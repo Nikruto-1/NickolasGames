@@ -58,7 +58,7 @@ section.s{padding:96px 0}
 .card{position:absolute;inset:0;border:1px solid var(--line);border-radius:22px;background:linear-gradient(160deg,#f7fbff,#CCE6FF);box-shadow:0 18px 40px -22px rgba(0,80,125,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px;transition:transform .5s cubic-bezier(.2,.8,.2,1),opacity .5s;touch-action:manipulation}
 .card small{position:absolute;top:22px;left:24px;color:var(--mut);font-size:14px}
 .card .w{font-size:clamp(30px,8vw,40px);font-weight:700;letter-spacing:-.01em;line-height:1.1;overflow-wrap:anywhere;min-height:1.2em}
-.card .w.hid{color:var(--mut);font-weight:500;font-size:22px}
+.card .w.hid{color:var(--mut);font-weight:500;font-size:22px}.empty-card{border-style:dashed;background:linear-gradient(160deg,#fff,#eef7ff)}.empty-card .w.hid{max-width:260px;font-size:19px;line-height:1.35}
 .card .w.enc{color:var(--acc);font-family:ui-monospace,monospace;font-size:30px}
 .ctrl{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:26px}
 .score{text-align:center;color:var(--mut);font-size:15px;margin-top:14px}
