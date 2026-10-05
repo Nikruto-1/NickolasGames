@@ -92,21 +92,21 @@ vec3 shadeCloud(vec3 color, vec3 sky, vec2 p, vec2 c, vec2 r, float seed, float 
 
   // sample density toward the sun (straight up) for self-shadowing
   float dUp = cloudDensity(p + vec2(0.0, r.y * 0.55), c, r, seed, t);
-  float occl = clamp((dUp - d) * 1.1 + d * 0.55, 0.0, 1.0);
+  float occl = clamp((dUp - d) * 1.35 + d * 0.68, 0.0, 1.0);
 
-  vec3 lit = u_cloud * 1.04;
-  vec3 shadow = mix(u_cloud * 0.60, sky, 0.38);
-  vec3 cloudCol = mix(lit, shadow, occl * 0.85);
+  vec3 lit = u_cloud * 1.16;
+  vec3 shadow = mix(u_cloud * 0.50, sky, 0.20);
+  vec3 cloudCol = mix(lit, shadow, occl * 0.92);
 
-  float alpha = smoothstep(0.02, 0.38, d);
+  float alpha = smoothstep(0.00, 0.24, d);
 
   // silver lining on thin edges
-  float rim = smoothstep(0.02, 0.14, d) * (1.0 - smoothstep(0.14, 0.40, d));
-  cloudCol += rim * 0.10;
+  float rim = smoothstep(0.00, 0.10, d) * (1.0 - smoothstep(0.10, 0.30, d));
+  cloudCol += rim * 0.18;
 
   // atmospheric perspective: far clouds fade into the sky
-  cloudCol = mix(cloudCol, sky, dist * 0.35);
-  alpha *= mix(1.0, 0.8, dist);
+  cloudCol = mix(cloudCol, sky, dist * 0.18);
+  alpha *= mix(1.0, 0.92, dist);
 
   return mix(color, cloudCol, alpha);
 }
