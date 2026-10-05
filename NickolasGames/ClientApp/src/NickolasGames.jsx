@@ -232,6 +232,7 @@ const PLAYER_SETUP = {
     forPlayer: "Картка для",
     hidden: "Приховано від гравця",
     empty: "Додай хоча б одне ім'я.",
+    notEnough: "Унікальних карток менше, ніж гравців. Додай більше слів або прибери частину гравців.",
   },
   en: {
     title: "Deal cards to players",
@@ -245,6 +246,7 @@ const PLAYER_SETUP = {
     forPlayer: "Card for",
     hidden: "Hidden from player",
     empty: "Add at least one name.",
+    notEnough: "There are fewer unique cards than players. Add more words or remove some players.",
   },
   sv: {
     title: "Dela ut kort till spelare",
@@ -258,6 +260,7 @@ const PLAYER_SETUP = {
     forPlayer: "Kort för",
     hidden: "Dolt för spelaren",
     empty: "Lägg till minst ett namn.",
+    notEnough: "Det finns färre unika kort än spelare. Lägg till fler ord eller ta bort några spelare.",
   },
   de: {
     title: "Karten an Spieler verteilen",
@@ -271,6 +274,7 @@ const PLAYER_SETUP = {
     forPlayer: "Karte für",
     hidden: "Vor dem Spieler verborgen",
     empty: "Füge mindestens einen Namen hinzu.",
+    notEnough: "Es gibt weniger einzigartige Karten als Spieler. Füge mehr Wörter hinzu oder entferne einige Spieler.",
   },
   es: {
     title: "Repartir tarjetas a jugadores",
@@ -284,6 +288,7 @@ const PLAYER_SETUP = {
     forPlayer: "Tarjeta para",
     hidden: "Oculta para el jugador",
     empty: "Añade al menos un nombre.",
+    notEnough: "Hay menos tarjetas únicas que jugadores. Añade más palabras o elimina algunos jugadores.",
   },
 };
 
@@ -302,6 +307,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
   const [playerNames, setPlayerNames] = useState("Nickolas\nSofia\nDmytro");
   const [assignments, setAssignments] = useState([]);
   const [visibleCards, setVisibleCards] = useState({});
+  const [dealWarning, setDealWarning] = useState("");
   const scr = useRef(0);
   const playerCopy = PLAYER_SETUP[lang] || PLAYER_SETUP.en;
 
@@ -309,7 +315,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
   useEffect(() => {
     clearInterval(scr.current);
     setQueue(shuffle(games[game].c[cat] || []));
-    setIdx(0); setShown(false); setExit(null); setEnc(false); setText(""); setScore({ got: 0, skipped: 0 }); setAssignments([]); setVisibleCards({});
+    setIdx(0); setShown(false); setExit(null); setEnc(false); setText(""); setScore({ got: 0, skipped: 0 }); setAssignments([]); setVisibleCards({}); setDealWarning("");
   }, [game, cat, games]);
   useEffect(() => {
     if (!running) return;
@@ -358,16 +364,23 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
     if (!parsedNames.length) {
       setAssignments([]);
       setVisibleCards({});
+      setDealWarning("");
       return;
     }
-    const words = shuffle(games.whoami.c[cat] || []);
-    const dealt = parsedNames.map((name, i) => ({
+    const categories = games.whoami.c;
+    const preferredWords = categories[cat] || [];
+    const fallbackWords = Object.entries(categories)
+      .filter(([category]) => category !== cat)
+      .flatMap(([, words]) => words);
+    const uniqueWords = [...new Set([...shuffle(preferredWords), ...shuffle(fallbackWords)])];
+    const dealt = parsedNames.slice(0, uniqueWords.length).map((name, i) => ({
       id: `${name}-${i}-${Date.now()}`,
       name,
-      word: words[i % words.length],
+      word: uniqueWords[i],
     }));
     setAssignments(dealt);
     setVisibleCards({});
+    setDealWarning(parsedNames.length > uniqueWords.length ? playerCopy.notEnough : "");
   };
 
   const toggleAssignedCard = (id) => {
@@ -402,6 +415,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
                 <button className="btn sm" onClick={() => setVisibleCards({})}>{playerCopy.hideAll}</button>
               </div>
               {!parsedNames.length && <div className="players-note">{playerCopy.empty}</div>}
+              {dealWarning && <div className="players-note warn">{dealWarning}</div>}
             </div>
           )}
         </div>
