@@ -62,6 +62,10 @@ section.s{padding:96px 0}
 .card .w.enc{color:var(--acc);font-family:ui-monospace,monospace;font-size:30px}
 .ctrl{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:26px}
 .score{text-align:center;color:var(--mut);font-size:15px;margin-top:14px}
+.players-panel{margin-top:28px;border:1px solid var(--line);background:rgba(247,251,255,.72);border-radius:18px;padding:20px;box-shadow:0 18px 42px -32px rgba(0,80,125,.38)}
+.players-panel h3{font-size:24px;margin-bottom:8px}.players-panel p{color:var(--mut);font-size:15px;line-height:1.45}.players-label{display:block;margin-top:16px;margin-bottom:8px;font-size:14px;font-weight:700;color:var(--fg)}
+.players-panel textarea{width:100%;min-height:116px;resize:vertical;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--fg);padding:12px 14px;font:inherit;line-height:1.35;outline:none}.players-panel textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(0,151,255,.16)}
+.players-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}.players-note{margin-top:10px;color:var(--mut);font-size:14px}.assigned-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:22px}.assigned-card{border:1px solid var(--line);background:linear-gradient(160deg,#fff,#e7f4ff);border-radius:18px;padding:18px;box-shadow:0 16px 34px -26px rgba(0,80,125,.42)}.assigned-card small{display:block;color:var(--mut);font-size:13px}.assigned-card h3{font-size:24px;margin-top:4px}.assigned-word{margin:14px 0;padding:14px;border:1px dashed rgba(0,80,125,.32);border-radius:14px;color:var(--mut);font-weight:700;text-align:center;min-height:56px;display:flex;align-items:center;justify-content:center}.assigned-word.visible{border-style:solid;background:#006BB6;color:#fff;font-size:24px;overflow-wrap:anywhere}
 /* steps */
 .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:36px;counter-reset:s}
 .steps div{border-top:1px solid var(--line);padding-top:22px}
@@ -87,8 +91,4 @@ footer{border-top:1px solid var(--line);padding:26px 0;color:var(--mut);font-siz
  html{scroll-behavior:auto}.flight{display:none}.reveal-games{opacity:1;transform:none;transition:none}
  .mq{overflow-x:auto;mask-image:none}.mt{animation:none}.card,.gc{transition:none}
 }
-
-
-
-
 

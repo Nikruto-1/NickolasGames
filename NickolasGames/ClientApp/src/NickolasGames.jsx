@@ -219,8 +219,75 @@ function GamesGrid({ games, t, onPlay }) {
 }
 
 const SCRAMBLE = "▓▒░#@$%&*+?";
+const PLAYER_SETUP = {
+  uk: {
+    title: "Роздати картки гравцям",
+    text: "Введи імена, натисни random, і кожен отримає приховану картку. Не відкривай картку перед її власником.",
+    label: "Імена гравців",
+    placeholder: "Nickolas\nSofia\nDmytro",
+    assign: "Random картки",
+    hideAll: "Сховати всі",
+    show: "Показати слово",
+    hide: "Сховати слово",
+    forPlayer: "Картка для",
+    hidden: "Приховано від гравця",
+    empty: "Додай хоча б одне ім'я.",
+  },
+  en: {
+    title: "Deal cards to players",
+    text: "Enter names, press random, and every player gets a hidden card. Do not reveal a card in front of its owner.",
+    label: "Player names",
+    placeholder: "Nickolas\nSofia\nDmytro",
+    assign: "Random cards",
+    hideAll: "Hide all",
+    show: "Show word",
+    hide: "Hide word",
+    forPlayer: "Card for",
+    hidden: "Hidden from player",
+    empty: "Add at least one name.",
+  },
+  sv: {
+    title: "Dela ut kort till spelare",
+    text: "Skriv namn, tryck på slump, så får varje spelare ett dolt kort. Visa inte kortet för den som äger det.",
+    label: "Spelarnamn",
+    placeholder: "Nickolas\nSofia\nDmytro",
+    assign: "Slumpa kort",
+    hideAll: "Dölj alla",
+    show: "Visa ord",
+    hide: "Dölj ord",
+    forPlayer: "Kort för",
+    hidden: "Dolt för spelaren",
+    empty: "Lägg till minst ett namn.",
+  },
+  de: {
+    title: "Karten an Spieler verteilen",
+    text: "Gib Namen ein, drücke Zufall, und jeder bekommt eine verdeckte Karte. Zeige die Karte nicht vor der eigenen Person.",
+    label: "Spielernamen",
+    placeholder: "Nickolas\nSofia\nDmytro",
+    assign: "Zufällige Karten",
+    hideAll: "Alle verbergen",
+    show: "Wort zeigen",
+    hide: "Wort verbergen",
+    forPlayer: "Karte für",
+    hidden: "Vor dem Spieler verborgen",
+    empty: "Füge mindestens einen Namen hinzu.",
+  },
+  es: {
+    title: "Repartir tarjetas a jugadores",
+    text: "Escribe nombres, pulsa aleatorio y cada jugador recibe una tarjeta oculta. No muestres la tarjeta delante de su dueño.",
+    label: "Nombres de jugadores",
+    placeholder: "Nickolas\nSofia\nDmytro",
+    assign: "Tarjetas aleatorias",
+    hideAll: "Ocultar todo",
+    show: "Mostrar palabra",
+    hide: "Ocultar palabra",
+    forPlayer: "Tarjeta para",
+    hidden: "Oculta para el jugador",
+    empty: "Añade al menos un nombre.",
+  },
+};
 
-function CardStackPreview({ game, games, t, onGame }) {
+function CardStackPreview({ game, games, t, lang, onGame }) {
   const cats = useMemo(() => Object.keys(games[game].c), [game, games]);
   const [cat, setCat] = useState(cats[0]);
   const [queue, setQueue] = useState([]);
@@ -232,13 +299,17 @@ function CardStackPreview({ game, games, t, onGame }) {
   const [score, setScore] = useState({ got: 0, skipped: 0 });
   const [left, setLeft] = useState(60);
   const [running, setRunning] = useState(false);
+  const [playerNames, setPlayerNames] = useState("Nickolas\nSofia\nDmytro");
+  const [assignments, setAssignments] = useState([]);
+  const [visibleCards, setVisibleCards] = useState({});
   const scr = useRef(0);
+  const playerCopy = PLAYER_SETUP[lang] || PLAYER_SETUP.en;
 
   useEffect(() => { setCat(Object.keys(games[game].c)[0]); }, [game, games]);
   useEffect(() => {
     clearInterval(scr.current);
     setQueue(shuffle(games[game].c[cat] || []));
-    setIdx(0); setShown(false); setExit(null); setEnc(false); setText(""); setScore({ got: 0, skipped: 0 });
+    setIdx(0); setShown(false); setExit(null); setEnc(false); setText(""); setScore({ got: 0, skipped: 0 }); setAssignments([]); setVisibleCards({});
   }, [game, cat, games]);
   useEffect(() => {
     if (!running) return;
@@ -282,6 +353,27 @@ function CardStackPreview({ game, games, t, onGame }) {
     if (running || left < 60) { setRunning(false); setLeft(60); } else setRunning(true);
   };
 
+  const parsedNames = playerNames.split(/[\n,]+/).map((name) => name.trim()).filter(Boolean);
+  const dealWhoAmICards = () => {
+    if (!parsedNames.length) {
+      setAssignments([]);
+      setVisibleCards({});
+      return;
+    }
+    const words = shuffle(games.whoami.c[cat] || []);
+    const dealt = parsedNames.map((name, i) => ({
+      id: `${name}-${i}-${Date.now()}`,
+      name,
+      word: words[i % words.length],
+    }));
+    setAssignments(dealt);
+    setVisibleCards({});
+  };
+
+  const toggleAssignedCard = (id) => {
+    setVisibleCards((current) => ({ ...current, [id]: !current[id] }));
+  };
+
   return (
     <section className="s pv" id="preview">
       <div className="wrap pvg">
@@ -299,6 +391,19 @@ function CardStackPreview({ game, games, t, onGame }) {
             <div className="tbar"><i style={{ transform: `scaleX(${left / 60})` }} /></div>
             <button className="btn sm" onClick={toggleTimer}>{running || left < 60 ? t.reset : t.startTimer}</button>
           </div>
+          {game === "whoami" && (
+            <div className="players-panel">
+              <h3>{playerCopy.title}</h3>
+              <p>{playerCopy.text}</p>
+              <label className="players-label" htmlFor="player-names">{playerCopy.label}</label>
+              <textarea id="player-names" value={playerNames} placeholder={playerCopy.placeholder} onChange={(e) => setPlayerNames(e.target.value)} />
+              <div className="players-actions">
+                <button className="btn pri sm" onClick={dealWhoAmICards}>{playerCopy.assign}</button>
+                <button className="btn sm" onClick={() => setVisibleCards({})}>{playerCopy.hideAll}</button>
+              </div>
+              {!parsedNames.length && <div className="players-note">{playerCopy.empty}</div>}
+            </div>
+          )}
         </div>
         <div>
           <div className="deck" aria-live="polite">
@@ -318,6 +423,21 @@ function CardStackPreview({ game, games, t, onGame }) {
             <button className="btn" onClick={() => advance("skip")}>{t.skip}</button>
           </div>
           <div className="score">{t.guessed} {score.got} · {t.skipped} {score.skipped}</div>
+          {game === "whoami" && assignments.length > 0 && (
+            <div className="assigned-grid">
+              {assignments.map((item) => {
+                const isVisible = Boolean(visibleCards[item.id]);
+                return (
+                  <article className="assigned-card" key={item.id}>
+                    <small>{playerCopy.forPlayer}</small>
+                    <h3>{item.name}</h3>
+                    <div className={"assigned-word" + (isVisible ? " visible" : "")}>{isVisible ? item.word : playerCopy.hidden}</div>
+                    <button className="btn sm" onClick={() => toggleAssignedCard(item.id)}>{isVisible ? playerCopy.hide : playerCopy.show}</button>
+                  </article>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </section>
@@ -398,7 +518,7 @@ export default function NickolasGames() {
       <Hero t={t} />
       <PlaneFlight title={t.flight} />
       <GamesGrid games={t.games} t={t} onPlay={(k) => choose(k, true)} />
-      <CardStackPreview game={game} games={t.games} t={t} onGame={(k) => choose(k, false)} />
+      <CardStackPreview game={game} games={t.games} t={t} lang={lang} onGame={(k) => choose(k, false)} />
       <HowItWorks t={t} />
       <Testimonials t={t} />
       <FinalCta t={t} />
