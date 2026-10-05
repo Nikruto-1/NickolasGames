@@ -235,6 +235,8 @@ const PLAYER_SETUP = {
     notEnough: "Унікальних карток менше, ніж гравців. Додай більше слів або прибери частину гравців.",
     guessed: "Вгадав",
     guessedWord: "Вгадане слово",
+    giveUp: "Здаюся",
+    gaveUpWord: "Слово було",
     noNewWord: "Немає нового унікального слова для цього гравця.",
   },
   en: {
@@ -252,6 +254,8 @@ const PLAYER_SETUP = {
     notEnough: "There are fewer unique cards than players. Add more words or remove some players.",
     guessed: "Guessed",
     guessedWord: "Guessed word",
+    giveUp: "Give up",
+    gaveUpWord: "The word was",
     noNewWord: "There is no new unique word for this player.",
   },
   sv: {
@@ -269,6 +273,8 @@ const PLAYER_SETUP = {
     notEnough: "Det finns färre unika kort än spelare. Lägg till fler ord eller ta bort några spelare.",
     guessed: "Gissade",
     guessedWord: "Gissat ord",
+    giveUp: "Ger upp",
+    gaveUpWord: "Ordet var",
     noNewWord: "Det finns inget nytt unikt ord för den här spelaren.",
   },
   de: {
@@ -286,6 +292,8 @@ const PLAYER_SETUP = {
     notEnough: "Es gibt weniger einzigartige Karten als Spieler. Füge mehr Wörter hinzu oder entferne einige Spieler.",
     guessed: "Erraten",
     guessedWord: "Erratenes Wort",
+    giveUp: "Ich gebe auf",
+    gaveUpWord: "Das Wort war",
     noNewWord: "Es gibt kein neues einzigartiges Wort für diesen Spieler.",
   },
   es: {
@@ -303,6 +311,8 @@ const PLAYER_SETUP = {
     notEnough: "Hay menos tarjetas únicas que jugadores. Añade más palabras o elimina algunos jugadores.",
     guessed: "Adivinó",
     guessedWord: "Palabra adivinada",
+    giveUp: "Me rindo",
+    gaveUpWord: "La palabra era",
     noNewWord: "No hay una palabra única nueva para este jugador.",
   },
 };
@@ -404,22 +414,25 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
     setVisibleCards((current) => ({ ...current, [id]: !current[id] }));
   };
 
-  const markAssignedGuessed = (id) => {
+  const finishAssignedCard = (id, outcome) => {
     const target = assignments.find((item) => item.id === id);
     if (!target) return;
     const activeWords = new Set(assignments.filter((item) => item.id !== id).map((item) => item.word));
     const usedByPlayer = new Set(target.usedWords || [target.word]);
     const nextWord = shuffle(allWhoAmIWords).find((candidate) => !usedByPlayer.has(candidate) && !activeWords.has(candidate));
     if (!nextWord) {
-      setAssignments((current) => current.map((item) => item.id === id ? { ...item, lastGuessed: item.word, usedWords: [...new Set([...(item.usedWords || []), item.word])] } : item));
+      setAssignments((current) => current.map((item) => item.id === id ? { ...item, lastWord: item.word, lastOutcome: outcome, usedWords: [...new Set([...(item.usedWords || []), item.word])] } : item));
       setVisibleCards((current) => ({ ...current, [id]: false }));
       setDealWarning(playerCopy.noNewWord);
       return;
     }
-    setAssignments((current) => current.map((item) => item.id === id ? { ...item, word: nextWord, lastGuessed: item.word, usedWords: [...new Set([...(item.usedWords || []), item.word, nextWord])] } : item));
+    setAssignments((current) => current.map((item) => item.id === id ? { ...item, word: nextWord, lastWord: item.word, lastOutcome: outcome, usedWords: [...new Set([...(item.usedWords || []), item.word, nextWord])] } : item));
     setVisibleCards((current) => ({ ...current, [id]: false }));
     setDealWarning("");
   };
+
+  const markAssignedGuessed = (id) => finishAssignedCard(id, "guessed");
+  const markAssignedGivenUp = (id) => finishAssignedCard(id, "gaveUp");
 
   return (
     <section className="s pv" id="preview">
@@ -480,10 +493,11 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
                     <small>{playerCopy.forPlayer}</small>
                     <h3>{item.name}</h3>
                     <div className={"assigned-word" + (isVisible ? " visible" : "")}>{isVisible ? item.word : playerCopy.hidden}</div>
-                    {item.lastGuessed && <div className="assigned-solved">{playerCopy.guessedWord}: <b>{item.lastGuessed}</b></div>}
+                    {item.lastWord && <div className="assigned-solved">{item.lastOutcome === "gaveUp" ? playerCopy.gaveUpWord : playerCopy.guessedWord}: <b>{item.lastWord}</b></div>}
                     <div className="assigned-actions">
                       <button className="btn sm" onClick={() => toggleAssignedCard(item.id)}>{isVisible ? playerCopy.hide : playerCopy.show}</button>
                       <button className="btn pri sm" onClick={() => markAssignedGuessed(item.id)}>{playerCopy.guessed}</button>
+                      <button className="btn sm" onClick={() => markAssignedGivenUp(item.id)}>{playerCopy.giveUp}</button>
                     </div>
                   </article>
                 );
