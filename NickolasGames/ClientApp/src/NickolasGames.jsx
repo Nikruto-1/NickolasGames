@@ -379,6 +379,7 @@ const PLAYER_SETUP = {
 function CardStackPreview({ game, games, t, lang, onGame }) {
   const cats = useMemo(() => Object.keys(games[game].c), [game, games]);
   const [cat, setCat] = useState(cats[0]);
+  const [difficulty, setDifficulty] = useState("medium");
   const [queue, setQueue] = useState([]);
   const [idx, setIdx] = useState(0);
   const [shown, setShown] = useState(false);
@@ -400,7 +401,9 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
   const playerCopy = PLAYER_SETUP[lang] || PLAYER_SETUP.en;
 
   const parsedCustomWords = useMemo(() => [...new Set(customWords.split(/[\n,]+/).map((word) => word.trim()).filter(Boolean))], [customWords]);
-  const whoAmIWordPool = useMemo(() => customOnly ? parsedCustomWords : [...new Set([...Object.values(games.whoami.c).flat(), ...parsedCustomWords])], [customOnly, games, parsedCustomWords]);
+  const getWordsForCategory = (category) => wordsByDifficulty(games[game].c[category] || [], difficulty);
+  const filteredWhoAmIWords = useMemo(() => Object.values(games.whoami.c).flatMap((words) => wordsByDifficulty(words, difficulty)), [games, difficulty]);
+  const whoAmIWordPool = useMemo(() => customOnly ? parsedCustomWords : [...new Set([...filteredWhoAmIWords, ...parsedCustomWords])], [customOnly, filteredWhoAmIWords, parsedCustomWords]);
 
   useEffect(() => { setCat(Object.keys(games[game].c)[0]); }, [game, games]);
   useEffect(() => {
