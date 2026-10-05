@@ -225,6 +225,9 @@ const PLAYER_SETUP = {
     text: "Введи імена, натисни random, і кожен отримає приховану картку. Не відкривай картку перед її власником.",
     label: "Імена гравців",
     placeholder: "Nickolas\nSofia\nDmytro",
+    customLabel: "Свої слова для карток",
+    customPlaceholder: "Футболіст\nВчитель\nMinecraft",
+    customHint: "Кожне слово з нового рядка або через кому.",
     assign: "Random картки",
     hideAll: "Сховати всі",
     show: "Показати слово",
@@ -244,6 +247,9 @@ const PLAYER_SETUP = {
     text: "Enter names, press random, and every player gets a hidden card. Do not reveal a card in front of its owner.",
     label: "Player names",
     placeholder: "Nickolas\nSofia\nDmytro",
+    customLabel: "Custom card words",
+    customPlaceholder: "Footballer\nTeacher\nMinecraft",
+    customHint: "One word per line or separated by commas.",
     assign: "Random cards",
     hideAll: "Hide all",
     show: "Show word",
@@ -263,6 +269,9 @@ const PLAYER_SETUP = {
     text: "Skriv namn, tryck på slump, så får varje spelare ett dolt kort. Visa inte kortet för den som äger det.",
     label: "Spelarnamn",
     placeholder: "Nickolas\nSofia\nDmytro",
+    customLabel: "Egna kortord",
+    customPlaceholder: "Fotbollsspelare\nLärare\nMinecraft",
+    customHint: "Ett ord per rad eller separerat med kommatecken.",
     assign: "Slumpa kort",
     hideAll: "Dölj alla",
     show: "Visa ord",
@@ -282,6 +291,9 @@ const PLAYER_SETUP = {
     text: "Gib Namen ein, drücke Zufall, und jeder bekommt eine verdeckte Karte. Zeige die Karte nicht vor der eigenen Person.",
     label: "Spielernamen",
     placeholder: "Nickolas\nSofia\nDmytro",
+    customLabel: "Eigene Kartenwörter",
+    customPlaceholder: "Fußballer\nLehrer\nMinecraft",
+    customHint: "Ein Wort pro Zeile oder durch Kommas getrennt.",
     assign: "Zufällige Karten",
     hideAll: "Alle verbergen",
     show: "Wort zeigen",
@@ -301,6 +313,9 @@ const PLAYER_SETUP = {
     text: "Escribe nombres, pulsa aleatorio y cada jugador recibe una tarjeta oculta. No muestres la tarjeta delante de su dueño.",
     label: "Nombres de jugadores",
     placeholder: "Nickolas\nSofia\nDmytro",
+    customLabel: "Palabras propias",
+    customPlaceholder: "Futbolista\nProfesor\nMinecraft",
+    customHint: "Una palabra por línea o separadas por comas.",
     assign: "Tarjetas aleatorias",
     hideAll: "Ocultar todo",
     show: "Mostrar palabra",
@@ -330,18 +345,21 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
   const [left, setLeft] = useState(60);
   const [running, setRunning] = useState(false);
   const [playerNames, setPlayerNames] = useState("Nickolas\nSofia\nDmytro");
+  const [customWords, setCustomWords] = useState("");
   const [assignments, setAssignments] = useState([]);
   const [visibleCards, setVisibleCards] = useState({});
   const [dealWarning, setDealWarning] = useState("");
   const scr = useRef(0);
   const playerCopy = PLAYER_SETUP[lang] || PLAYER_SETUP.en;
 
+  const parsedCustomWords = useMemo(() => [...new Set(customWords.split(/[\n,]+/).map((word) => word.trim()).filter(Boolean))], [customWords]);
+
   useEffect(() => { setCat(Object.keys(games[game].c)[0]); }, [game, games]);
   useEffect(() => {
     clearInterval(scr.current);
-    setQueue(shuffle(games[game].c[cat] || []));
+    setQueue(shuffle(game === "whoami" ? [...new Set([...(games[game].c[cat] || []), ...parsedCustomWords])] : (games[game].c[cat] || [])));
     setIdx(0); setShown(false); setExit(null); setEnc(false); setText(""); setScore({ got: 0, skipped: 0 }); setAssignments([]); setVisibleCards({}); setDealWarning("");
-  }, [game, cat, games]);
+  }, [game, cat, games, parsedCustomWords]);
   useEffect(() => {
     if (!running) return;
     const id = setInterval(() => setLeft((l) => { if (l <= 1) { setRunning(false); return 0; } return l - 1; }), 1000);
@@ -384,7 +402,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
     if (running || left < 60) { setRunning(false); setLeft(60); } else setRunning(true);
   };
 
-  const allWhoAmIWords = useMemo(() => [...new Set(Object.values(games.whoami.c).flat())], [games]);
+  const allWhoAmIWords = useMemo(() => [...new Set([...Object.values(games.whoami.c).flat(), ...parsedCustomWords])], [games, parsedCustomWords]);
   const parsedNames = playerNames.split(/[\n,]+/).map((name) => name.trim()).filter(Boolean);
   const dealWhoAmICards = () => {
     if (!parsedNames.length) {
@@ -394,7 +412,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
       return;
     }
     const categories = games.whoami.c;
-    const preferredWords = categories[cat] || [];
+    const preferredWords = [...(categories[cat] || []), ...parsedCustomWords];
     const fallbackWords = Object.entries(categories)
       .filter(([category]) => category !== cat)
       .flatMap(([, words]) => words);
@@ -457,6 +475,9 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
               <p>{playerCopy.text}</p>
               <label className="players-label" htmlFor="player-names">{playerCopy.label}</label>
               <textarea id="player-names" value={playerNames} placeholder={playerCopy.placeholder} onChange={(e) => setPlayerNames(e.target.value)} />
+              <label className="players-label" htmlFor="custom-words">{playerCopy.customLabel}</label>
+              <textarea id="custom-words" className="custom-words" value={customWords} placeholder={playerCopy.customPlaceholder} onChange={(e) => setCustomWords(e.target.value)} />
+              <div className="players-note">{playerCopy.customHint}</div>
               <div className="players-actions">
                 <button className="btn pri sm" onClick={dealWhoAmICards}>{playerCopy.assign}</button>
                 <button className="btn sm" onClick={() => setVisibleCards({})}>{playerCopy.hideAll}</button>
