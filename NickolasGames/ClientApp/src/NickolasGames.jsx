@@ -30,6 +30,8 @@ const COPY = {
     min: "хв",
     reset: "Скинути",
     startTimer: "Запустити таймер",
+    timerDuration: "Тривалість тайму",
+    sec: "с",
     tap: "Натисни, щоб відкрити",
     reveal: "Відкрити",
     next: "Далі",
@@ -67,7 +69,7 @@ const COPY = {
     ],
   },
   en: {
-    heroTitle: "Games for real moments.", heroText: "Simple web games for friends, teams and parties.", start: "Start playing", explore: "Explore games", flight: "Step into the game world.", gamesTitle: "Pick your game.", gamesText: "Five ways to get a room talking, laughing and moving.", play: "Play", previewTitle: "Try it right here.", previewText: "Reveal a card, act it out, then draw the next one.", gameLabel: "Game", categoryLabel: "Category", random: "Random", any: "Any", players: "players", min: "min", reset: "Reset", startTimer: "Start timer", tap: "Tap to reveal", reveal: "Reveal", next: "Next", skip: "Skip", guessed: "Guessed", skipped: "Skipped", howTitle: "How it works", testimonialsTitle: "Played around the world.", played: "Played", finalTitle: "Ready to play?", finalText: "Pick a game, gather your people and start in seconds.", footer: "© 2026 NickolasGames. Games for real moments.", language: "Language",
+    heroTitle: "Games for real moments.", heroText: "Simple web games for friends, teams and parties.", start: "Start playing", explore: "Explore games", flight: "Step into the game world.", gamesTitle: "Pick your game.", gamesText: "Five ways to get a room talking, laughing and moving.", play: "Play", previewTitle: "Try it right here.", previewText: "Reveal a card, act it out, then draw the next one.", gameLabel: "Game", categoryLabel: "Category", random: "Random", any: "Any", players: "players", min: "min", reset: "Reset", startTimer: "Start timer", timerDuration: "Round time", sec: "s", tap: "Tap to reveal", reveal: "Reveal", next: "Next", skip: "Skip", guessed: "Guessed", skipped: "Skipped", howTitle: "How it works", testimonialsTitle: "Played around the world.", played: "Played", finalTitle: "Ready to play?", finalText: "Pick a game, gather your people and start in seconds.", footer: "© 2026 NickolasGames. Games for real moments.", language: "Language",
     steps: [["Choose a game", "Pick one of five games, or let the system choose for you."], ["Set players and time", "Decide how many people are playing and how long each round lasts."], ["Play from one phone or screen", "Pass the device around or cast it to a TV. Nobody needs to install anything."]],
     games: {
       whoami: { n: "Who Am I?", d: "Guess the person, character or object on your card.", p: "2-10 players", t: "10 min", c: { People: ["Movie director", "Astronaut", "Chess champion", "Street musician", "Pizza chef"], Characters: ["Sherlock Holmes", "Robot butler", "Pirate captain", "Wizard", "Detective"], Objects: ["Airplane", "Umbrella", "Lighthouse", "Vinyl record", "Compass"] } },
@@ -79,7 +81,7 @@ const COPY = {
     testimonials: [["Sofia", "Sweden", "We used Who Am I? during a team evening. It was simple, fast and genuinely fun.", "Who Am I?"], ["Dmytro", "Ukraine", "Crocodile worked perfectly from one phone at a house party.", "Crocodile"], ["Lena", "Germany", "Alias became our quick icebreaker before meetings.", "Alias"], ["Marta", "Poland", "Truth or Dare felt clean and modern, not awkward.", "Truth or Dare"]],
   },
   sv: {
-    heroTitle: "Spel för riktiga stunder.", heroText: "Enkla webbspel för vänner, team och fester.", start: "Börja spela", explore: "Utforska spel", flight: "Kliv in i spelvärlden.", gamesTitle: "Välj ditt spel.", gamesText: "Fem sätt att få rummet att prata, skratta och röra på sig.", play: "Spela", previewTitle: "Prova direkt här.", previewText: "Vänd ett kort, spela ut det och dra sedan nästa.", gameLabel: "Spel", categoryLabel: "Kategori", random: "Slump", any: "När som helst", players: "spelare", min: "min", reset: "Återställ", startTimer: "Starta timer", tap: "Tryck för att visa", reveal: "Visa", next: "Nästa", skip: "Hoppa över", guessed: "Gissade", skipped: "Hoppade över", howTitle: "Så fungerar det", testimonialsTitle: "Spelas runt om i världen.", played: "Spelade", finalTitle: "Redo att spela?", finalText: "Välj ett spel, samla dina människor och börja på några sekunder.", footer: "© 2026 NickolasGames. Spel för riktiga stunder.", language: "Språk",
+    heroTitle: "Spel för riktiga stunder.", heroText: "Enkla webbspel för vänner, team och fester.", start: "Börja spela", explore: "Utforska spel", flight: "Kliv in i spelvärlden.", gamesTitle: "Välj ditt spel.", gamesText: "Fem sätt att få rummet att prata, skratta och röra på sig.", play: "Spela", previewTitle: "Prova direkt här.", previewText: "Vänd ett kort, spela ut det och dra sedan nästa.", gameLabel: "Spel", categoryLabel: "Kategori", random: "Slump", any: "När som helst", players: "spelare", min: "min", reset: "Återställ", startTimer: "Starta timer", timerDuration: "Rundtid", sec: "s", tap: "Tryck för att visa", reveal: "Visa", next: "Nästa", skip: "Hoppa över", guessed: "Gissade", skipped: "Hoppade över", howTitle: "Så fungerar det", testimonialsTitle: "Spelas runt om i världen.", played: "Spelade", finalTitle: "Redo att spela?", finalText: "Välj ett spel, samla dina människor och börja på några sekunder.", footer: "© 2026 NickolasGames. Spel för riktiga stunder.", language: "Språk",
     steps: [["Välj ett spel", "Välj ett av fem spel eller låt systemet välja åt dig."], ["Ställ in spelare och tid", "Bestäm hur många som spelar och hur länge varje runda varar."], ["Spela från en telefon eller skärm", "Skicka runt enheten eller casta till en TV. Ingen behöver installera något."]],
     games: {
       whoami: { n: "Vem är jag?", d: "Gissa personen, karaktären eller saken på ditt kort.", p: "2-10 spelare", t: "10 min", c: { Personer: ["Filmregissör", "Astronaut", "Schackmästare", "Gatumusiker", "Pizzakock"], Karaktärer: ["Sherlock Holmes", "Robotbutler", "Piratkapten", "Trollkarl", "Detektiv"], Saker: ["Flygplan", "Paraply", "Fyr", "Vinylskiva", "Kompass"] } },
@@ -91,7 +93,7 @@ const COPY = {
     testimonials: [["Sofia", "Sverige", "Vi använde Vem är jag? på en teamkväll. Det var enkelt, snabbt och riktigt kul.", "Vem är jag?"], ["Dmytro", "Ukraina", "Krokodil fungerade perfekt från en telefon på en hemmafest.", "Krokodil"], ["Lena", "Tyskland", "Alias blev vår snabba isbrytare före möten.", "Alias"], ["Marta", "Polen", "Sanning eller konsekvens kändes rent och modernt, inte pinsamt.", "Sanning eller konsekvens"]],
   },
   de: {
-    heroTitle: "Spiele für echte Momente.", heroText: "Einfache Webspiele für Freunde, Teams und Partys.", start: "Jetzt spielen", explore: "Spiele ansehen", flight: "Tritt in die Spielwelt ein.", gamesTitle: "Wähle dein Spiel.", gamesText: "Fünf Wege, einen Raum zum Reden, Lachen und Mitmachen zu bringen.", play: "Spielen", previewTitle: "Probiere es direkt hier.", previewText: "Decke eine Karte auf, stelle sie dar und ziehe dann die nächste.", gameLabel: "Spiel", categoryLabel: "Kategorie", random: "Zufall", any: "Jederzeit", players: "Spieler", min: "Min", reset: "Zurücksetzen", startTimer: "Timer starten", tap: "Tippen zum Aufdecken", reveal: "Aufdecken", next: "Weiter", skip: "Überspringen", guessed: "Erraten", skipped: "Übersprungen", howTitle: "So funktioniert es", testimonialsTitle: "Weltweit gespielt.", played: "Spielte", finalTitle: "Bereit zu spielen?", finalText: "Wähle ein Spiel, sammle deine Leute und starte in Sekunden.", footer: "© 2026 NickolasGames. Spiele für echte Momente.", language: "Sprache",
+    heroTitle: "Spiele für echte Momente.", heroText: "Einfache Webspiele für Freunde, Teams und Partys.", start: "Jetzt spielen", explore: "Spiele ansehen", flight: "Tritt in die Spielwelt ein.", gamesTitle: "Wähle dein Spiel.", gamesText: "Fünf Wege, einen Raum zum Reden, Lachen und Mitmachen zu bringen.", play: "Spielen", previewTitle: "Probiere es direkt hier.", previewText: "Decke eine Karte auf, stelle sie dar und ziehe dann die nächste.", gameLabel: "Spiel", categoryLabel: "Kategorie", random: "Zufall", any: "Jederzeit", players: "Spieler", min: "Min", reset: "Zurücksetzen", startTimer: "Timer starten", timerDuration: "Rundenzeit", sec: "s", tap: "Tippen zum Aufdecken", reveal: "Aufdecken", next: "Weiter", skip: "Überspringen", guessed: "Erraten", skipped: "Übersprungen", howTitle: "So funktioniert es", testimonialsTitle: "Weltweit gespielt.", played: "Spielte", finalTitle: "Bereit zu spielen?", finalText: "Wähle ein Spiel, sammle deine Leute und starte in Sekunden.", footer: "© 2026 NickolasGames. Spiele für echte Momente.", language: "Sprache",
     steps: [["Spiel wählen", "Wähle eines von fünf Spielen oder lass das System entscheiden."], ["Spieler und Zeit festlegen", "Entscheide, wie viele Personen mitspielen und wie lange jede Runde dauert."], ["Von einem Handy oder Bildschirm spielen", "Gib das Gerät weiter oder streame es auf den Fernseher. Niemand muss etwas installieren."]],
     games: {
       whoami: { n: "Wer bin ich?", d: "Errate die Person, Figur oder Sache auf deiner Karte.", p: "2-10 Spieler", t: "10 Min", c: { Personen: ["Filmregisseur", "Astronaut", "Schachmeister", "Straßenmusiker", "Pizzabäcker"], Figuren: ["Sherlock Holmes", "Roboterbutler", "Piratenkapitän", "Zauberer", "Detektiv"], Dinge: ["Flugzeug", "Regenschirm", "Leuchtturm", "Schallplatte", "Kompass"] } },
@@ -103,7 +105,7 @@ const COPY = {
     testimonials: [["Sofia", "Schweden", "Wir haben Wer bin ich? bei einem Teamabend genutzt. Es war einfach, schnell und wirklich lustig.", "Wer bin ich?"], ["Dmytro", "Ukraine", "Krokodil funktionierte perfekt von einem Handy auf einer Hausparty.", "Krokodil"], ["Lena", "Deutschland", "Alias wurde unser schneller Eisbrecher vor Meetings.", "Alias"], ["Marta", "Polen", "Wahrheit oder Pflicht wirkte modern und gar nicht unangenehm.", "Wahrheit oder Pflicht"]],
   },
   es: {
-    heroTitle: "Juegos para momentos reales.", heroText: "Juegos web sencillos para amigos, equipos y fiestas.", start: "Empezar a jugar", explore: "Explorar juegos", flight: "Entra en el mundo del juego.", gamesTitle: "Elige tu juego.", gamesText: "Cinco formas de hacer que todos hablen, rían y se muevan.", play: "Jugar", previewTitle: "Pruébalo aquí mismo.", previewText: "Revela una tarjeta, actúala y luego toma la siguiente.", gameLabel: "Juego", categoryLabel: "Categoría", random: "Aleatorio", any: "Cualquiera", players: "jugadores", min: "min", reset: "Reiniciar", startTimer: "Iniciar temporizador", tap: "Toca para revelar", reveal: "Revelar", next: "Siguiente", skip: "Saltar", guessed: "Adivinadas", skipped: "Saltadas", howTitle: "Cómo funciona", testimonialsTitle: "Jugado en todo el mundo.", played: "Jugó", finalTitle: "¿Listo para jugar?", finalText: "Elige un juego, reúne a tu gente y empieza en segundos.", footer: "© 2026 NickolasGames. Juegos para momentos reales.", language: "Idioma",
+    heroTitle: "Juegos para momentos reales.", heroText: "Juegos web sencillos para amigos, equipos y fiestas.", start: "Empezar a jugar", explore: "Explorar juegos", flight: "Entra en el mundo del juego.", gamesTitle: "Elige tu juego.", gamesText: "Cinco formas de hacer que todos hablen, rían y se muevan.", play: "Jugar", previewTitle: "Pruébalo aquí mismo.", previewText: "Revela una tarjeta, actúala y luego toma la siguiente.", gameLabel: "Juego", categoryLabel: "Categoría", random: "Aleatorio", any: "Cualquiera", players: "jugadores", min: "min", reset: "Reiniciar", startTimer: "Iniciar temporizador", timerDuration: "Duración", sec: "s", tap: "Toca para revelar", reveal: "Revelar", next: "Siguiente", skip: "Saltar", guessed: "Adivinadas", skipped: "Saltadas", howTitle: "Cómo funciona", testimonialsTitle: "Jugado en todo el mundo.", played: "Jugó", finalTitle: "¿Listo para jugar?", finalText: "Elige un juego, reúne a tu gente y empieza en segundos.", footer: "© 2026 NickolasGames. Juegos para momentos reales.", language: "Idioma",
     steps: [["Elige un juego", "Elige uno de los cinco juegos o deja que el sistema elija por ti."], ["Configura jugadores y tiempo", "Decide cuántas personas juegan y cuánto dura cada ronda."], ["Juega desde un móvil o una pantalla", "Pasa el dispositivo o compártelo en la TV. Nadie necesita instalar nada."]],
     games: {
       whoami: { n: "¿Quién soy?", d: "Adivina la persona, personaje u objeto de tu tarjeta.", p: "2-10 jugadores", t: "10 min", c: { Personas: ["Director de cine", "Astronauta", "Campeón de ajedrez", "Músico callejero", "Pizzero"], Personajes: ["Sherlock Holmes", "Mayordomo robot", "Capitán pirata", "Mago", "Detective"], Objetos: ["Avión", "Paraguas", "Faro", "Disco de vinilo", "Brújula"] } },
@@ -117,6 +119,7 @@ const COPY = {
 };
 
 const PLAYABLE = ["whoami", "crocodile", "alias", "truth"];
+const ROUND_OPTIONS = [30, 60, 90, 120];
 const RM = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const shuffle = (a) => a.map((v) => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map((x) => x[1]);
 const go = (id) => document.querySelector(id)?.scrollIntoView({ behavior: RM ? "auto" : "smooth" });
@@ -367,6 +370,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
   const [enc, setEnc] = useState(false);
   const [exit, setExit] = useState(null);
   const [score, setScore] = useState({ got: 0, skipped: 0 });
+  const [roundSeconds, setRoundSeconds] = useState(60);
   const [left, setLeft] = useState(60);
   const [running, setRunning] = useState(false);
   const [playerNames, setPlayerNames] = useState("Nickolas\nSofia\nDmytro");
@@ -400,7 +404,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
   const reveal = () => {
     if (shown || exit || !word) return;
     setShown(true);
-    if (!running && left === 60) setRunning(true);
+    if (!running && left === roundSeconds) setRunning(true);
     if (RM) { setText(word); return; }
     setEnc(true);
     let f = 0;
@@ -425,9 +429,15 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
   const cardStyle = (i) => i === 0 && exit
     ? { transform: `translate(${exit === "skip" ? "-" : ""}130%,-20px) rotate(${exit === "skip" ? -12 : 12}deg)`, opacity: 0 }
     : { transform: `translateY(${i * 14}px) scale(${1 - i * 0.05})`, opacity: 1 - i * 0.25 };
+  const changeRoundSeconds = (value) => {
+    const seconds = Math.max(10, Math.min(600, Number(value) || 10));
+    setRoundSeconds(seconds);
+    setLeft(seconds);
+    setRunning(false);
+  };
 
   const toggleTimer = () => {
-    if (running || left < 60) { setRunning(false); setLeft(60); } else setRunning(true);
+    if (running || left !== roundSeconds) { setRunning(false); setLeft(roundSeconds); } else setRunning(true);
   };
 
   const allWhoAmIWords = whoAmIWordPool;
@@ -517,8 +527,15 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
           </div>
           <div className="timer">
             <b>{left}</b>
-            <div className="tbar"><i style={{ transform: `scaleX(${left / 60})` }} /></div>
-            <button className="btn sm" onClick={toggleTimer}>{running || left < 60 ? t.reset : t.startTimer}</button>
+            <div className="tbar"><i style={{ transform: `scaleX(${Math.max(0, Math.min(1, left / roundSeconds))})` }} /></div>
+            <button className="btn sm" onClick={toggleTimer}>{running || left !== roundSeconds ? t.reset : t.startTimer}</button>
+          </div>
+          <div className="timer-options" aria-label={t.timerDuration}>
+            <span>{t.timerDuration}</span>
+            {ROUND_OPTIONS.map((seconds) => (
+              <button key={seconds} className="chip" aria-pressed={seconds === roundSeconds} onClick={() => changeRoundSeconds(seconds)}>{seconds}{t.sec}</button>
+            ))}
+            <input type="number" min="10" max="600" step="5" value={roundSeconds} aria-label={t.timerDuration} onChange={(e) => changeRoundSeconds(e.target.value)} />
           </div>
           {game === "whoami" && (
             <div className="players-panel">

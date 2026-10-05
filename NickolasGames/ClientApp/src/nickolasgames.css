@@ -53,7 +53,7 @@ section.s{padding:96px 0}
 .timer{margin-top:26px;display:flex;align-items:center;gap:14px;font-size:15px;color:var(--mut)}
 .timer b{font-size:34px;color:var(--fg);font-variant-numeric:tabular-nums;min-width:2.6ch}
 .tbar{flex:1;height:3px;background:var(--line);border-radius:3px;overflow:hidden}
-.tbar i{display:block;height:100%;width:100%;background:var(--acc);transform-origin:left}
+.tbar i{display:block;height:100%;width:100%;background:var(--acc);transform-origin:left}.timer-options{margin-top:12px;display:flex;align-items:center;flex-wrap:wrap;gap:8px;color:var(--mut);font-size:14px}.timer-options span{font-weight:700;color:var(--fg);margin-right:2px}.timer-options input{width:76px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--fg);padding:8px 10px;font:inherit;font-weight:700;text-align:center;outline:none}.timer-options input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(0,151,255,.16)}
 .deck{position:relative;width:min(100%,360px);height:440px;margin:0 auto}
 .card{position:absolute;inset:0;border:1px solid var(--line);border-radius:22px;background:linear-gradient(160deg,#f7fbff,#CCE6FF);box-shadow:0 18px 40px -22px rgba(0,80,125,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px;transition:transform .5s cubic-bezier(.2,.8,.2,1),opacity .5s;touch-action:manipulation}
 .card small{position:absolute;top:22px;left:24px;color:var(--mut);font-size:14px}
