@@ -1,0 +1,6 @@
+@NickolasGames_HostAddress = http://localhost:5118
+
+GET {{NickolasGames_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

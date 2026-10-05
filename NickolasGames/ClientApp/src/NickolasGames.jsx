@@ -1,0 +1,293 @@
+import { useEffect, useRef, useState } from "react";
+import { CloudShader } from "@/components/ui/cloud-shader";
+import "./nickolasgames.css";
+
+/* ---------- data ---------- */
+const GAMES = {
+  whoami: { n: "Who Am I?", d: "Guess the person, character or object on your card.", p: "2–10 players", t: "10 min",
+    c: { People: ["Movie director", "Astronaut", "Chess champion", "Street musician", "Pizza chef"], Characters: ["Sherlock Holmes", "Robot butler", "Pirate captain", "Wizard", "Detective"], Objects: ["Airplane", "Umbrella", "Lighthouse", "Vinyl record", "Compass"] } },
+  crocodile: { n: "Crocodile", d: "Act out words without speaking.", p: "3–12 players", t: "15 min",
+    c: { Animals: ["Elephant", "Penguin", "Octopus", "Flamingo", "Kangaroo"], Jobs: ["Movie director", "Pizza chef", "Pilot", "Barista", "Magician"], Things: ["Airplane", "Robot", "Bicycle", "Skateboard", "Elevator"] } },
+  alias: { n: "Alias", d: "Explain words fast and score points with your team.", p: "4–12 players", t: "20 min",
+    c: { Everyday: ["Breakfast", "Traffic", "Umbrella", "Weekend", "Passport"], Travel: ["Airport", "Luggage", "Harbour", "Ticket", "Border"], Work: ["Deadline", "Meeting", "Budget", "Feedback", "Launch"] } },
+  truth: { n: "Truth or Dare", d: "Clean, modern prompts for friends and parties.", p: "3–10 players", t: "20 min",
+    c: { Truth: ["What skill do you wish you had?", "Which message did you reread most this week?", "What is your most useless talent?"], Dare: ["Speak only in questions for two minutes.", "Do your best movie-trailer voice.", "Swap seats with the person on your left."] } },
+  random: { n: "Random Game", d: "Let the system pick what to play next.", p: "2–12 players", t: "Any", c: null },
+};
+const PLAYABLE = ["whoami", "crocodile", "alias", "truth"];
+
+const TESTIMONIALS = [
+  ["Sofia", "Sweden", "We used Who Am I? during a team evening. It was simple, fast and genuinely fun.", "Who Am I?"],
+  ["Dmytro", "Ukraine", "Crocodile worked perfectly from one phone at a house party.", "Crocodile"],
+  ["Lena", "Germany", "Alias became our quick icebreaker before meetings.", "Alias"],
+  ["Marta", "Poland", "Truth or Dare felt clean and modern, not awkward.", "Truth or Dare"],
+  ["Ethan", "United States", "We cast it to the TV at game night and everyone jumped in.", "Random Game"],
+  ["James", "United Kingdom", "The card flow made it easy for everyone to join.", "Crocodile"],
+  ["Carmen", "Spain", "Perfect for dinner with friends. No setup, just play.", "Who Am I?"],
+  ["Giulia", "Italy", "Our family played Alias for an hour and nobody wanted to stop.", "Alias"],
+];
+
+const RM = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const shuffle = (a) => a.map((v) => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map((x) => x[1]);
+const go = (id) => document.querySelector(id)?.scrollIntoView({ behavior: RM ? "auto" : "smooth" });
+const pickRandom = () => PLAYABLE[Math.floor(Math.random() * PLAYABLE.length)];
+
+/* ---------- sections ---------- */
+function Hero() {
+  return (
+    <header className="hero">
+      <CloudShader className="cloud-backdrop" speed={0.7} count={6} cloudColor="#f7fbff" skyTopColor="#8EC8FF" skyBottomColor="#CCE6FF" />
+      <div className="wrap">
+        <h1>Games for real moments.</h1>
+        <p>Simple web games for friends, teams and parties.</p>
+        <div className="cta-row">
+          <button className="btn pri" onClick={() => go("#preview")}>Start playing</button>
+          <button className="btn" onClick={() => go("#games")}>Explore games</button>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function PlaneFlight() {
+  const root = useRef(null), plane = useRef(null), trail = useRef(null), title = useRef(null);
+  useEffect(() => {
+    if (RM) return;
+    const X = (t) => -0.05 + 1.1 * t, Y = (t) => 0.85 - 0.7 * t - 0.08 * Math.sin(Math.PI * t * 2);
+    const fly = () => {
+      const r = root.current.getBoundingClientRect(), vh = innerHeight, W = innerWidth;
+      const p = Math.min(1, Math.max(0, -r.top / (r.height - vh)));
+      let d = "";
+      for (let i = 0; i <= 40; i++) { const t = (p * i) / 40; d += (i ? "L" : "M") + (X(t) * 100).toFixed(2) + " " + (Y(t) * 100).toFixed(2); }
+      trail.current.setAttribute("d", d);
+      const e = 0.01, dx = (X(p + e) - X(p)) * W, dy = (Y(p + e) - Y(p)) * vh;
+      const el = plane.current;
+      el.style.left = X(p) * 100 + "%"; el.style.top = Y(p) * 100 + "%";
+      el.style.transform = `rotate(${(Math.atan2(dy, dx) * 180) / Math.PI + 45}deg)`;
+      title.current.style.opacity = Math.min(1, p * 3) * Math.min(1, (1 - p) * 4);
+    };
+    addEventListener("scroll", fly, { passive: true }); addEventListener("resize", fly); fly();
+    return () => { removeEventListener("scroll", fly); removeEventListener("resize", fly); };
+  }, []);
+  if (RM) return null;
+  return (
+    <div className="flight" ref={root} aria-hidden="true">
+      <div className="stage">
+        <svg className="trail" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <path ref={trail} fill="none" stroke="#0097FF" strokeWidth="1.2" vectorEffect="non-scaling-stroke" strokeLinecap="round" opacity=".7" />
+        </svg>
+        <h2 ref={title}>Step into the game world.</h2>
+        <svg ref={plane} className="plane" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round">
+          <path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z" />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+function GamesGrid({ onPlay }) {
+  const ref = useRef(null);
+  const [seen, setSeen] = useState(false);
+  useEffect(() => {
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setSeen(true); io.disconnect(); } }, { threshold: 0.1 });
+    io.observe(ref.current);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <section className="s" id="games">
+      <div className="wrap">
+        <div className="head"><h2>Pick your game.</h2><p>Five ways to get a room talking, laughing and moving.</p></div>
+        <div ref={ref} className={"grid reveal-games" + (seen ? " in" : "")}>
+          {Object.entries(GAMES).map(([k, g]) => (
+            <article className="gc" key={k}>
+              <h3>{g.n}</h3><p>{g.d}</p>
+              <div className="meta"><span>{g.p}</span><span>{g.t}</span></div>
+              <button className="btn sm" onClick={() => onPlay(k)} aria-label={`Play ${g.n}`}>Play</button>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const SCRAMBLE = "▓▒░#@$%&*+?";
+
+function CardStackPreview({ game, onGame }) {
+  const cats = Object.keys(GAMES[game].c);
+  const [cat, setCat] = useState(cats[0]);
+  const [queue, setQueue] = useState([]);
+  const [idx, setIdx] = useState(0);
+  const [shown, setShown] = useState(false);
+  const [text, setText] = useState("");
+  const [enc, setEnc] = useState(false);
+  const [exit, setExit] = useState(null);
+  const [score, setScore] = useState({ got: 0, skipped: 0 });
+  const [left, setLeft] = useState(60);
+  const [running, setRunning] = useState(false);
+  const scr = useRef(0);
+
+  useEffect(() => { setCat(Object.keys(GAMES[game].c)[0]); }, [game]);
+  useEffect(() => {
+    clearInterval(scr.current);
+    setQueue(shuffle(GAMES[game].c[cat] || []));
+    setIdx(0); setShown(false); setExit(null); setEnc(false); setScore({ got: 0, skipped: 0 });
+  }, [game, cat]);
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => setLeft((l) => { if (l <= 1) { setRunning(false); return 0; } return l - 1; }), 1000);
+    return () => clearInterval(id);
+  }, [running]);
+  useEffect(() => () => clearInterval(scr.current), []);
+
+  const word = queue.length ? queue[idx % queue.length] : "";
+
+  const reveal = () => {
+    if (shown || exit || !word) return;
+    setShown(true);
+    if (!running && left === 60) setRunning(true);
+    if (RM) { setText(word); return; }
+    setEnc(true);
+    let f = 0;
+    const N = 22;
+    scr.current = setInterval(() => {
+      f++;
+      const r = Math.floor((f / N) * word.length * 1.4);
+      setText([...word].map((ch, i) => (ch === " " ? " " : i < r ? ch : SCRAMBLE[Math.floor(Math.random() * SCRAMBLE.length)])).join(""));
+      if (f >= N || r >= word.length) { clearInterval(scr.current); setEnc(false); setText(word); }
+    }, 34);
+  };
+
+  const advance = (dir) => {
+    if (exit || !word) return;
+    if (!shown && dir === "next") return reveal();
+    clearInterval(scr.current);
+    setExit(dir);
+    setScore((s) => (dir === "skip" ? { ...s, skipped: s.skipped + 1 } : { ...s, got: s.got + 1 }));
+    setTimeout(() => { setIdx((i) => i + 1); setShown(false); setEnc(false); setExit(null); }, RM ? 0 : 380);
+  };
+
+  const cardStyle = (i) => {
+    if (i === 0 && exit) {
+      return { transform: `translate(${exit === "skip" ? "-" : ""}130%,-20px) rotate(${exit === "skip" ? -12 : 12}deg)`, opacity: 0 };
+    }
+    return { transform: `translateY(${i * 14}px) scale(${1 - i * 0.05})`, opacity: 1 - i * 0.25 };
+  };
+
+  const toggleTimer = () => {
+    if (running || left < 60) { setRunning(false); setLeft(60); } else setRunning(true);
+  };
+
+  return (
+    <section className="s pv" id="preview">
+      <div className="wrap pvg">
+        <div>
+          <div className="head" style={{ margin: 0 }}><h2>Try it right here.</h2><p>Reveal a card, act it out, then draw the next one.</p></div>
+          <div className="tabs" role="group" aria-label="Game">
+            {PLAYABLE.map((k) => <button key={k} className="chip" aria-pressed={k === game} onClick={() => onGame(k)}>{GAMES[k].n}</button>)}
+            <button className="chip" aria-pressed="false" onClick={() => onGame("random")}>Random</button>
+          </div>
+          <div className="cats" role="group" aria-label="Category">
+            {cats.map((c) => <button key={c} className="chip" aria-pressed={c === cat} onClick={() => setCat(c)}>{c}</button>)}
+          </div>
+          <div className="timer">
+            <b>{left}</b>
+            <div className="tbar"><i style={{ transform: `scaleX(${left / 60})` }} /></div>
+            <button className="btn sm" onClick={toggleTimer}>{running || left < 60 ? "Reset" : "Start timer"}</button>
+          </div>
+        </div>
+        <div>
+          <div className="deck" aria-live="polite">
+            {queue.length > 0 && [2, 1, 0].map((i) => {
+              const k = idx + i;
+              return (
+                <div key={k} className="card" style={cardStyle(i)} onClick={i === 0 ? reveal : undefined}>
+                  <small>{GAMES[game].n} · {cat}</small>
+                  {i === 0 && shown
+                    ? <div className={"w" + (enc ? " enc" : "")}>{text}</div>
+                    : <div className="w hid">Tap to reveal</div>}
+                </div>
+              );
+            })}
+          </div>
+          <div className="ctrl">
+            <button className="btn pri" onClick={reveal}>Reveal</button>
+            <button className="btn" onClick={() => advance("next")}>Next</button>
+            <button className="btn" onClick={() => advance("skip")}>Skip</button>
+          </div>
+          <div className="score">Guessed {score.got} · Skipped {score.skipped}</div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HowItWorks() {
+  return (
+    <section className="s">
+      <div className="wrap">
+        <div className="head"><h2>How it works</h2></div>
+        <div className="steps">
+          <div><h3>Choose a game</h3><p>Pick one of five games, or let the system choose for you.</p></div>
+          <div><h3>Set players and time</h3><p>Decide how many people are playing and how long each round lasts.</p></div>
+          <div><h3>Play from one phone or screen</h3><p>Pass the device around or cast it to a TV. Nobody needs to install anything.</p></div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Testimonials() {
+  const items = RM ? TESTIMONIALS : [...TESTIMONIALS, ...TESTIMONIALS];
+  return (
+    <section className="s" style={{ paddingTop: 20 }}>
+      <div className="wrap"><div className="head"><h2>Played around the world.</h2></div></div>
+      <div className="mq">
+        <div className="mt">
+          {items.map(([name, country, quote, game], i) => (
+            <figure className="tc" style={{ margin: 0 }} key={i}>
+              <q>“{quote}”</q>
+              <div><b>{name}, {country}</b>Played {game}</div>
+            </figure>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FinalCta() {
+  return (
+    <section className="fin">
+      <div className="wrap">
+        <h2>Ready to play?</h2>
+        <p>Pick a game, gather your people and start in seconds.</p>
+        <button className="btn pri" onClick={() => go("#preview")}>Start playing</button>
+      </div>
+    </section>
+  );
+}
+
+/* ---------- app ---------- */
+export default function NickolasGames() {
+  const [game, setGame] = useState("crocodile");
+  const choose = (k, scroll) => {
+    setGame(k === "random" ? pickRandom() : k);
+    if (scroll) go("#preview");
+  };
+  return (
+    <>
+      <nav>NickolasGames</nav>
+      <Hero />
+      <PlaneFlight />
+      <GamesGrid onPlay={(k) => choose(k, true)} />
+      <CardStackPreview game={game} onGame={(k) => choose(k, false)} />
+      <HowItWorks />
+      <Testimonials />
+      <FinalCta />
+      <footer>© 2026 NickolasGames. Games for real moments.</footer>
+    </>
+  );
+}
+
+

@@ -1,0 +1,10 @@
+.vs/
+**/bin/
+**/obj/
+**/node_modules/
+**/wwwroot/assets/*.map
+*.user
+*.suo
+.DS_Store
+.env
+.env.*
