@@ -228,6 +228,7 @@ const PLAYER_SETUP = {
     customLabel: "Свої слова для карток",
     customPlaceholder: "Футболіст\nВчитель\nMinecraft",
     customHint: "Кожне слово з нового рядка або через кому.",
+    onlyCustom: "Використовувати тільки свої слова",
     assign: "Random картки",
     hideAll: "Сховати всі",
     show: "Показати слово",
@@ -254,6 +255,7 @@ const PLAYER_SETUP = {
     customLabel: "Custom card words",
     customPlaceholder: "Footballer\nTeacher\nMinecraft",
     customHint: "One word per line or separated by commas.",
+    onlyCustom: "Use only custom words",
     assign: "Random cards",
     hideAll: "Hide all",
     show: "Show word",
@@ -280,6 +282,7 @@ const PLAYER_SETUP = {
     customLabel: "Egna kortord",
     customPlaceholder: "Fotbollsspelare\nLärare\nMinecraft",
     customHint: "Ett ord per rad eller separerat med kommatecken.",
+    onlyCustom: "Använd bara egna ord",
     assign: "Slumpa kort",
     hideAll: "Dölj alla",
     show: "Visa ord",
@@ -306,6 +309,7 @@ const PLAYER_SETUP = {
     customLabel: "Eigene Kartenwörter",
     customPlaceholder: "Fußballer\nLehrer\nMinecraft",
     customHint: "Ein Wort pro Zeile oder durch Kommas getrennt.",
+    onlyCustom: "Nur eigene Wörter verwenden",
     assign: "Zufällige Karten",
     hideAll: "Alle verbergen",
     show: "Wort zeigen",
@@ -332,6 +336,7 @@ const PLAYER_SETUP = {
     customLabel: "Palabras propias",
     customPlaceholder: "Futbolista\nProfesor\nMinecraft",
     customHint: "Una palabra por línea o separadas por comas.",
+    onlyCustom: "Usar solo palabras propias",
     assign: "Tarjetas aleatorias",
     hideAll: "Ocultar todo",
     show: "Mostrar palabra",
@@ -366,6 +371,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
   const [running, setRunning] = useState(false);
   const [playerNames, setPlayerNames] = useState("Nickolas\nSofia\nDmytro");
   const [customWords, setCustomWords] = useState("");
+  const [customOnly, setCustomOnly] = useState(false);
   const [assignments, setAssignments] = useState([]);
   const [visibleCards, setVisibleCards] = useState({});
   const [pendingWords, setPendingWords] = useState({});
@@ -374,13 +380,14 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
   const playerCopy = PLAYER_SETUP[lang] || PLAYER_SETUP.en;
 
   const parsedCustomWords = useMemo(() => [...new Set(customWords.split(/[\n,]+/).map((word) => word.trim()).filter(Boolean))], [customWords]);
+  const whoAmIWordPool = useMemo(() => customOnly ? parsedCustomWords : [...new Set([...Object.values(games.whoami.c).flat(), ...parsedCustomWords])], [customOnly, games, parsedCustomWords]);
 
   useEffect(() => { setCat(Object.keys(games[game].c)[0]); }, [game, games]);
   useEffect(() => {
     clearInterval(scr.current);
-    setQueue(shuffle(game === "whoami" ? [...new Set([...(games[game].c[cat] || []), ...parsedCustomWords])] : (games[game].c[cat] || [])));
+    setQueue(shuffle(game === "whoami" ? (customOnly ? parsedCustomWords : [...new Set([...(games[game].c[cat] || []), ...parsedCustomWords])]) : (games[game].c[cat] || [])));
     setIdx(0); setShown(false); setExit(null); setEnc(false); setText(""); setScore({ got: 0, skipped: 0 }); setAssignments([]); setVisibleCards({}); setPendingWords({}); setDealWarning("");
-  }, [game, cat, games, parsedCustomWords]);
+  }, [game, cat, games, parsedCustomWords, customOnly]);
   useEffect(() => {
     if (!running) return;
     const id = setInterval(() => setLeft((l) => { if (l <= 1) { setRunning(false); return 0; } return l - 1; }), 1000);
@@ -423,7 +430,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
     if (running || left < 60) { setRunning(false); setLeft(60); } else setRunning(true);
   };
 
-  const allWhoAmIWords = useMemo(() => [...new Set([...Object.values(games.whoami.c).flat(), ...parsedCustomWords])], [games, parsedCustomWords]);
+  const allWhoAmIWords = whoAmIWordPool;
   const parsedNames = playerNames.split(/[\n,]+/).map((name) => name.trim()).filter(Boolean);
   const dealWhoAmICards = () => {
     if (!parsedNames.length) {
@@ -433,8 +440,8 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
       return;
     }
     const categories = games.whoami.c;
-    const preferredWords = [...(categories[cat] || []), ...parsedCustomWords];
-    const fallbackWords = Object.entries(categories)
+    const preferredWords = customOnly ? parsedCustomWords : [...(categories[cat] || []), ...parsedCustomWords];
+    const fallbackWords = customOnly ? [] : Object.entries(categories)
       .filter(([category]) => category !== cat)
       .flatMap(([, words]) => words);
     const uniqueWords = [...new Set([...shuffle(preferredWords), ...shuffle(fallbackWords)])];
@@ -522,6 +529,10 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
               <label className="players-label" htmlFor="custom-words">{playerCopy.customLabel}</label>
               <textarea id="custom-words" className="custom-words" value={customWords} placeholder={playerCopy.customPlaceholder} onChange={(e) => setCustomWords(e.target.value)} />
               <div className="players-note">{playerCopy.customHint}</div>
+              <label className="only-custom">
+                <input type="checkbox" checked={customOnly} onChange={(e) => setCustomOnly(e.target.checked)} />
+                <span>{playerCopy.onlyCustom}</span>
+              </label>
               <div className="players-actions">
                 <button className="btn pri sm" onClick={dealWhoAmICards}>{playerCopy.assign}</button>
                 <button className="btn sm" onClick={() => setVisibleCards({})}>{playerCopy.hideAll}</button>
