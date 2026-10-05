@@ -241,6 +241,10 @@ const PLAYER_SETUP = {
     giveUp: "Здаюся",
     gaveUpWord: "Слово було",
     noNewWord: "Немає нового унікального слова для цього гравця.",
+    manualLabel: "Нове слово для цього гравця",
+    manualPlaceholder: "Введи слово",
+    manualAssign: "Дати слово",
+    manualDuplicate: "Це слово вже активне або вже було в цього гравця.",
   },
   en: {
     title: "Deal cards to players",
@@ -263,6 +267,10 @@ const PLAYER_SETUP = {
     giveUp: "Give up",
     gaveUpWord: "The word was",
     noNewWord: "There is no new unique word for this player.",
+    manualLabel: "New word for this player",
+    manualPlaceholder: "Enter a word",
+    manualAssign: "Give word",
+    manualDuplicate: "This word is already active or was already used by this player.",
   },
   sv: {
     title: "Dela ut kort till spelare",
@@ -285,6 +293,10 @@ const PLAYER_SETUP = {
     giveUp: "Ger upp",
     gaveUpWord: "Ordet var",
     noNewWord: "Det finns inget nytt unikt ord för den här spelaren.",
+    manualLabel: "Nytt ord för den här spelaren",
+    manualPlaceholder: "Skriv ett ord",
+    manualAssign: "Ge ord",
+    manualDuplicate: "Det ordet är redan aktivt eller har redan använts av spelaren.",
   },
   de: {
     title: "Karten an Spieler verteilen",
@@ -307,6 +319,10 @@ const PLAYER_SETUP = {
     giveUp: "Ich gebe auf",
     gaveUpWord: "Das Wort war",
     noNewWord: "Es gibt kein neues einzigartiges Wort für diesen Spieler.",
+    manualLabel: "Neues Wort für diesen Spieler",
+    manualPlaceholder: "Wort eingeben",
+    manualAssign: "Wort geben",
+    manualDuplicate: "Dieses Wort ist bereits aktiv oder wurde von diesem Spieler schon verwendet.",
   },
   es: {
     title: "Repartir tarjetas a jugadores",
@@ -329,6 +345,10 @@ const PLAYER_SETUP = {
     giveUp: "Me rindo",
     gaveUpWord: "La palabra era",
     noNewWord: "No hay una palabra única nueva para este jugador.",
+    manualLabel: "Nueva palabra para este jugador",
+    manualPlaceholder: "Escribe una palabra",
+    manualAssign: "Dar palabra",
+    manualDuplicate: "Esta palabra ya está activa o ya fue usada por este jugador.",
   },
 };
 
@@ -348,6 +368,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
   const [customWords, setCustomWords] = useState("");
   const [assignments, setAssignments] = useState([]);
   const [visibleCards, setVisibleCards] = useState({});
+  const [pendingWords, setPendingWords] = useState({});
   const [dealWarning, setDealWarning] = useState("");
   const scr = useRef(0);
   const playerCopy = PLAYER_SETUP[lang] || PLAYER_SETUP.en;
@@ -358,7 +379,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
   useEffect(() => {
     clearInterval(scr.current);
     setQueue(shuffle(game === "whoami" ? [...new Set([...(games[game].c[cat] || []), ...parsedCustomWords])] : (games[game].c[cat] || [])));
-    setIdx(0); setShown(false); setExit(null); setEnc(false); setText(""); setScore({ got: 0, skipped: 0 }); setAssignments([]); setVisibleCards({}); setDealWarning("");
+    setIdx(0); setShown(false); setExit(null); setEnc(false); setText(""); setScore({ got: 0, skipped: 0 }); setAssignments([]); setVisibleCards({}); setPendingWords({}); setDealWarning("");
   }, [game, cat, games, parsedCustomWords]);
   useEffect(() => {
     if (!running) return;
@@ -425,6 +446,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
     }));
     setAssignments(dealt);
     setVisibleCards({});
+    setPendingWords({});
     setDealWarning(parsedNames.length > uniqueWords.length ? playerCopy.notEnough : "");
   };
 
@@ -446,11 +468,33 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
     }
     setAssignments((current) => current.map((item) => item.id === id ? { ...item, word: nextWord, lastWord: item.word, lastOutcome: outcome, usedWords: [...new Set([...(item.usedWords || []), item.word, nextWord])] } : item));
     setVisibleCards((current) => ({ ...current, [id]: false }));
+    setPendingWords((current) => ({ ...current, [id]: "" }));
     setDealWarning("");
   };
 
   const markAssignedGuessed = (id) => finishAssignedCard(id, "guessed");
   const markAssignedGivenUp = (id) => finishAssignedCard(id, "gaveUp");
+
+  const updatePendingWord = (id, value) => {
+    setPendingWords((current) => ({ ...current, [id]: value }));
+  };
+
+  const assignManualWord = (id) => {
+    const word = (pendingWords[id] || "").trim();
+    const target = assignments.find((item) => item.id === id);
+    if (!word || !target) return;
+    const activeWords = new Set(assignments.filter((item) => item.id !== id).map((item) => item.word.toLocaleLowerCase()));
+    const usedByPlayer = new Set((target.usedWords || [target.word]).map((item) => item.toLocaleLowerCase()));
+    const normalized = word.toLocaleLowerCase();
+    if (activeWords.has(normalized) || usedByPlayer.has(normalized)) {
+      setDealWarning(playerCopy.manualDuplicate);
+      return;
+    }
+    setAssignments((current) => current.map((item) => item.id === id ? { ...item, word, lastWord: item.word, lastOutcome: "manual", usedWords: [...new Set([...(item.usedWords || []), item.word, word])] } : item));
+    setVisibleCards((current) => ({ ...current, [id]: false }));
+    setPendingWords((current) => ({ ...current, [id]: "" }));
+    setDealWarning("");
+  };
 
   return (
     <section className="s pv" id="preview">
@@ -519,6 +563,13 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
                       <button className="btn sm" onClick={() => toggleAssignedCard(item.id)}>{isVisible ? playerCopy.hide : playerCopy.show}</button>
                       <button className="btn pri sm" onClick={() => markAssignedGuessed(item.id)}>{playerCopy.guessed}</button>
                       <button className="btn sm" onClick={() => markAssignedGivenUp(item.id)}>{playerCopy.giveUp}</button>
+                    </div>
+                    <div className="manual-word">
+                      <label htmlFor={`manual-${item.id}`}>{playerCopy.manualLabel}</label>
+                      <div>
+                        <input id={`manual-${item.id}`} value={pendingWords[item.id] || ""} placeholder={playerCopy.manualPlaceholder} onChange={(e) => updatePendingWord(item.id, e.target.value)} />
+                        <button className="btn sm" onClick={() => assignManualWord(item.id)}>{playerCopy.manualAssign}</button>
+                      </div>
                     </div>
                   </article>
                 );
