@@ -393,6 +393,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
       id: `${name}-${i}-${Date.now()}`,
       name,
       word: uniqueWords[i],
+      usedWords: [uniqueWords[i]],
     }));
     setAssignments(dealt);
     setVisibleCards({});
@@ -407,14 +408,15 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
     const target = assignments.find((item) => item.id === id);
     if (!target) return;
     const activeWords = new Set(assignments.filter((item) => item.id !== id).map((item) => item.word));
-    const nextWord = shuffle(allWhoAmIWords).find((candidate) => candidate !== target.word && !activeWords.has(candidate));
+    const usedByPlayer = new Set(target.usedWords || [target.word]);
+    const nextWord = shuffle(allWhoAmIWords).find((candidate) => !usedByPlayer.has(candidate) && !activeWords.has(candidate));
     if (!nextWord) {
-      setAssignments((current) => current.map((item) => item.id === id ? { ...item, lastGuessed: item.word } : item));
+      setAssignments((current) => current.map((item) => item.id === id ? { ...item, lastGuessed: item.word, usedWords: [...new Set([...(item.usedWords || []), item.word])] } : item));
       setVisibleCards((current) => ({ ...current, [id]: false }));
       setDealWarning(playerCopy.noNewWord);
       return;
     }
-    setAssignments((current) => current.map((item) => item.id === id ? { ...item, word: nextWord, lastGuessed: item.word } : item));
+    setAssignments((current) => current.map((item) => item.id === id ? { ...item, word: nextWord, lastGuessed: item.word, usedWords: [...new Set([...(item.usedWords || []), item.word, nextWord])] } : item));
     setVisibleCards((current) => ({ ...current, [id]: false }));
     setDealWarning("");
   };
