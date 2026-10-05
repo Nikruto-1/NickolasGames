@@ -152,7 +152,7 @@ function PlaneFlight({ title }) {
       const e = 0.01, dx = (X(p + e) - X(p)) * W, dy = (Y(p + e) - Y(p)) * vh;
       const el = plane.current;
       el.style.left = X(p) * 100 + "%"; el.style.top = Y(p) * 100 + "%";
-      el.style.transform = `rotate(${(Math.atan2(dy, dx) * 180) / Math.PI + 45}deg)`;
+      el.style.transform = `rotate(${(Math.atan2(dy, dx) * 180) / Math.PI}deg)`;
       heading.current.style.opacity = Math.min(1, p * 3) * Math.min(1, (1 - p) * 4);
     };
     addEventListener("scroll", fly, { passive: true }); addEventListener("resize", fly); fly();
@@ -166,7 +166,27 @@ function PlaneFlight({ title }) {
           <path ref={trail} fill="none" stroke="#0097FF" strokeWidth="1.2" vectorEffect="non-scaling-stroke" strokeLinecap="round" opacity=".7" />
         </svg>
         <h2 ref={heading}>{title}</h2>
-        <svg ref={plane} className="plane" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
+                <svg ref={plane} className="plane" viewBox="0 0 120 72" role="img" aria-label="Airplane">
+          <defs>
+            <linearGradient id="planeBody" x1="18" x2="108" y1="34" y2="34" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#ffffff" />
+              <stop offset="0.55" stopColor="#d9efff" />
+              <stop offset="1" stopColor="#7bbcff" />
+            </linearGradient>
+            <linearGradient id="planeWing" x1="38" x2="68" y1="22" y2="62" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#f7fbff" />
+              <stop offset="1" stopColor="#0097FF" />
+            </linearGradient>
+          </defs>
+          <path className="plane-shadow" d="M18 44c22 11 62 12 88-1" />
+          <path className="plane-wing back" d="M45 37 18 62h18l38-22z" />
+          <path className="plane-body" d="M8 36c15-10 58-18 94-13 7 1 12 6 12 10s-5 8-12 9c-36 5-79-3-94-13-4-3-4-7 0-10z" />
+          <path className="plane-nose" d="M96 24c12 2 18 6 18 9s-6 7-18 9c4-5 4-13 0-18z" />
+          <path className="plane-wing front" d="M47 34 23 10h18l36 22z" />
+          <path className="plane-tail" d="M24 30 9 15h14l20 16zM24 42 9 57h14l20-16z" />
+          <path className="plane-window" d="M76 26c6 0 11 1 16 3" />
+          <path className="plane-highlight" d="M18 32c20-6 47-9 74-6" />
+        </svg>
       </div>
     </div>
   );
@@ -386,3 +406,4 @@ export default function NickolasGames() {
     </>
   );
 }
+
