@@ -233,6 +233,9 @@ const PLAYER_SETUP = {
     hidden: "Приховано від гравця",
     empty: "Додай хоча б одне ім'я.",
     notEnough: "Унікальних карток менше, ніж гравців. Додай більше слів або прибери частину гравців.",
+    guessed: "Вгадав",
+    guessedWord: "Вгадане слово",
+    noNewWord: "Немає нового унікального слова для цього гравця.",
   },
   en: {
     title: "Deal cards to players",
@@ -247,6 +250,9 @@ const PLAYER_SETUP = {
     hidden: "Hidden from player",
     empty: "Add at least one name.",
     notEnough: "There are fewer unique cards than players. Add more words or remove some players.",
+    guessed: "Guessed",
+    guessedWord: "Guessed word",
+    noNewWord: "There is no new unique word for this player.",
   },
   sv: {
     title: "Dela ut kort till spelare",
@@ -261,6 +267,9 @@ const PLAYER_SETUP = {
     hidden: "Dolt för spelaren",
     empty: "Lägg till minst ett namn.",
     notEnough: "Det finns färre unika kort än spelare. Lägg till fler ord eller ta bort några spelare.",
+    guessed: "Gissade",
+    guessedWord: "Gissat ord",
+    noNewWord: "Det finns inget nytt unikt ord för den här spelaren.",
   },
   de: {
     title: "Karten an Spieler verteilen",
@@ -275,6 +284,9 @@ const PLAYER_SETUP = {
     hidden: "Vor dem Spieler verborgen",
     empty: "Füge mindestens einen Namen hinzu.",
     notEnough: "Es gibt weniger einzigartige Karten als Spieler. Füge mehr Wörter hinzu oder entferne einige Spieler.",
+    guessed: "Erraten",
+    guessedWord: "Erratenes Wort",
+    noNewWord: "Es gibt kein neues einzigartiges Wort für diesen Spieler.",
   },
   es: {
     title: "Repartir tarjetas a jugadores",
@@ -289,6 +301,9 @@ const PLAYER_SETUP = {
     hidden: "Oculta para el jugador",
     empty: "Añade al menos un nombre.",
     notEnough: "Hay menos tarjetas únicas que jugadores. Añade más palabras o elimina algunos jugadores.",
+    guessed: "Adivinó",
+    guessedWord: "Palabra adivinada",
+    noNewWord: "No hay una palabra única nueva para este jugador.",
   },
 };
 
@@ -359,6 +374,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
     if (running || left < 60) { setRunning(false); setLeft(60); } else setRunning(true);
   };
 
+  const allWhoAmIWords = useMemo(() => [...new Set(Object.values(games.whoami.c).flat())], [games]);
   const parsedNames = playerNames.split(/[\n,]+/).map((name) => name.trim()).filter(Boolean);
   const dealWhoAmICards = () => {
     if (!parsedNames.length) {
@@ -385,6 +401,22 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
 
   const toggleAssignedCard = (id) => {
     setVisibleCards((current) => ({ ...current, [id]: !current[id] }));
+  };
+
+  const markAssignedGuessed = (id) => {
+    const target = assignments.find((item) => item.id === id);
+    if (!target) return;
+    const activeWords = new Set(assignments.filter((item) => item.id !== id).map((item) => item.word));
+    const nextWord = shuffle(allWhoAmIWords).find((candidate) => candidate !== target.word && !activeWords.has(candidate));
+    if (!nextWord) {
+      setAssignments((current) => current.map((item) => item.id === id ? { ...item, lastGuessed: item.word } : item));
+      setVisibleCards((current) => ({ ...current, [id]: false }));
+      setDealWarning(playerCopy.noNewWord);
+      return;
+    }
+    setAssignments((current) => current.map((item) => item.id === id ? { ...item, word: nextWord, lastGuessed: item.word } : item));
+    setVisibleCards((current) => ({ ...current, [id]: false }));
+    setDealWarning("");
   };
 
   return (
@@ -446,7 +478,11 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
                     <small>{playerCopy.forPlayer}</small>
                     <h3>{item.name}</h3>
                     <div className={"assigned-word" + (isVisible ? " visible" : "")}>{isVisible ? item.word : playerCopy.hidden}</div>
-                    <button className="btn sm" onClick={() => toggleAssignedCard(item.id)}>{isVisible ? playerCopy.hide : playerCopy.show}</button>
+                    {item.lastGuessed && <div className="assigned-solved">{playerCopy.guessedWord}: <b>{item.lastGuessed}</b></div>}
+                    <div className="assigned-actions">
+                      <button className="btn sm" onClick={() => toggleAssignedCard(item.id)}>{isVisible ? playerCopy.hide : playerCopy.show}</button>
+                      <button className="btn pri sm" onClick={() => markAssignedGuessed(item.id)}>{playerCopy.guessed}</button>
+                    </div>
                   </article>
                 );
               })}
