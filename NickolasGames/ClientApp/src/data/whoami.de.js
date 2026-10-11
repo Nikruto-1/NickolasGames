@@ -204,5 +204,34 @@ export const WHOAMI_DE = {
       "Zyklop",
       "Greif"
     ]
+  },
+  "Geografie": {
+    "easy": [
+      "Ukraine",
+      "Ägypten (Land der Pyramiden)",
+      "Paris (Stadt der Liebe und des Eiffelturms)",
+      "New York (Stadt der Wolkenkratzer)",
+      "London (Stadt mit Big Ben)",
+      "Rom (Hauptstadt Italiens)",
+      "Japan",
+      "China",
+      "USA",
+      "Australien (Land und Kontinent mit Kängurus)"
+    ],
+    "medium": [
+      "Eiffelturm (Paris, Frankreich)",
+      "Freiheitsstatue (New York, USA)",
+      "Cheops-Pyramide (Ägypten)",
+      "Chinesische Mauer (China)",
+      "Tokio (Japan)",
+      "Brasilien",
+      "Indien",
+      "Kanada",
+      "Venedig (Stadt auf dem Wasser)",
+      "Athen (Griechenland)",
+      "Island (Land der Geysire und Gletscher)",
+      "Antarktika (eisiger Kontinent)"
+    ],
+    "hard": []
   }
 };
