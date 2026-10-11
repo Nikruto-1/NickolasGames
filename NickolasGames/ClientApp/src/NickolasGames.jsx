@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { CloudShader } from "@/components/ui/cloud-shader";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { HolmesFloor } from "./components/HolmesFloor";
 import "./nickolasgames.css";
+import { HolmesIntro } from "./components/HolmesIntro";
 import { readValue, writeValue, readProgress } from "./utils/progress";
 import { AppStatus, PROGRESS_COPY } from "./components/AppStatus";
 import { CharadesGame } from "./components/CharadesGame";
@@ -27,71 +28,17 @@ const pickRandom = () => PLAYABLE[Math.floor(Math.random() * PLAYABLE.length)];
 
 function Hero({ t }) {
   return (
-    <header className="hero">
-      <CloudShader className="cloud-backdrop" speed={0.7} count={6} cloudColor="#f7fbff" skyTopColor="#8EC8FF" skyBottomColor="#CCE6FF" />
+    <header className="hero holmes-home">
       <div className="wrap">
-        <h1>{t.heroTitle}</h1>
+        <div className="hero-copy"><h1>{t.heroTitle}</h1>
         <p>{t.heroText}</p>
         <div className="cta-row">
           <button className="btn pri" onClick={() => go("#preview")}>{t.start}</button>
           <button className="btn" onClick={() => go("#games")}>{t.explore}</button>
-        </div>
+        </div></div>
+        <HolmesFloor games={t.games} />
       </div>
     </header>
-  );
-}
-
-function PlaneFlight({ title }) {
-  const root = useRef(null), plane = useRef(null), trail = useRef(null), heading = useRef(null);
-  useEffect(() => {
-    if (RM) return;
-    const X = (t) => -0.05 + 1.1 * t, Y = (t) => 0.85 - 0.7 * t - 0.08 * Math.sin(Math.PI * t * 2);
-    const fly = () => {
-      const r = root.current.getBoundingClientRect(), vh = innerHeight, W = innerWidth;
-      const p = Math.min(1, Math.max(0, -r.top / (r.height - vh)));
-      let d = "";
-      for (let i = 0; i <= 40; i++) { const t = (p * i) / 40; d += (i ? "L" : "M") + (X(t) * 100).toFixed(2) + " " + (Y(t) * 100).toFixed(2); }
-      trail.current.setAttribute("d", d);
-      const e = 0.01, dx = (X(p + e) - X(p)) * W, dy = (Y(p + e) - Y(p)) * vh;
-      const el = plane.current;
-      el.style.left = X(p) * 100 + "%"; el.style.top = Y(p) * 100 + "%";
-      el.style.transform = `rotate(${(Math.atan2(dy, dx) * 180) / Math.PI}deg)`;
-      heading.current.style.opacity = Math.min(1, p * 3) * Math.min(1, (1 - p) * 4);
-    };
-    addEventListener("scroll", fly, { passive: true }); addEventListener("resize", fly); fly();
-    return () => { removeEventListener("scroll", fly); removeEventListener("resize", fly); };
-  }, []);
-  if (RM) return null;
-  return (
-    <div className="flight" ref={root} aria-hidden="true">
-      <div className="stage">
-        <svg className="trail" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <path ref={trail} fill="none" stroke="#0097FF" strokeWidth="1.2" vectorEffect="non-scaling-stroke" strokeLinecap="round" opacity=".7" />
-        </svg>
-        <h2 ref={heading}>{title}</h2>
-                <svg ref={plane} className="plane" viewBox="0 0 120 72" role="img" aria-label="Airplane">
-          <defs>
-            <linearGradient id="planeBody" x1="18" x2="108" y1="34" y2="34" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#ffffff" />
-              <stop offset="0.55" stopColor="#d9efff" />
-              <stop offset="1" stopColor="#7bbcff" />
-            </linearGradient>
-            <linearGradient id="planeWing" x1="38" x2="68" y1="22" y2="62" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#f7fbff" />
-              <stop offset="1" stopColor="#0097FF" />
-            </linearGradient>
-          </defs>
-          <path className="plane-shadow" d="M18 44c22 11 62 12 88-1" />
-          <path className="plane-wing back" d="M45 37 18 62h18l38-22z" />
-          <path className="plane-body" d="M8 36c15-10 58-18 94-13 7 1 12 6 12 10s-5 8-12 9c-36 5-79-3-94-13-4-3-4-7 0-10z" />
-          <path className="plane-nose" d="M96 24c12 2 18 6 18 9s-6 7-18 9c4-5 4-13 0-18z" />
-          <path className="plane-wing front" d="M47 34 23 10h18l36 22z" />
-          <path className="plane-tail" d="M24 30 9 15h14l20 16zM24 42 9 57h14l20-16z" />
-          <path className="plane-window" d="M76 26c6 0 11 1 16 3" />
-          <path className="plane-highlight" d="M18 32c20-6 47-9 74-6" />
-        </svg>
-      </div>
-    </div>
   );
 }
 
@@ -480,6 +427,8 @@ function LanguageSwitcher({ lang, setLang, label }) {
 }
 
 export default function NickolasGames() {
+  const [showIntro, setShowIntro] = useState(true);
+  const finishIntro = useCallback(() => setShowIntro(false), []);
   const [lang, setLang] = useState(() => { try { const l = localStorage.getItem("nickolasgames-lang"); return COPY[l] ? l : "en"; } catch { return "en"; } });
   const [game, setGame] = useState(() => { const g = readValue("nickolasgames-active-game"); return PLAYABLE.includes(g) ? g : "crocodile"; });
   useEffect(() => { writeValue("nickolasgames-active-game", game); }, [game]);
@@ -496,10 +445,11 @@ export default function NickolasGames() {
 
   return (
     <>
+      {showIntro && <HolmesIntro lang={lang} onComplete={finishIntro} />}
+      <div inert={showIntro ? true : undefined}>
       <nav><span>NickolasGames</span><LanguageSwitcher lang={lang} setLang={setLang} label={t.language} /></nav>
       <AppStatus lang={lang} />
       <Hero t={t} />
-      <PlaneFlight title={t.flight} />
       <GamesGrid games={t.games} t={t} onPlay={(k) => choose(k, true)} />
       {game === "crocodile"
         ? <CharadesGame key={`${lang}-${game}`} games={t.games} t={t} lang={lang} onGame={(k) => choose(k, false)} />
@@ -507,7 +457,8 @@ export default function NickolasGames() {
       <HowItWorks t={t} />
       <Testimonials t={t} />
       <FinalCta t={t} />
-      <footer>{t.footer}</footer>
+      <footer>{t.footer}<button className="btn sm" onClick={() => setShowIntro(true)}>{({uk:"Холмс · 2D-вступ",en:"Holmes · 2D intro",sv:"Holmes · 2D-intro",de:"Holmes · 2D-Intro",es:"Holmes · Intro 2D"})[lang]}</button></footer>
+      </div>
     </>
   );
 }
