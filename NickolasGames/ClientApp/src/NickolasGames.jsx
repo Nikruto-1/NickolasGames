@@ -1,3 +1,4 @@
+import holmesLogo from './assets/holmes-logo.webp';
 import { createHolmesTimerSound, HOLMES_TIME_UP } from './utils/holmesTimerSound.js';
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { HolmesFloor } from "./components/HolmesFloor";
@@ -453,7 +454,7 @@ export default function NickolasGames() {
     <>
       {showIntro && <HolmesIntro lang={lang} onComplete={finishIntro} />}
       <div inert={showIntro ? true : undefined}>
-      <nav><span>NickolasGames</span><LanguageSwitcher lang={lang} setLang={setLang} label={t.language} /></nav>
+      <nav><a className="site-logo" href="#" aria-label="NickolasGames"><img src={holmesLogo} alt="NickolasGames" width="1024" height="341" /></a><LanguageSwitcher lang={lang} setLang={setLang} label={t.language} /></nav>
       <AppStatus lang={lang} />
       <Hero t={t} />
       <GamesGrid games={t.games} t={t} onPlay={(k) => choose(k, true)} />
