@@ -87,7 +87,6 @@ export const WHOAMI_ES = {
       "Pikachu (Pokémon)",
       "Sonic",
       "Mario",
-      "Luigi",
       "Pac-Man",
       "Ángel",
       "Demonio / Diablillo",
