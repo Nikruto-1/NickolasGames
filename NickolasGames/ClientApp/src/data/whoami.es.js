@@ -186,6 +186,11 @@ export const WHOAMI_ES = {
       "Viernes (Robinson Crusoe)",
       "Volodímir Zelenski (Presidente de Ucrania)"
     ],
-    "hard": []
+    "hard": [
+      "La mujer de las palomas (Solo en casa 2)",
+      "Dobby (Harry Potter)",
+      "Alfombra Mágica (Aladdín)",
+      "Groot (Guardianes de la Galaxia)"
+    ]
   }
 };

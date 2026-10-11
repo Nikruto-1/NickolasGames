@@ -186,6 +186,11 @@ export const WHOAMI_EN = {
       "Friday (Robinson Crusoe)",
       "Volodymyr Zelenskyy (President of Ukraine)"
     ],
-    "hard": []
+    "hard": [
+      "Pigeon Lady (Home Alone 2)",
+      "Dobby (Harry Potter)",
+      "Magic Carpet (Aladdin)",
+      "Groot (Guardians of the Galaxy)"
+    ]
   }
 };

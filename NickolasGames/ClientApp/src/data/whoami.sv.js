@@ -186,6 +186,11 @@ export const WHOAMI_SV = {
       "Fredag (Robinson Crusoe)",
       "Volodymyr Zelenskyj (Ukrainas president)"
     ],
-    "hard": []
+    "hard": [
+      "Duvdamen (Ensam hemma 2)",
+      "Dobby (Harry Potter)",
+      "Den flygande mattan (Aladdin)",
+      "Groot (Guardians of the Galaxy)"
+    ]
   }
 };

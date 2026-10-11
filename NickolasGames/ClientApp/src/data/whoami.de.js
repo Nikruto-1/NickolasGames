@@ -186,6 +186,11 @@ export const WHOAMI_DE = {
       "Freitag (Robinson Crusoe)",
       "Wolodymyr Selenskyj (Präsident der Ukraine)"
     ],
-    "hard": []
+    "hard": [
+      "Taubenfrau (Kevin – Allein in New York)",
+      "Dobby (Harry Potter)",
+      "Fliegender Teppich (Aladdin)",
+      "Groot (Guardians of the Galaxy)"
+    ]
   }
 };
