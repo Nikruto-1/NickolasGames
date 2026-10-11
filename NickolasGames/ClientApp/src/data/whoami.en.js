@@ -204,5 +204,34 @@ export const WHOAMI_EN = {
       "Cyclops",
       "Griffin"
     ]
+  },
+  "Geography": {
+    "easy": [
+      "Ukraine",
+      "Egypt (land of pyramids)",
+      "Paris (city of love and the Eiffel Tower)",
+      "New York (city of skyscrapers)",
+      "London (city of Big Ben)",
+      "Rome (capital of Italy)",
+      "Japan",
+      "China",
+      "USA",
+      "Australia (country and continent with kangaroos)"
+    ],
+    "medium": [
+      "Eiffel Tower (Paris, France)",
+      "Statue of Liberty (New York, USA)",
+      "Great Pyramid of Giza (Egypt)",
+      "Great Wall of China (China)",
+      "Tokyo (Japan)",
+      "Brazil",
+      "India",
+      "Canada",
+      "Venice (city on water)",
+      "Athens (Greece)",
+      "Iceland (land of geysers and glaciers)",
+      "Antarctica (icy continent)"
+    ],
+    "hard": []
   }
 };
