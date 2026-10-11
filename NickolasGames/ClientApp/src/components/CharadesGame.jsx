@@ -1,0 +1,160 @@
+import { useEffect, useReducer, useState } from 'react';
+import { CHARADES_COPY } from '../locales/charades.js';
+import { DIFFICULTIES } from '../utils/difficulty.js';
+import { POINTS_BY_DIFFICULTY, validTargetScore } from '../utils/playerScores.js';
+import { readValue, writeValue } from '../utils/progress.js';
+import { ALL_CHARADES_CATEGORIES, charadesReducer, createCharadesDeck, currentCharadesCard, deckReady, newCharadesState, validCharadesState } from '../utils/charades.js';
+
+export function CharadesGame({ games, t, lang, onGame }) {
+  const copy = CHARADES_COPY[lang] || CHARADES_COPY.en;
+  const key = `nickolasgames-charades-v2-${lang}`;
+  const [state, dispatch] = useReducer(charadesReducer, null, () => {
+    const saved = readValue(key);
+    return validCharadesState(saved) ? saved : newCharadesState(games.crocodile.c, readValue(`nickolasgames-progress-v1-${lang}-crocodile`));
+  });
+  const [name, setName] = useState('');
+  const [warning, setWarning] = useState('');
+  const [targetDraft, setTargetDraft] = useState(String(state.targetScore));
+  const [storageOk, setStorageOk] = useState(true);
+  const [clock, setClock] = useState(Date.now());
+  const setup = state.phase === 'setup';
+  const actor = state.players.find(p => p.id === state.activeId);
+  const card = currentCharadesCard(state);
+  const readingTime = state.phase === 'confirming' ? state.answeredAt : clock;
+  const remaining = state.deadline === null ? 60 : Math.max(0, Math.ceil((state.deadline - readingTime) / 1000));
+  const expired = state.deadline !== null && readingTime >= state.deadline;
+  useEffect(() => { setStorageOk(writeValue(key, state)); }, [key, state]);
+  useEffect(() => {
+    if (state.phase !== 'acting') return;
+    const refresh = () => setClock(Date.now());
+    refresh();
+    const timer = setInterval(refresh, 250);
+    document.addEventListener('visibilitychange', refresh);
+    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', refresh); };
+  }, [state.phase, state.deadline]);
+  useEffect(() => { setTargetDraft(String(state.targetScore)); setWarning(''); }, [state.targetScore, setup]);
+
+  const add = event => {
+    event.preventDefault();
+    const clean = name.trim();
+    if (!clean || !setup) return;
+    if (state.players.some(p => p.name.toLocaleLowerCase() === clean.toLocaleLowerCase())) { setWarning(copy.duplicate); return; }
+    dispatch({ type: 'add', player: { id: crypto.randomUUID(), name: clean } });
+    setName(''); setWarning('');
+  };
+  const newGame = () => {
+    if (!window.confirm(copy.confirm)) return;
+    dispatch({ type: 'new', deck: createCharadesDeck(games.crocodile.c, state.category) });
+  };
+  const selectWord = level => {
+    const now = Date.now(); setClock(now);
+    dispatch({ type: 'select', level, now });
+  };
+  const markGuessed = () => {
+    const now = Date.now(); setClock(now);
+    dispatch({ type: 'guess', now });
+  };
+
+  return <section className="s pv" id="preview">
+    <div className="wrap pvg">
+      <div>
+        <div className="head" style={{ margin: 0 }}><h2>{copy.title}</h2><p>{copy.rules}</p></div>
+        <div className="tabs" role="group" aria-label={t.gameLabel}>
+          {['whoami', 'crocodile', 'alias', 'truth'].map(game => <button key={game} className="chip" aria-pressed={game === 'crocodile'} onClick={() => onGame(game)}>{games[game].n}</button>)}
+          <button className="chip" onClick={() => onGame('random')}>{t.random}</button>
+        </div>
+        <div className="players-panel">
+          <h3>{copy.players}</h3>
+          <p>{copy.order}</p>
+          <form onSubmit={add}>
+            <label className="players-label" htmlFor="score-player-name">{copy.name}</label>
+            <div className="player-add">
+              <input id="score-player-name" maxLength={60} value={name} disabled={!setup} onChange={event => { setName(event.target.value); setWarning(''); }} />
+              <button className="btn sm" disabled={!setup || !name.trim()}>{copy.add}</button>
+            </div>
+          </form>
+          <ul className="player-score-list">
+            {state.players.map(player => <li key={player.id}>
+              <span className={`player-name${player.id === state.activeId ? ' is-active' : ''}`} aria-current={player.id === state.activeId ? 'true' : undefined}>{player.name}</span>
+              <span><b>{player.points}</b> / {state.targetScore}</span>
+              {setup && <button className="player-remove" aria-label={`${copy.remove}: ${player.name}`} onClick={() => dispatch({ type: 'remove', id: player.id })}>×</button>}
+            </li>)}
+          </ul>
+          <form onSubmit={event => {
+            event.preventDefault();
+            const value = Number(targetDraft);
+            if (!validTargetScore(value)) { setWarning(copy.invalidTarget); return; }
+            dispatch({ type: 'target', value }); setWarning('');
+          }}>
+            <label className="players-label" htmlFor="target-score">{copy.target}</label>
+            <div className="player-add">
+              <input id="target-score" type="number" min="1" max="1000" step="1" value={targetDraft} disabled={!setup} onChange={event => setTargetDraft(event.target.value)} />
+              <button className="btn sm" disabled={!setup}>{copy.apply}</button>
+            </div>
+            {!setup && <p className="players-note">{copy.locked}</p>}
+          </form>
+          <label className="players-label" htmlFor="charades-category">{t.categoryLabel}</label>
+          <select id="charades-category" className="charades-category" disabled={!setup} value={state.category} onChange={event => dispatch({ type: 'category', category: event.target.value, deck: createCharadesDeck(games.crocodile.c, event.target.value) })}>
+            <option value={ALL_CHARADES_CATEGORIES}>{t.allCategories}</option>
+            {Object.keys(games.crocodile.c).map(category => <option key={category} value={category}>{category}</option>)}
+          </select>
+          {!deckReady(state.deck) && <p role="status">{copy.noLevels}</p>}
+          {warning && <p role="alert">{warning}</p>}
+          <div className="players-actions">
+            {setup && <button className="btn pri" disabled={state.players.length < 2 || !deckReady(state.deck)} onClick={() => dispatch({ type: 'start' })}>{copy.start}</button>}
+            <button className="btn sm" onClick={newGame}>{copy.newGame}</button>
+          </div>
+          <p className="players-note" role="status">{storageOk ? copy.saved : copy.failed}</p>
+        </div>
+      </div>
+      <div className="charades-round">
+        {actor && <h3 className="current-player">{copy.active}: <b>{actor.name}</b></h3>}
+        {state.lastResult && <div className="charades-result" role="status">
+          {state.lastResult.presenter}: +{state.lastResult.presenterPoints} · {state.lastResult.guesser}: +{state.lastResult.guesserPoints}
+        </div>}
+        {state.phase === 'setup' && <div className="charades-card"><p>{copy.order}</p><p>{copy.choose}</p></div>}
+        {state.phase === 'handoff' && <div className="charades-card">
+          <p>{copy.handoff}</p>
+          <button className="btn pri" onClick={() => dispatch({ type: 'reveal' })}>{copy.reveal}</button>
+        </div>}
+        {state.phase === 'choosing' && <div className="charades-card">
+          <p>{copy.choose}</p>
+          <div className="charades-choices">
+            {DIFFICULTIES.map(level => <button key={level} className={`charades-option ${level}`} onClick={() => selectWord(level)}>
+              <small>{t.difficulty[level]} · +{POINTS_BY_DIFFICULTY[level]}</small>
+              <strong>{card[level]}</strong>
+            </button>)}
+          </div>
+        </div>}
+        {['acting', 'confirming'].includes(state.phase) && <>
+          <div className="timer" role="timer" aria-label={copy.countdown}>
+            <b>{remaining}</b><div className="tbar"><i style={{ transform: `scaleX(${remaining / 60})` }} /></div>
+          </div>
+          {expired && <p className="charades-overtime" role="status">{copy.overtime}</p>}
+          <div className="charades-card">
+            <small>{t.difficulty[state.selected]} · +{POINTS_BY_DIFFICULTY[state.selected]}</small>
+            <div className="charades-word">{card[state.selected]}</div>
+            {state.phase === 'acting' && <div className="players-actions">
+              <button className="btn pri" onClick={markGuessed}>{copy.guessed}</button>
+              <button className="btn" onClick={() => dispatch({ type: 'skip' })}>{copy.skip}</button>
+            </div>}
+            {state.phase === 'confirming' && <div className="charades-guesser">
+              <h3>{copy.whoGuessed}</h3>
+              <p>{expired ? copy.late : copy.timed}</p>
+              <p>{copy.awardHint}</p>
+              <div className="players-actions">
+                {state.players.filter(p => p.id !== state.activeId).map(player => <button className="btn pri" key={player.id} onClick={() => dispatch({ type: 'award', id: player.id })}>{player.name} +{POINTS_BY_DIFFICULTY[state.selected]}</button>)}
+              </div>
+              <button className="btn sm" onClick={() => dispatch({ type: 'cancelGuess' })}>{copy.cancel}</button>
+            </div>}
+          </div>
+        </>}
+        {state.phase === 'finished' && <div className="winner-banner" role="status">
+          <h3>🏆 {copy.winner}: {state.winners.map(id => state.players.find(p => p.id === id).name).join(', ')}</h3>
+          <p>{copy.finish}</p>
+          <button className="btn pri" onClick={newGame}>{copy.newGame}</button>
+        </div>}
+      </div>
+    </div>
+  </section>;
+}
