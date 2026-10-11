@@ -5,6 +5,7 @@ import { HolmesIntro } from "./components/HolmesIntro";
 import { readValue, writeValue, readProgress } from "./utils/progress";
 import { AppStatus, PROGRESS_COPY } from "./components/AppStatus";
 import { CharadesGame } from "./components/CharadesGame";
+import { WhoAmIGame } from "./components/WhoAmIGame";
 import { COPY, PLAYER_SETUP } from "./locales";
 import { DIFFICULTIES, wordsByDifficulty } from "./utils/difficulty";
 import { ROUND_MESSAGES } from "./locales/round";
@@ -453,6 +454,7 @@ export default function NickolasGames() {
       <GamesGrid games={t.games} t={t} onPlay={(k) => choose(k, true)} />
       {game === "crocodile"
         ? <CharadesGame key={`${lang}-${game}`} games={t.games} t={t} lang={lang} onGame={(k) => choose(k, false)} />
+        : game === "whoami" ? <WhoAmIGame key={`${lang}-${game}`} games={t.games} t={t} lang={lang} onGame={(k) => choose(k, false)} />
         : <CardStackPreview key={`${lang}-${game}`} game={game} games={t.games} t={t} lang={lang} onGame={(k) => choose(k, false)} />}
       <HowItWorks t={t} />
       <Testimonials t={t} />
