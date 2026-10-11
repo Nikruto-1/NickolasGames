@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -38,6 +40,10 @@ jobs:
       - name: Build React application
         working-directory: NickolasGames/ClientApp
         run: npm run build
+
+      - name: Keep previous assets for cached browser pages
+        working-directory: NickolasGames/ClientApp
+        run: node scripts/preserve-assets.mjs
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

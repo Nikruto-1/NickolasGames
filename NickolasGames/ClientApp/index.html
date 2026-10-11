@@ -8,9 +8,61 @@
     <link rel="apple-touch-icon" href="%BASE_URL%icons/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>NickolasGames</title>
+    <style>
+      html,body{margin:0;background:#CCE6FF;color:#00507D}
+      #app-startup{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;box-sizing:border-box;font:16px/1.5 system-ui,sans-serif;text-align:center}
+      #app-startup h1{margin:0;font-size:32px}
+      #app-startup p{margin:0;max-width:36ch}
+      #app-startup button{font:inherit;color:#fff;background:#006BB6;border:0;border-radius:8px;padding:12px 20px;cursor:pointer}
+      #app-startup button[hidden]{display:none}
+    </style>
+    <script>
+      (function () {
+        var copy = {
+          uk: { loading: "Завантаження гри…", error: "Не вдалося завантажити гру. Перевір підключення та спробуй ще раз.", retry: "Спробувати ще раз" },
+          en: { loading: "Loading the game…", error: "The game could not load. Check your connection and try again.", retry: "Try again" },
+          sv: { loading: "Laddar spelet…", error: "Spelet kunde inte laddas. Kontrollera anslutningen och försök igen.", retry: "Försök igen" },
+          de: { loading: "Spiel wird geladen…", error: "Das Spiel konnte nicht geladen werden. Prüfe die Verbindung und versuche es erneut.", retry: "Erneut versuchen" },
+          es: { loading: "Cargando el juego…", error: "No se pudo cargar el juego. Comprueba la conexión e inténtalo de nuevo.", retry: "Intentar de nuevo" }
+        };
+        var lang = "en";
+        try { lang = localStorage.getItem("nickolasgames-lang") || lang; } catch (_) {}
+        var text = copy[lang] || copy.en;
+        var failed = false;
+        function update() {
+          var startup = document.getElementById("app-startup");
+          if (!startup) return;
+          document.getElementById("app-startup-status").textContent = failed ? text.error : text.loading;
+          var retry = document.getElementById("app-startup-retry");
+          retry.textContent = text.retry;
+          retry.hidden = !failed;
+          retry.onclick = function () {
+            var url = new URL(location.href);
+            url.searchParams.set("ng-refresh", Date.now().toString());
+            location.replace(url.href);
+          };
+        }
+        function fail() { failed = true; update(); }
+        window.addEventListener("error", function (event) {
+          var target = event.target;
+          if (event.error || (target && (target.tagName === "SCRIPT" || target.tagName === "LINK"))) fail();
+        }, true);
+        window.addEventListener("unhandledrejection", fail);
+        document.addEventListener("DOMContentLoaded", update);
+        setTimeout(function () {
+          if (document.getElementById("app-startup")) fail();
+        }, 15000);
+      })();
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <section id="app-startup" aria-label="NickolasGames">
+        <h1>NickolasGames</h1>
+        <p id="app-startup-status" role="status">Завантаження гри…</p>
+        <button id="app-startup-retry" type="button" hidden>Спробувати ще раз</button>
+      </section>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

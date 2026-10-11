@@ -1,9 +1,10 @@
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 // Generated from build output so every hashed application asset is available offline.
 export function offlinePlugin() {
  return { name: 'nickolasgames-offline', apply: 'build', generateBundle(_, bundle) {
   const files = [...new Set(['index.html', ...Object.keys(bundle)]), 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'manifest.webmanifest'];
-  const version = createHash('sha256').update(Object.values(bundle).map(f => f.code || f.source || '').join('')).digest('hex').slice(0,16);
+  const version = createHash('sha256').update(readFileSync(new URL('./index.html', import.meta.url))).update(Object.values(bundle).map(f => f.code || f.source || '').join('')).digest('hex').slice(0,16);
   this.emitFile({type:'asset', fileName:'sw.js', source: `
 const CACHE = 'nickolasgames-${version}';
 const URLS = ${JSON.stringify(files)}.map(p => new URL(p, self.registration.scope).href);
