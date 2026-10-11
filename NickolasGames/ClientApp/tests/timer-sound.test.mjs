@@ -29,3 +29,17 @@ test('voice failure falls back to the timer signal',()=>{
  let message;class Utterance {constructor(text){this.text=text;}}
  const s=createTimerSound(()=>Context,()=>({Utterance,synthesis:{getVoices:()=>[],speak:m=>{message=m;},cancel(){}}}));s.unlock();s.announce('Time is up','en');message.onerror();assert.equal(tones,3);s.dispose();
 });
+test('the provided recording plays instead of synthesized Ukrainian and stops on disposal',async()=>{
+ const buffer={recording:true};const played=[];let speech=0,stopped=0;
+ class Context {state='running';sampleRate=44100;destination={};resume(){}close(){}createBuffer(){return {};}createBufferSource(){return {connect(){},start(){played.push(this.buffer);},stop(){stopped++;},disconnect(){}};}}
+ const s=createTimerSound(()=>Context,()=>({synthesis:{speak(){speech++;}},Utterance:class{}}),'voice.mp3',async()=>buffer);
+ s.unlock('uk');await Promise.resolve();await Promise.resolve();s.announce('Time is up','uk');assert.equal(played.at(-1),buffer);assert.equal(speech,0);s.dispose();assert.equal(stopped,1);
+});
+test('every non-Ukrainian locale plays a meow without synthesized speech',async()=>{
+ for(const language of ['en','sv','de','es']) {
+  const loaded=[],played=[];let speech=0;
+  class Context {state='running';sampleRate=44100;destination={};resume(){}close(){}createBuffer(){return {};}createBufferSource(){return {connect(){},start(){played.push(this.buffer);},stop(){},disconnect(){}};}}
+  const meow={meow:true};const s=createTimerSound(()=>Context,()=>({synthesis:{speak(){speech++;}},Utterance:class{}}),{uk:'uk.mp3',other:'meow.mp3'},async(_,url)=>{loaded.push(url);return meow;});
+  s.unlock(language);await Promise.resolve();await Promise.resolve();s.announce('Time is up',language);assert.deepEqual(loaded,['meow.mp3']);assert.equal(played.at(-1),meow);assert.equal(speech,0);s.dispose();
+ }
+});

@@ -1,13 +1,17 @@
 // Create/resume during the timer button gesture so mobile browsers allow the alarm.
-export function createTimerSound(getContext = () => globalThis.AudioContext || globalThis.webkitAudioContext, getSpeech = () => ({synthesis:globalThis.speechSynthesis,Utterance:globalThis.SpeechSynthesisUtterance})) {
- let context;let pending=null;let disposed=false;
+export function createTimerSound(getContext = () => globalThis.AudioContext || globalThis.webkitAudioContext, getSpeech = () => ({synthesis:globalThis.speechSynthesis,Utterance:globalThis.SpeechSynthesisUtterance}), recordingUrl=null, loadRecording=async (ctx,url)=>{
+ const response=await fetch(url);if(!response.ok)throw new Error('Audio unavailable');return ctx.decodeAudioData(await response.arrayBuffer());
+}) {
+ let context;let pending=null;let disposed=false;const recordings=new Map();const loads=new Map();let source=null;
+ const recordingFor=language=>typeof recordingUrl==='string'?(language==='uk'?recordingUrl:null):recordingUrl?.[language==='uk'?'uk':'other'];
  const unlock = (language='uk') => {
   disposed=false;
   // Prime speech in the same user gesture as starting the timer (including Safari).
-  try {const {synthesis,Utterance}=getSpeech();if(synthesis&&Utterance){const silent=new Utterance('.');silent.volume=0;silent.lang=language;synthesis.speak(silent);}} catch {}
+  try {const {synthesis,Utterance}=getSpeech();if(synthesis&&Utterance&&!recordingFor(language)){const silent=new Utterance('.');silent.volume=0;silent.lang=language;synthesis.speak(silent);}} catch {}
   try {
    const Context=getContext();if(!Context)return;
    context ||= new Context();
+   const url=recordingFor(language);if(url&&!loads.has(url)){loads.set(url,loadRecording(context,url).then(buffer=>{if(!disposed)recordings.set(url,buffer);}).catch(()=>{}));}
    Promise.resolve(context.resume()).catch(()=>{});
    const source=context.createBufferSource();source.buffer=context.createBuffer(1,1,context.sampleRate);source.connect(context.destination);source.start();
   } catch {}
@@ -23,6 +27,11 @@ export function createTimerSound(getContext = () => globalThis.AudioContext || g
   } catch {}
  };
  const announce = (text,language) => {
+  const url=recordingFor(language);const recording=recordings.get(url);
+  if(recording&&context?.state==='running') {
+   try {source=context.createBufferSource();source.buffer=recording;source.connect(context.destination);source.start();return;}catch {}
+  }
+  if(url&&language!=='uk'){play();return;}
   try {
    const {synthesis,Utterance}=getSpeech();
    if(!synthesis||!Utterance){play();return;}
@@ -36,5 +45,5 @@ export function createTimerSound(getContext = () => globalThis.AudioContext || g
    synthesis.speak(message);
   } catch {pending=null;play();}
  };
- return {unlock,play,announce,dispose(){disposed=true;if(pending){pending.onend=null;pending.onerror=null;try{getSpeech().synthesis.cancel();}catch{}pending=null;}if(context){Promise.resolve(context.close()).catch(()=>{});context=null;}}};
+ return {unlock,play,announce,dispose(){disposed=true;if(source){try{source.stop();source.disconnect();}catch{}source=null;}recordings.clear();loads.clear();if(pending){pending.onend=null;pending.onerror=null;try{getSpeech().synthesis.cancel();}catch{}pending=null;}if(context){Promise.resolve(context.close()).catch(()=>{});context=null;}}};
 }
