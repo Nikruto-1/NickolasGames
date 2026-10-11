@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import holmesMeow from '../assets/audio/holmes-meow.mp3';
-import holmesRecording from '../assets/audio/holmes-time-up-uk.mp3';
-import { createTimerSound } from '../utils/timerSound.js';
+import { createHolmesTimerSound } from '../utils/holmesTimerSound.js';
 import { WHOAMI_UI } from '../locales/whoami-ui.js';
 import { PLAYER_SETUP } from '../locales/index.js';
 import { readValue, readProgress, writeValue } from '../utils/progress.js';
@@ -21,7 +19,7 @@ export function WhoAmIGame({games,t,lang,onGame}) {
  const [name,setName]=useState('');const [warning,setWarning]=useState('');
  const [activeId,setActiveId]=useState(null);const [held,setHeld]=useState(false);
  const [manual,setManual]=useState('');const [running,setRunning]=useState(false);const [storageOk,setStorageOk]=useState(true);
- const sound=useRef(null);if(!sound.current)sound.current=createTimerSound(undefined,undefined,{uk:holmesRecording,other:holmesMeow});
+ const sound=useRef(null);if(!sound.current)sound.current=createHolmesTimerSound();
  const previousLeft=useRef(state.left);
  useEffect(()=>()=>sound.current.dispose(),[]);
  useEffect(()=>{if(running&&previousLeft.current>0&&state.left===0)sound.current.announce(copy.timeUp,lang);previousLeft.current=state.left;},[state.left,running,copy.timeUp,lang]);

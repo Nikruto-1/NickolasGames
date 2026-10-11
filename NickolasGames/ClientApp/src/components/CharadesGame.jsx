@@ -1,4 +1,5 @@
-import { useEffect, useReducer, useState } from 'react';
+import { createHolmesTimerSound, HOLMES_TIME_UP } from '../utils/holmesTimerSound.js';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import { ROUND_MESSAGES } from '../locales/round.js';
 import { CHARADES_COPY, CHARADES_TIME_COPY } from '../locales/charades.js';
 import { DIFFICULTIES } from '../utils/difficulty.js';
@@ -18,6 +19,14 @@ export function CharadesGame({ games, t, lang, onGame }) {
   const [targetDraft, setTargetDraft] = useState(String(state.targetScore));
   const [storageOk, setStorageOk] = useState(true);
   const [clock, setClock] = useState(Date.now());
+  const sound=useRef(null);if(!sound.current)sound.current=createHolmesTimerSound();
+  const armedDeadline=useRef(null);
+  useEffect(()=>()=>sound.current.dispose(),[]);
+  useEffect(()=>{
+    if(state.phase==='acting'&&state.timed&&state.deadline===armedDeadline.current&&clock>=state.deadline){
+      armedDeadline.current=null;sound.current.announce(HOLMES_TIME_UP,lang);
+    }
+  },[state.phase,state.timed,state.deadline,clock,lang]);
   const setup = state.phase === 'setup';
   const actor = state.players.find(p => p.id === state.activeId);
   const card = currentCharadesCard(state);
@@ -52,6 +61,7 @@ export function CharadesGame({ games, t, lang, onGame }) {
   };
   const selectWord = level => {
     const now = Date.now(); setClock(now);
+    if(state.timed){sound.current.unlock(lang);armedDeadline.current=now+60_000;}
     dispatch({ type: 'select', level, now });
   };
   const markGuessed = () => {
