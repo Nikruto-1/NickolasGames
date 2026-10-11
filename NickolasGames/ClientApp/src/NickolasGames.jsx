@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CloudShader } from "@/components/ui/cloud-shader";
 import "./nickolasgames.css";
+import { readValue, writeValue, readProgress } from "./utils/progress";
+import { AppStatus, PROGRESS_COPY } from "./components/AppStatus";
+import { CharadesGame } from "./components/CharadesGame";
+import { COPY, PLAYER_SETUP } from "./locales";
+import { DIFFICULTIES, wordsByDifficulty } from "./utils/difficulty";
+import { ROUND_MESSAGES } from "./locales/round";
+import { uniqueWords } from "./utils/words";
 
 const LANGS = [
   { code: "uk", short: "UA", label: "Українська" },
@@ -10,169 +17,11 @@ const LANGS = [
   { code: "es", short: "ES", label: "Español" },
 ];
 
-const COPY = {
-  uk: {
-    heroTitle: "Ігри для справжніх моментів.",
-    heroText: "Прості вебігри для друзів, команд і вечірок.",
-    start: "Почати гру",
-    explore: "Переглянути ігри",
-    flight: "Увійди у світ гри.",
-    gamesTitle: "Обери гру.",
-    gamesText: "П'ять способів розговорити кімнату, розсмішити всіх і додати руху.",
-    play: "Грати",
-    previewTitle: "Спробуй прямо тут.",
-    previewText: "Відкрий картку, пояснюй або показуй, а потім бери наступну.",
-    gameLabel: "Гра",
-    categoryLabel: "Категорія",
-    allCategories: "Всі категорії",
-    difficultyLabel: "Рівень складності",
-    difficulty: { easy: "Легкий", medium: "Середній", hard: "Складний" },
-    random: "Випадкова",
-    any: "Будь-коли",
-    players: "гравців",
-    min: "хв",
-    reset: "Скинути",
-    startTimer: "Запустити таймер",
-    timerDuration: "Тривалість тайму",
-    sec: "с",
-    tap: "Натисни, щоб відкрити",
-    noWords: "Немає слів для цього вибору. Зміни категорію, рівень складності або додай свої слова.",
-    reveal: "Відкрити",
-    next: "Далі",
-    skip: "Пропустити",
-    guessed: "Вгадано",
-    skipped: "Пропущено",
-    howTitle: "Як це працює",
-    steps: [
-      ["Обери гру", "Вибери одну з п'яти ігор або дозволь системі обрати за тебе."],
-      ["Встанови гравців і час", "Виріши, скільки людей грає і скільки триває кожен раунд."],
-      ["Грай з одного телефона або екрана", "Передавай пристрій по колу або виведи гру на телевізор. Нічого встановлювати не потрібно."],
-    ],
-    testimonialsTitle: "Грають у різних країнах.",
-    played: "Грали в",
-    finalTitle: "Готові грати?",
-    finalText: "Обери гру, збери людей і починай за кілька секунд.",
-    footer: "© 2026 NickolasGames. Ігри для справжніх моментів.",
-    language: "Мова",
-    games: {
-      whoami: { n: "Хто я?", d: "Вгадай людину, персонажа або предмет на своїй картці.", p: "2-10 гравців", t: "10 хв",
-        c: { Люди: ["Кінорежисер", "Астронавт", "Чемпіон з шахів", "Вуличний музикант", "Піцайоло"], Персонажі: ["Шерлок Голмс", "Робот-дворецький", "Піратський капітан", "Чарівник", "Детектив"], Предмети: ["Літак", "Парасоля", "Маяк", "Вінілова платівка", "Компас"], Нові: ["Магніт", "Чохол на телефон", "Тредс", "11", "Гороховий суп", "Тік ток", "Швеція", "Чай", "Євро €", "Звук", "Серце", "Свічка", "Карти", "Колумб який відкрив Америку", "Шахмати", "Дракула", "Суші", "Пікачу", "Аскорбінка", "YouTube", "Суми", "Гомосексуальність"] } },
-      crocodile: { n: "Крокодил", d: "Показуй слова без жодного звуку.", p: "3-12 гравців", t: "15 хв",
-        c: { Тварини: ["Слон", "Пінгвін", "Восьминіг", "Фламінго", "Кенгуру"], Професії: ["Кінорежисер", "Піцайоло", "Пілот", "Бариста", "Фокусник"], Речі: ["Літак", "Робот", "Велосипед", "Скейтборд", "Ліфт"] } },
-      alias: { n: "Alias", d: "Пояснюй слова швидко і заробляй бали для команди.", p: "4-12 гравців", t: "20 хв",
-        c: { Щоденне: ["Сніданок", "Затори", "Парасоля", "Вихідні", "Паспорт"], Подорожі: ["Аеропорт", "Багаж", "Гавань", "Квиток", "Кордон"], Робота: ["Дедлайн", "Зустріч", "Бюджет", "Відгук", "Запуск"] } },
-      truth: { n: "Правда або дія", d: "Чисті сучасні завдання для друзів і вечірок.", p: "3-10 гравців", t: "20 хв",
-        c: { Правда: ["Яку навичку ти хотів би мати?", "Яке повідомлення ти перечитував цього тижня найчастіше?", "Який твій найбезкорисніший талант?"], Дія: ["Говори лише питаннями дві хвилини.", "Зроби голос трейлера до фільму.", "Поміняйся місцями з людиною ліворуч."] } },
-      random: { n: "Випадкова гра", d: "Нехай система сама обере, у що грати далі.", p: "2-12 гравців", t: "Будь-коли", c: null },
-    },
-    testimonials: [
-      ["Софія", "Швеція", "Ми грали у 'Хто я?' на командному вечорі. Було просто, швидко і справді весело.", "Хто я?"],
-      ["Дмитро", "Україна", "Крокодил ідеально спрацював з одного телефона на домашній вечірці.", "Крокодил"],
-      ["Лена", "Німеччина", "Alias став нашим швидким icebreaker перед зустрічами.", "Alias"],
-      ["Марта", "Польща", "Правда або дія виглядала сучасно і без незручних моментів.", "Правда або дія"],
-    ],
-  },
-  en: {
-    heroTitle: "Games for real moments.", heroText: "Simple web games for friends, teams and parties.", start: "Start playing", explore: "Explore games", flight: "Step into the game world.", gamesTitle: "Pick your game.", gamesText: "Five ways to get a room talking, laughing and moving.", play: "Play", previewTitle: "Try it right here.", previewText: "Reveal a card, act it out, then draw the next one.", gameLabel: "Game", categoryLabel: "Category", allCategories: "All categories", difficultyLabel: "Difficulty", difficulty: { easy: "Easy", medium: "Medium", hard: "Hard" }, random: "Random", any: "Any", players: "players", min: "min", reset: "Reset", startTimer: "Start timer", timerDuration: "Round time", sec: "s", tap: "Tap to reveal", noWords: "No words are available for this choice. Change the category, difficulty, or add custom words.", reveal: "Reveal", next: "Next", skip: "Skip", guessed: "Guessed", skipped: "Skipped", howTitle: "How it works", testimonialsTitle: "Played around the world.", played: "Played", finalTitle: "Ready to play?", finalText: "Pick a game, gather your people and start in seconds.", footer: "© 2026 NickolasGames. Games for real moments.", language: "Language",
-    steps: [["Choose a game", "Pick one of five games, or let the system choose for you."], ["Set players and time", "Decide how many people are playing and how long each round lasts."], ["Play from one phone or screen", "Pass the device around or cast it to a TV. Nobody needs to install anything."]],
-    games: {
-      whoami: { n: "Who Am I?", d: "Guess the person, character or object on your card.", p: "2-10 players", t: "10 min", c: { People: ["Movie director", "Astronaut", "Chess champion", "Street musician", "Pizza chef"], Characters: ["Sherlock Holmes", "Robot butler", "Pirate captain", "Wizard", "Detective"], Objects: ["Airplane", "Umbrella", "Lighthouse", "Vinyl record", "Compass"] } },
-      crocodile: { n: "Crocodile", d: "Act out words without speaking.", p: "3-12 players", t: "15 min", c: { Animals: ["Elephant", "Penguin", "Octopus", "Flamingo", "Kangaroo"], Jobs: ["Movie director", "Pizza chef", "Pilot", "Barista", "Magician"], Things: ["Airplane", "Robot", "Bicycle", "Skateboard", "Elevator"] } },
-      alias: { n: "Alias", d: "Explain words fast and score points with your team.", p: "4-12 players", t: "20 min", c: { Everyday: ["Breakfast", "Traffic", "Umbrella", "Weekend", "Passport"], Travel: ["Airport", "Luggage", "Harbour", "Ticket", "Border"], Work: ["Deadline", "Meeting", "Budget", "Feedback", "Launch"] } },
-      truth: { n: "Truth or Dare", d: "Clean, modern prompts for friends and parties.", p: "3-10 players", t: "20 min", c: { Truth: ["What skill do you wish you had?", "Which message did you reread most this week?", "What is your most useless talent?"], Dare: ["Speak only in questions for two minutes.", "Do your best movie-trailer voice.", "Swap seats with the person on your left."] } },
-      random: { n: "Random Game", d: "Let the system pick what to play next.", p: "2-12 players", t: "Any", c: null },
-    },
-    testimonials: [["Sofia", "Sweden", "We used Who Am I? during a team evening. It was simple, fast and genuinely fun.", "Who Am I?"], ["Dmytro", "Ukraine", "Crocodile worked perfectly from one phone at a house party.", "Crocodile"], ["Lena", "Germany", "Alias became our quick icebreaker before meetings.", "Alias"], ["Marta", "Poland", "Truth or Dare felt clean and modern, not awkward.", "Truth or Dare"]],
-  },
-  sv: {
-    heroTitle: "Spel för riktiga stunder.", heroText: "Enkla webbspel för vänner, team och fester.", start: "Börja spela", explore: "Utforska spel", flight: "Kliv in i spelvärlden.", gamesTitle: "Välj ditt spel.", gamesText: "Fem sätt att få rummet att prata, skratta och röra på sig.", play: "Spela", previewTitle: "Prova direkt här.", previewText: "Vänd ett kort, spela ut det och dra sedan nästa.", gameLabel: "Spel", categoryLabel: "Kategori", allCategories: "Alla kategorier", difficultyLabel: "Svårighet", difficulty: { easy: "Lätt", medium: "Medel", hard: "Svår" }, random: "Slump", any: "När som helst", players: "spelare", min: "min", reset: "Återställ", startTimer: "Starta timer", timerDuration: "Rundtid", sec: "s", tap: "Tryck för att visa", noWords: "Det finns inga ord för det här valet. Byt kategori, svårighet eller lägg till egna ord.", reveal: "Visa", next: "Nästa", skip: "Hoppa över", guessed: "Gissade", skipped: "Hoppade över", howTitle: "Så fungerar det", testimonialsTitle: "Spelas runt om i världen.", played: "Spelade", finalTitle: "Redo att spela?", finalText: "Välj ett spel, samla dina människor och börja på några sekunder.", footer: "© 2026 NickolasGames. Spel för riktiga stunder.", language: "Språk",
-    steps: [["Välj ett spel", "Välj ett av fem spel eller låt systemet välja åt dig."], ["Ställ in spelare och tid", "Bestäm hur många som spelar och hur länge varje runda varar."], ["Spela från en telefon eller skärm", "Skicka runt enheten eller casta till en TV. Ingen behöver installera något."]],
-    games: {
-      whoami: { n: "Vem är jag?", d: "Gissa personen, karaktären eller saken på ditt kort.", p: "2-10 spelare", t: "10 min", c: { Personer: ["Filmregissör", "Astronaut", "Schackmästare", "Gatumusiker", "Pizzakock"], Karaktärer: ["Sherlock Holmes", "Robotbutler", "Piratkapten", "Trollkarl", "Detektiv"], Saker: ["Flygplan", "Paraply", "Fyr", "Vinylskiva", "Kompass"] } },
-      crocodile: { n: "Krokodil", d: "Spela upp ord utan att prata.", p: "3-12 spelare", t: "15 min", c: { Djur: ["Elefant", "Pingvin", "Bläckfisk", "Flamingo", "Känguru"], Jobb: ["Filmregissör", "Pizzakock", "Pilot", "Barista", "Magiker"], Saker: ["Flygplan", "Robot", "Cykel", "Skateboard", "Hiss"] } },
-      alias: { n: "Alias", d: "Förklara ord snabbt och samla poäng till laget.", p: "4-12 spelare", t: "20 min", c: { Vardag: ["Frukost", "Trafik", "Paraply", "Helg", "Pass"], Resor: ["Flygplats", "Bagage", "Hamn", "Biljett", "Gräns"], Arbete: ["Deadline", "Möte", "Budget", "Feedback", "Lansering"] } },
-      truth: { n: "Sanning eller konsekvens", d: "Fräscha moderna frågor och uppdrag för vänner och fester.", p: "3-10 spelare", t: "20 min", c: { Sanning: ["Vilken färdighet önskar du att du hade?", "Vilket meddelande läste du om flest gånger den här veckan?", "Vilken är din mest onödiga talang?"], Konsekvens: ["Prata bara i frågor i två minuter.", "Gör din bästa filmtrailerröst.", "Byt plats med personen till vänster."] } },
-      random: { n: "Slumpspel", d: "Låt systemet välja vad ni ska spela härnäst.", p: "2-12 spelare", t: "När som helst", c: null },
-    },
-    testimonials: [["Sofia", "Sverige", "Vi använde Vem är jag? på en teamkväll. Det var enkelt, snabbt och riktigt kul.", "Vem är jag?"], ["Dmytro", "Ukraina", "Krokodil fungerade perfekt från en telefon på en hemmafest.", "Krokodil"], ["Lena", "Tyskland", "Alias blev vår snabba isbrytare före möten.", "Alias"], ["Marta", "Polen", "Sanning eller konsekvens kändes rent och modernt, inte pinsamt.", "Sanning eller konsekvens"]],
-  },
-  de: {
-    heroTitle: "Spiele für echte Momente.", heroText: "Einfache Webspiele für Freunde, Teams und Partys.", start: "Jetzt spielen", explore: "Spiele ansehen", flight: "Tritt in die Spielwelt ein.", gamesTitle: "Wähle dein Spiel.", gamesText: "Fünf Wege, einen Raum zum Reden, Lachen und Mitmachen zu bringen.", play: "Spielen", previewTitle: "Probiere es direkt hier.", previewText: "Decke eine Karte auf, stelle sie dar und ziehe dann die nächste.", gameLabel: "Spiel", categoryLabel: "Kategorie", allCategories: "Alle Kategorien", difficultyLabel: "Schwierigkeit", difficulty: { easy: "Leicht", medium: "Mittel", hard: "Schwer" }, random: "Zufall", any: "Jederzeit", players: "Spieler", min: "Min", reset: "Zurücksetzen", startTimer: "Timer starten", timerDuration: "Rundenzeit", sec: "s", tap: "Tippen zum Aufdecken", noWords: "Für diese Auswahl gibt es keine Wörter. Ändere Kategorie, Schwierigkeit oder füge eigene Wörter hinzu.", reveal: "Aufdecken", next: "Weiter", skip: "Überspringen", guessed: "Erraten", skipped: "Übersprungen", howTitle: "So funktioniert es", testimonialsTitle: "Weltweit gespielt.", played: "Spielte", finalTitle: "Bereit zu spielen?", finalText: "Wähle ein Spiel, sammle deine Leute und starte in Sekunden.", footer: "© 2026 NickolasGames. Spiele für echte Momente.", language: "Sprache",
-    steps: [["Spiel wählen", "Wähle eines von fünf Spielen oder lass das System entscheiden."], ["Spieler und Zeit festlegen", "Entscheide, wie viele Personen mitspielen und wie lange jede Runde dauert."], ["Von einem Handy oder Bildschirm spielen", "Gib das Gerät weiter oder streame es auf den Fernseher. Niemand muss etwas installieren."]],
-    games: {
-      whoami: { n: "Wer bin ich?", d: "Errate die Person, Figur oder Sache auf deiner Karte.", p: "2-10 Spieler", t: "10 Min", c: { Personen: ["Filmregisseur", "Astronaut", "Schachmeister", "Straßenmusiker", "Pizzabäcker"], Figuren: ["Sherlock Holmes", "Roboterbutler", "Piratenkapitän", "Zauberer", "Detektiv"], Dinge: ["Flugzeug", "Regenschirm", "Leuchtturm", "Schallplatte", "Kompass"] } },
-      crocodile: { n: "Krokodil", d: "Stelle Wörter dar, ohne zu sprechen.", p: "3-12 Spieler", t: "15 Min", c: { Tiere: ["Elefant", "Pinguin", "Oktopus", "Flamingo", "Känguru"], Berufe: ["Filmregisseur", "Pizzabäcker", "Pilot", "Barista", "Magier"], Dinge: ["Flugzeug", "Roboter", "Fahrrad", "Skateboard", "Aufzug"] } },
-      alias: { n: "Alias", d: "Erkläre Wörter schnell und sammle Punkte für dein Team.", p: "4-12 Spieler", t: "20 Min", c: { Alltag: ["Frühstück", "Verkehr", "Regenschirm", "Wochenende", "Pass"], Reisen: ["Flughafen", "Gepäck", "Hafen", "Ticket", "Grenze"], Arbeit: ["Deadline", "Meeting", "Budget", "Feedback", "Launch"] } },
-      truth: { n: "Wahrheit oder Pflicht", d: "Saubere moderne Aufgaben für Freunde und Partys.", p: "3-10 Spieler", t: "20 Min", c: { Wahrheit: ["Welche Fähigkeit hättest du gern?", "Welche Nachricht hast du diese Woche am häufigsten gelesen?", "Was ist dein nutzlosestes Talent?"], Pflicht: ["Sprich zwei Minuten lang nur in Fragen.", "Mach deine beste Filmtrailer-Stimme.", "Tausche den Platz mit der Person links von dir."] } },
-      random: { n: "Zufallsspiel", d: "Lass das System wählen, was als Nächstes gespielt wird.", p: "2-12 Spieler", t: "Jederzeit", c: null },
-    },
-    testimonials: [["Sofia", "Schweden", "Wir haben Wer bin ich? bei einem Teamabend genutzt. Es war einfach, schnell und wirklich lustig.", "Wer bin ich?"], ["Dmytro", "Ukraine", "Krokodil funktionierte perfekt von einem Handy auf einer Hausparty.", "Krokodil"], ["Lena", "Deutschland", "Alias wurde unser schneller Eisbrecher vor Meetings.", "Alias"], ["Marta", "Polen", "Wahrheit oder Pflicht wirkte modern und gar nicht unangenehm.", "Wahrheit oder Pflicht"]],
-  },
-  es: {
-    heroTitle: "Juegos para momentos reales.", heroText: "Juegos web sencillos para amigos, equipos y fiestas.", start: "Empezar a jugar", explore: "Explorar juegos", flight: "Entra en el mundo del juego.", gamesTitle: "Elige tu juego.", gamesText: "Cinco formas de hacer que todos hablen, rían y se muevan.", play: "Jugar", previewTitle: "Pruébalo aquí mismo.", previewText: "Revela una tarjeta, actúala y luego toma la siguiente.", gameLabel: "Juego", categoryLabel: "Categoría", allCategories: "Todas las categorías", difficultyLabel: "Dificultad", difficulty: { easy: "Fácil", medium: "Media", hard: "Difícil" }, random: "Aleatorio", any: "Cualquiera", players: "jugadores", min: "min", reset: "Reiniciar", startTimer: "Iniciar temporizador", timerDuration: "Duración", sec: "s", tap: "Toca para revelar", noWords: "No hay palabras para esta selección. Cambia la categoría, la dificultad o añade palabras propias.", reveal: "Revelar", next: "Siguiente", skip: "Saltar", guessed: "Adivinadas", skipped: "Saltadas", howTitle: "Cómo funciona", testimonialsTitle: "Jugado en todo el mundo.", played: "Jugó", finalTitle: "¿Listo para jugar?", finalText: "Elige un juego, reúne a tu gente y empieza en segundos.", footer: "© 2026 NickolasGames. Juegos para momentos reales.", language: "Idioma",
-    steps: [["Elige un juego", "Elige uno de los cinco juegos o deja que el sistema elija por ti."], ["Configura jugadores y tiempo", "Decide cuántas personas juegan y cuánto dura cada ronda."], ["Juega desde un móvil o una pantalla", "Pasa el dispositivo o compártelo en la TV. Nadie necesita instalar nada."]],
-    games: {
-      whoami: { n: "¿Quién soy?", d: "Adivina la persona, personaje u objeto de tu tarjeta.", p: "2-10 jugadores", t: "10 min", c: { Personas: ["Director de cine", "Astronauta", "Campeón de ajedrez", "Músico callejero", "Pizzero"], Personajes: ["Sherlock Holmes", "Mayordomo robot", "Capitán pirata", "Mago", "Detective"], Objetos: ["Avión", "Paraguas", "Faro", "Disco de vinilo", "Brújula"] } },
-      crocodile: { n: "Cocodrilo", d: "Representa palabras sin hablar.", p: "3-12 jugadores", t: "15 min", c: { Animales: ["Elefante", "Pingüino", "Pulpo", "Flamenco", "Canguro"], Profesiones: ["Director de cine", "Pizzero", "Piloto", "Barista", "Mago"], Cosas: ["Avión", "Robot", "Bicicleta", "Monopatín", "Ascensor"] } },
-      alias: { n: "Alias", d: "Explica palabras rápido y suma puntos para tu equipo.", p: "4-12 jugadores", t: "20 min", c: { Diario: ["Desayuno", "Tráfico", "Paraguas", "Fin de semana", "Pasaporte"], Viajes: ["Aeropuerto", "Equipaje", "Puerto", "Billete", "Frontera"], Trabajo: ["Fecha límite", "Reunión", "Presupuesto", "Comentarios", "Lanzamiento"] } },
-      truth: { n: "Verdad o reto", d: "Retos modernos y limpios para amigos y fiestas.", p: "3-10 jugadores", t: "20 min", c: { Verdad: ["¿Qué habilidad te gustaría tener?", "¿Qué mensaje releíste más esta semana?", "¿Cuál es tu talento más inútil?"], Reto: ["Habla solo con preguntas durante dos minutos.", "Haz tu mejor voz de tráiler de película.", "Cambia de asiento con la persona de tu izquierda."] } },
-      random: { n: "Juego aleatorio", d: "Deja que el sistema elija qué jugar después.", p: "2-12 jugadores", t: "Cualquiera", c: null },
-    },
-    testimonials: [["Sofia", "Suecia", "Usamos ¿Quién soy? durante una noche de equipo. Fue simple, rápido y muy divertido.", "¿Quién soy?"], ["Dmytro", "Ucrania", "Cocodrilo funcionó perfecto desde un solo teléfono en una fiesta en casa.", "Cocodrilo"], ["Lena", "Alemania", "Alias se convirtió en nuestro rompehielos rápido antes de reuniones.", "Alias"], ["Marta", "Polonia", "Verdad o reto se sintió moderno y nada incómodo.", "Verdad o reto"]],
-  },
-};
-
 const PLAYABLE = ["whoami", "crocodile", "alias", "truth"];
 const ROUND_OPTIONS = [30, 60, 90, 120];
-const DIFFICULTIES = ["easy", "medium", "hard"];
 const ALL_CATEGORIES = "__all__";
 const RM = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const shuffle = (a) => a.map((v) => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map((x) => x[1]);
-// Parallel translations share manually assigned semantic difficulty.
-const WORD_LEVELS = {
-  whoami: [["medium", "easy", "hard", "medium", "hard"], ["medium", "hard", "medium", "easy", "easy"], ["easy", "easy", "medium", "hard", "medium"], ["easy", "easy", "medium", "easy", "easy", "easy", "easy", "easy", "medium", "easy", "easy", "easy", "easy", "hard", "medium", "medium", "easy", "medium", "hard", "easy", "medium", "hard"]],
-  crocodile: [["easy", "easy", "medium", "hard", "medium"], ["hard", "hard", "easy", "medium", "medium"], ["easy", "medium", "easy", "medium", "hard"]],
-  alias: [["easy", "medium", "easy", "easy", "medium"], ["easy", "easy", "hard", "easy", "medium"], ["medium", "easy", "medium", "hard", "hard"]],
-  truth: [["easy", "medium", "hard"], ["hard", "medium", "easy"]],
-};
-const difficultyByWord = new Map();
-for (const copy of Object.values(COPY)) {
-  for (const game of PLAYABLE) {
-    Object.values(copy.games[game].c).forEach((words, category) => {
-      words.forEach((word, index) => difficultyByWord.set(game + ":" + word, WORD_LEVELS[game][category][index]));
-    });
-  }
-}
-const wordsByDifficulty = (words, difficulty, game) => (words || []).filter((word) => difficultyByWord.get(game + ":" + word) === difficulty);
-const uniqueWords = (words) => [...new Map(words.map((word) => [word.trim().toLocaleLowerCase(), word.trim()])).values()].filter(Boolean);
-const SESSION_KEY = "nickolasgames-session-v1";
-const readSession = () => {
-  try {
-    const saved = JSON.parse(localStorage.getItem(SESSION_KEY));
-    if (!saved || !PLAYABLE.includes(saved.game) || !DIFFICULTIES.includes(saved.difficulty)) return {};
-    if (!Array.isArray(saved.queue) || !saved.queue.every((word) => typeof word === "string")) return {};
-    if (!Array.isArray(saved.assignments) || !saved.assignments.every((item) =>
-      item && typeof item.id === "string" && typeof item.name === "string" &&
-      typeof item.word === "string" && Array.isArray(item.usedWords) &&
-      item.usedWords.every((word) => typeof word === "string"))) return {};
-    if (!Number.isInteger(saved.idx) || saved.idx < 0 || saved.idx > saved.queue.length) return {};
-    if (typeof saved.playerNames !== "string" || typeof saved.customWords !== "string" ||
-      typeof saved.cat !== "string" || typeof saved.configuration !== "string" ||
-      typeof saved.customOnly !== "boolean") return {};
-    if (!Number.isFinite(saved.roundSeconds) || saved.roundSeconds < 10 || saved.roundSeconds > 600 ||
-      !Number.isFinite(saved.left) || saved.left < 0 || saved.left > saved.roundSeconds) return {};
-    if (!Number.isInteger(saved.score?.got) || saved.score.got < 0 ||
-      !Number.isInteger(saved.score?.skipped) || saved.score.skipped < 0) return {};
-    return saved;
-  } catch { return {}; }
-};
-const ROUND_MESSAGES = {
-  uk: { exhausted: "Слова закінчилися. Обери іншу категорію або почни нову гру.", restart: "Нова гра", pause: "Пауза", resume: "Продовжити" },
-  en: { exhausted: "All words have been used. Choose another category or start a new game.", restart: "New game", pause: "Pause", resume: "Resume" },
-  sv: { exhausted: "Alla ord har använts. Välj en annan kategori eller börja ett nytt spel.", restart: "Nytt spel", pause: "Pausa", resume: "Fortsätt" },
-  de: { exhausted: "Alle Wörter wurden verwendet. Wähle eine andere Kategorie oder starte ein neues Spiel.", restart: "Neues Spiel", pause: "Pause", resume: "Fortsetzen" },
-  es: { exhausted: "Se han usado todas las palabras. Elige otra categoría o empieza una nueva partida.", restart: "Nueva partida", pause: "Pausa", resume: "Continuar" },
-};
 const go = (id) => document.querySelector(id)?.scrollIntoView({ behavior: RM ? "auto" : "smooth" });
 const pickRandom = () => PLAYABLE[Math.floor(Math.random() * PLAYABLE.length)];
 
@@ -273,220 +122,83 @@ function GamesGrid({ games, t, onPlay }) {
 }
 
 const SCRAMBLE = "▓▒░#@$%&*+?";
-const PLAYER_SETUP = {
-  uk: {
-    title: "Роздати картки гравцям",
-    text: "Введи імена, натисни random, і кожен отримає приховану картку. Не відкривай картку перед її власником.",
-    label: "Імена гравців",
-    placeholder: "Nickolas\nSofia\nDmytro",
-    customLabel: "Свої слова для карток",
-    customPlaceholder: "Футболіст\nВчитель\nMinecraft",
-    customHint: "Кожне слово з нового рядка або через кому.",
-    onlyCustom: "Використовувати тільки свої слова",
-    assign: "Random картки",
-    hideAll: "Сховати всі",
-    show: "Показати слово",
-    hide: "Сховати слово",
-    forPlayer: "Картка для",
-    hidden: "Приховано від гравця",
-    empty: "Додай хоча б одне ім'я.",
-    notEnough: "Унікальних карток менше, ніж гравців. Додай більше слів або прибери частину гравців.",
-    guessed: "Вгадав",
-    guessedWord: "Вгадане слово",
-    giveUp: "Здаюся",
-    gaveUpWord: "Слово було",
-    noNewWord: "Немає нового унікального слова для цього гравця.",
-    manualLabel: "Нове слово для цього гравця",
-    manualPlaceholder: "Введи слово",
-    manualAssign: "Дати слово",
-    manualDuplicate: "Це слово вже активне або вже було в цього гравця.",
-  },
-  en: {
-    title: "Deal cards to players",
-    text: "Enter names, press random, and every player gets a hidden card. Do not reveal a card in front of its owner.",
-    label: "Player names",
-    placeholder: "Nickolas\nSofia\nDmytro",
-    customLabel: "Custom card words",
-    customPlaceholder: "Footballer\nTeacher\nMinecraft",
-    customHint: "One word per line or separated by commas.",
-    onlyCustom: "Use only custom words",
-    assign: "Random cards",
-    hideAll: "Hide all",
-    show: "Show word",
-    hide: "Hide word",
-    forPlayer: "Card for",
-    hidden: "Hidden from player",
-    empty: "Add at least one name.",
-    notEnough: "There are fewer unique cards than players. Add more words or remove some players.",
-    guessed: "Guessed",
-    guessedWord: "Guessed word",
-    giveUp: "Give up",
-    gaveUpWord: "The word was",
-    noNewWord: "There is no new unique word for this player.",
-    manualLabel: "New word for this player",
-    manualPlaceholder: "Enter a word",
-    manualAssign: "Give word",
-    manualDuplicate: "This word is already active or was already used by this player.",
-  },
-  sv: {
-    title: "Dela ut kort till spelare",
-    text: "Skriv namn, tryck på slump, så får varje spelare ett dolt kort. Visa inte kortet för den som äger det.",
-    label: "Spelarnamn",
-    placeholder: "Nickolas\nSofia\nDmytro",
-    customLabel: "Egna kortord",
-    customPlaceholder: "Fotbollsspelare\nLärare\nMinecraft",
-    customHint: "Ett ord per rad eller separerat med kommatecken.",
-    onlyCustom: "Använd bara egna ord",
-    assign: "Slumpa kort",
-    hideAll: "Dölj alla",
-    show: "Visa ord",
-    hide: "Dölj ord",
-    forPlayer: "Kort för",
-    hidden: "Dolt för spelaren",
-    empty: "Lägg till minst ett namn.",
-    notEnough: "Det finns färre unika kort än spelare. Lägg till fler ord eller ta bort några spelare.",
-    guessed: "Gissade",
-    guessedWord: "Gissat ord",
-    giveUp: "Ger upp",
-    gaveUpWord: "Ordet var",
-    noNewWord: "Det finns inget nytt unikt ord för den här spelaren.",
-    manualLabel: "Nytt ord för den här spelaren",
-    manualPlaceholder: "Skriv ett ord",
-    manualAssign: "Ge ord",
-    manualDuplicate: "Det ordet är redan aktivt eller har redan använts av spelaren.",
-  },
-  de: {
-    title: "Karten an Spieler verteilen",
-    text: "Gib Namen ein, drücke Zufall, und jeder bekommt eine verdeckte Karte. Zeige die Karte nicht vor der eigenen Person.",
-    label: "Spielernamen",
-    placeholder: "Nickolas\nSofia\nDmytro",
-    customLabel: "Eigene Kartenwörter",
-    customPlaceholder: "Fußballer\nLehrer\nMinecraft",
-    customHint: "Ein Wort pro Zeile oder durch Kommas getrennt.",
-    onlyCustom: "Nur eigene Wörter verwenden",
-    assign: "Zufällige Karten",
-    hideAll: "Alle verbergen",
-    show: "Wort zeigen",
-    hide: "Wort verbergen",
-    forPlayer: "Karte für",
-    hidden: "Vor dem Spieler verborgen",
-    empty: "Füge mindestens einen Namen hinzu.",
-    notEnough: "Es gibt weniger einzigartige Karten als Spieler. Füge mehr Wörter hinzu oder entferne einige Spieler.",
-    guessed: "Erraten",
-    guessedWord: "Erratenes Wort",
-    giveUp: "Ich gebe auf",
-    gaveUpWord: "Das Wort war",
-    noNewWord: "Es gibt kein neues einzigartiges Wort für diesen Spieler.",
-    manualLabel: "Neues Wort für diesen Spieler",
-    manualPlaceholder: "Wort eingeben",
-    manualAssign: "Wort geben",
-    manualDuplicate: "Dieses Wort ist bereits aktiv oder wurde von diesem Spieler schon verwendet.",
-  },
-  es: {
-    title: "Repartir tarjetas a jugadores",
-    text: "Escribe nombres, pulsa aleatorio y cada jugador recibe una tarjeta oculta. No muestres la tarjeta delante de su dueño.",
-    label: "Nombres de jugadores",
-    placeholder: "Nickolas\nSofia\nDmytro",
-    customLabel: "Palabras propias",
-    customPlaceholder: "Futbolista\nProfesor\nMinecraft",
-    customHint: "Una palabra por línea o separadas por comas.",
-    onlyCustom: "Usar solo palabras propias",
-    assign: "Tarjetas aleatorias",
-    hideAll: "Ocultar todo",
-    show: "Mostrar palabra",
-    hide: "Ocultar palabra",
-    forPlayer: "Tarjeta para",
-    hidden: "Oculta para el jugador",
-    empty: "Añade al menos un nombre.",
-    notEnough: "Hay menos tarjetas únicas que jugadores. Añade más palabras o elimina algunos jugadores.",
-    guessed: "Adivinó",
-    guessedWord: "Palabra adivinada",
-    giveUp: "Me rindo",
-    gaveUpWord: "La palabra era",
-    noNewWord: "No hay una palabra única nueva para este jugador.",
-    manualLabel: "Nueva palabra para este jugador",
-    manualPlaceholder: "Escribe una palabra",
-    manualAssign: "Dar palabra",
-    manualDuplicate: "Esta palabra ya está activa o ya fue usada por este jugador.",
-  },
-};
-
 function CardStackPreview({ game, games, t, lang, onGame }) {
-  const [saved] = useState(readSession);
+  const storageKey = `nickolasgames-progress-v1-${lang}-${game}`;
+  const [saved] = useState(() => readProgress(storageKey));
+  const [storageOk, setStorageOk] = useState(true);
+  const progressCopy = PROGRESS_COPY[lang] || PROGRESS_COPY.en;
   const roundCopy = ROUND_MESSAGES[lang] || ROUND_MESSAGES.en;
   const cats = useMemo(() => Object.keys(games[game].c), [game, games]);
-  const [cat, setCat] = useState(saved.cat || ALL_CATEGORIES);
-  const [difficulty, setDifficulty] = useState(saved.difficulty || "medium");
-  const [queue, setQueue] = useState(saved.queue || []);
-  const [idx, setIdx] = useState(saved.idx || 0);
+  const [cat, setCat] = useState(() => saved?.cat ?? ALL_CATEGORIES);
+  const [difficulty, setDifficulty] = useState(() => saved?.difficulty ?? "medium");
+  const [queue, setQueue] = useState(() => saved?.queue ?? []);
+  const [idx, setIdx] = useState(() => Math.min(saved?.idx ?? 0, saved?.queue?.length ?? 0));
   const [shown, setShown] = useState(false);
   const [text, setText] = useState("");
   const [enc, setEnc] = useState(false);
   const [exit, setExit] = useState(null);
-  const [score, setScore] = useState(saved.score || { got: 0, skipped: 0 });
-  const [roundSeconds, setRoundSeconds] = useState(saved.roundSeconds || 60);
-  const [left, setLeft] = useState(saved.left ?? 60);
+  const [score, setScore] = useState(() => saved?.score ?? { got: 0, skipped: 0 });
+  const [roundSeconds, setRoundSeconds] = useState(() => saved?.roundSeconds ?? 60);
+  const [left, setLeft] = useState(() => saved?.left ?? 60);
   const [running, setRunning] = useState(false);
-  const [playerNames, setPlayerNames] = useState(saved.playerNames ?? "Nickolas\nSofia\nDmytro");
-  const [customWords, setCustomWords] = useState(saved.customWords || "");
-  const [customOnly, setCustomOnly] = useState(saved.customOnly || false);
-  const [assignments, setAssignments] = useState(saved.assignments || []);
+  const [playerNames, setPlayerNames] = useState(() => saved?.playerNames ?? "Nickolas\nSofia\nDmytro");
+  const [customWords, setCustomWords] = useState(() => saved?.customWords ?? "");
+  const [customOnly, setCustomOnly] = useState(() => saved?.customOnly ?? false);
+  const [assignments, setAssignments] = useState(() => saved?.assignments ?? []);
   const [visibleCards, setVisibleCards] = useState({});
   const [pendingWords, setPendingWords] = useState({});
   const [dealWarning, setDealWarning] = useState("");
   const scr = useRef(0);
-  const advanceTimeout = useRef(0);
+  const transition = useRef(0);
   const playerCopy = PLAYER_SETUP[lang] || PLAYER_SETUP.en;
 
   const parsedCustomWords = useMemo(() => uniqueWords(customWords.split(/[\n,]+/)), [customWords]);
   const getWordsForCategory = (category) => category === ALL_CATEGORIES
-    ? cats.flatMap((name) => wordsByDifficulty(games[game].c[name] || [], difficulty, game))
-    : wordsByDifficulty(games[game].c[category] || [], difficulty, game);
-  const filteredWhoAmIWords = useMemo(() => Object.values(games.whoami.c).flatMap((words) => wordsByDifficulty(words, difficulty, "whoami")), [games, difficulty]);
+    ? cats.flatMap((name) => wordsByDifficulty(games[game].c[name] || [], difficulty))
+    : wordsByDifficulty(games[game].c[category] || [], difficulty);
+  const filteredWhoAmIWords = useMemo(() => Object.values(games.whoami.c).flatMap((words) => wordsByDifficulty(words, difficulty)), [games, difficulty]);
   const whoAmIWordPool = useMemo(() => customOnly ? parsedCustomWords : uniqueWords([...filteredWhoAmIWords, ...parsedCustomWords]), [customOnly, filteredWhoAmIWords, parsedCustomWords]);
 
-  const configuration = JSON.stringify([game, lang, cat, difficulty, customOnly, parsedCustomWords]);
-  const previousConfiguration = useRef(saved.configuration || "");
-  const previousGame = useRef(game);
-  const [restart, setRestart] = useState(0);
-  const previousRestart = useRef(0);
-  const configurationChanged = configuration !== previousConfiguration.current || restart !== previousRestart.current;
-
-  useEffect(() => {
-    if (previousGame.current !== game || !cats.includes(cat) && cat !== ALL_CATEGORIES) {
-      previousGame.current = game;
-      setCat(ALL_CATEGORIES);
-    }
-  }, [game, cats, cat]);
+  const configuration = JSON.stringify([game, lang, cat, difficulty, customWords, customOnly]);
+  const previousConfiguration = useRef(saved ? configuration : null);
+  const configurationChanged = previousConfiguration.current !== configuration;
   useEffect(() => {
     if (!configurationChanged) return;
     previousConfiguration.current = configuration;
-    previousRestart.current = restart;
+    clearTimeout(transition.current); transition.current = 0;
+    setRunning(false); setLeft(roundSeconds);
     clearInterval(scr.current);
-    clearTimeout(advanceTimeout.current);
-    setRunning(false);
-    setLeft(roundSeconds);
     setQueue(shuffle(game === "whoami" ? (customOnly ? parsedCustomWords : uniqueWords([...getWordsForCategory(cat), ...parsedCustomWords])) : getWordsForCategory(cat)));
     setIdx(0); setShown(false); setExit(null); setEnc(false); setText(""); setScore({ got: 0, skipped: 0 }); setAssignments([]); setVisibleCards({}); setPendingWords({}); setDealWarning("");
-  }, [configuration, restart]);
-  useEffect(() => {
-    // Skip state from before a filter reset.
-    if (configurationChanged) return;
-    try {
-      localStorage.setItem(SESSION_KEY, JSON.stringify({ game, configuration, cat, difficulty, queue, idx: exit ? idx + 1 : idx, score, roundSeconds, left, playerNames, customWords, customOnly, assignments }));
-    } catch { /* The game remains playable when browser storage is unavailable. */ }
-  }, [game, configuration, cat, difficulty, queue, idx, score, roundSeconds, left, playerNames, customWords, customOnly, assignments, restart, exit]);
+  }, [game, cat, games, parsedCustomWords, customOnly, difficulty]);
   useEffect(() => {
     if (!running) return;
     const id = setInterval(() => setLeft((l) => { if (l <= 1) { setRunning(false); return 0; } return l - 1; }), 1000);
     return () => clearInterval(id);
   }, [running]);
-  useEffect(() => () => { clearInterval(scr.current); clearTimeout(advanceTimeout.current); }, []);
+  useEffect(() => () => { clearInterval(scr.current); clearTimeout(transition.current); }, []);
 
-  const word = queue[idx] || "";
   useEffect(() => {
-    if (!word) setRunning(false);
-  }, [word]);
+    if (configurationChanged) return;
+    // Commit a pending card transition as one logical action, even during its animation.
+    setStorageOk(writeValue(storageKey, { version: 1, cat, difficulty, queue,
+      idx: idx + (exit ? 1 : 0), score, roundSeconds, left, playerNames, customWords, customOnly, assignments }));
+  }, [storageKey, cat, difficulty, queue, idx, exit, score, roundSeconds, left, playerNames, customWords, customOnly, assignments]);
+  useEffect(() => {
+    const pause = () => { if (document.hidden) { setRunning(false); setVisibleCards({}); } };
+    document.addEventListener("visibilitychange", pause);
+    return () => document.removeEventListener("visibilitychange", pause);
+  }, []);
+  const newGame = () => {
+    if (!window.confirm(progressCopy.confirm)) return;
+    clearInterval(scr.current);
+    clearTimeout(transition.current); transition.current = 0;
+    setQueue(shuffle(queue)); setIdx(0); setScore({ got: 0, skipped: 0 });
+    setAssignments([]); setVisibleCards({}); setPendingWords({});
+    setRunning(false); setLeft(roundSeconds); setShown(false); setText(""); setExit(null); setEnc(false);
+  };
+  const word = queue[idx] || "";
+  useEffect(() => { if (!word) setRunning(false); }, [word]);
 
   const reveal = () => {
     if (shown || exit || !word) return;
@@ -505,13 +217,12 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
   };
 
   const advance = (dir) => {
-    if (exit || !word) return;
+    if (exit || transition.current || !word) return;
     if (!shown && dir === "next") return reveal();
     clearInterval(scr.current);
-    clearTimeout(advanceTimeout.current);
     setExit(dir);
     setScore((s) => (dir === "skip" ? { ...s, skipped: s.skipped + 1 } : { ...s, got: s.got + 1 }));
-    advanceTimeout.current = setTimeout(() => { setIdx((i) => i + 1); setShown(false); setEnc(false); setExit(null); setText(""); }, RM ? 0 : 380);
+    transition.current = setTimeout(() => { transition.current = 0; setIdx((i) => i + 1); setShown(false); setEnc(false); setExit(null); setText(""); }, RM ? 0 : 380);
   };
 
   const cardStyle = (i) => i === 0 && exit
@@ -526,10 +237,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
 
   const toggleTimer = () => {
     if (running) setRunning(false);
-    else {
-      if (left === 0) setLeft(roundSeconds);
-      setRunning(true);
-    }
+    else { if (left === 0) setLeft(roundSeconds); setRunning(true); }
   };
 
   const allWhoAmIWords = whoAmIWordPool;
@@ -545,7 +253,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
     const preferredWords = customOnly ? parsedCustomWords : [...getWordsForCategory(cat), ...parsedCustomWords];
     const fallbackWords = customOnly || cat === ALL_CATEGORIES ? [] : Object.entries(categories)
       .filter(([category]) => category !== cat)
-      .flatMap(([, words]) => wordsByDifficulty(words, difficulty, "whoami"));
+      .flatMap(([, words]) => wordsByDifficulty(words, difficulty));
     const availableWords = uniqueWords([...shuffle(preferredWords), ...shuffle(fallbackWords)]);
     const dealt = parsedNames.slice(0, availableWords.length).map((name, i) => ({
       id: `${name}-${i}-${Date.now()}`,
@@ -570,12 +278,12 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
     const usedByPlayer = new Set((target.usedWords || [target.word]).map((word) => word.toLocaleLowerCase()));
     const nextWord = shuffle(allWhoAmIWords).find((candidate) => !usedByPlayer.has(candidate.toLocaleLowerCase()) && !activeWords.has(candidate.toLocaleLowerCase()));
     if (!nextWord) {
-      setAssignments((current) => current.map((item) => item.id === id ? { ...item, word: "", exhausted: true, lastWord: item.word, lastOutcome: outcome, usedWords: [...new Set([...(item.usedWords || []), item.word])] } : item));
+      setAssignments((current) => current.map((item) => item.id === id ? { ...item, word: "", lastWord: item.word, lastOutcome: outcome, usedWords: [...new Set([...(item.usedWords || []), item.word])] } : item));
       setVisibleCards((current) => ({ ...current, [id]: false }));
       setDealWarning(playerCopy.noNewWord);
       return;
     }
-    setAssignments((current) => current.map((item) => item.id === id ? { ...item, word: nextWord, exhausted: false, lastWord: item.word, lastOutcome: outcome, usedWords: [...new Set([...(item.usedWords || []), item.word, nextWord])] } : item));
+    setAssignments((current) => current.map((item) => item.id === id ? { ...item, word: nextWord, lastWord: item.word, lastOutcome: outcome, usedWords: [...new Set([...(item.usedWords || []), item.word, nextWord])] } : item));
     setVisibleCards((current) => ({ ...current, [id]: false }));
     setPendingWords((current) => ({ ...current, [id]: "" }));
     setDealWarning("");
@@ -599,7 +307,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
       setDealWarning(playerCopy.manualDuplicate);
       return;
     }
-    setAssignments((current) => current.map((item) => item.id === id ? { ...item, word, exhausted: false, lastWord: item.word || item.lastWord, lastOutcome: "manual", usedWords: [...new Set([...(item.usedWords || []), item.word, word])] } : item));
+    setAssignments((current) => current.map((item) => item.id === id ? { ...item, word, lastWord: item.word || item.lastWord, lastOutcome: "manual", usedWords: [...new Set([...(item.usedWords || []), item.word, word])] } : item));
     setVisibleCards((current) => ({ ...current, [id]: false }));
     setPendingWords((current) => ({ ...current, [id]: "" }));
     setDealWarning("");
@@ -622,10 +330,13 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
             <span>{t.difficultyLabel}</span>
             {DIFFICULTIES.map((level) => <button key={level} className="chip" aria-pressed={level === difficulty} onClick={() => setDifficulty(level)}>{t.difficulty[level]}</button>)}
           </div>
+          <div className="players-note" role="status">{storageOk ? (saved ? progressCopy.restored : progressCopy.saved) : progressCopy.failed}</div>
+          <button className="btn sm" disabled={!!exit} onClick={newGame}>{progressCopy.newGame}</button>
+
           <div className="timer">
             <b>{left}</b>
             <div className="tbar"><i style={{ transform: `scaleX(${Math.max(0, Math.min(1, left / roundSeconds))})` }} /></div>
-            <button className="btn sm" onClick={toggleTimer}>{running ? roundCopy.pause : left !== roundSeconds ? roundCopy.resume : t.startTimer}</button>
+            <button className="btn sm" onClick={toggleTimer}>{running ? roundCopy.pause : left !== roundSeconds ? progressCopy.resume : t.startTimer}</button>
             <button className="btn sm" onClick={() => { setRunning(false); setLeft(roundSeconds); }}>{t.reset}</button>
           </div>
           <div className="timer-options" aria-label={t.timerDuration}>
@@ -680,7 +391,6 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
             <button className="btn" onClick={() => advance("next")} disabled={!word}>{t.next}</button>
             <button className="btn" onClick={() => advance("skip")} disabled={!word}>{t.skip}</button>
           </div>
-          <button className="btn" onClick={() => setRestart((value) => value + 1)}>{roundCopy.restart}</button>
           <div className="score">{t.guessed} {score.got} · {t.skipped} {score.skipped}</div>
           {game === "whoami" && assignments.length > 0 && (
             <div className="assigned-grid">
@@ -770,8 +480,9 @@ function LanguageSwitcher({ lang, setLang, label }) {
 }
 
 export default function NickolasGames() {
-  const [lang, setLang] = useState(() => localStorage.getItem("nickolasgames-lang") || "en");
-  const [game, setGame] = useState(() => readSession().game || "crocodile");
+  const [lang, setLang] = useState(() => { try { const l = localStorage.getItem("nickolasgames-lang"); return COPY[l] ? l : "en"; } catch { return "en"; } });
+  const [game, setGame] = useState(() => { const g = readValue("nickolasgames-active-game"); return PLAYABLE.includes(g) ? g : "crocodile"; });
+  useEffect(() => { writeValue("nickolasgames-active-game", game); }, [game]);
   const t = COPY[lang] || COPY.en;
   const choose = (k, scroll) => {
     setGame(k === "random" ? pickRandom() : k);
@@ -779,17 +490,20 @@ export default function NickolasGames() {
   };
 
   useEffect(() => {
-    localStorage.setItem("nickolasgames-lang", lang);
+    try { localStorage.setItem("nickolasgames-lang", lang); } catch {}
     document.documentElement.lang = lang;
   }, [lang]);
 
   return (
     <>
       <nav><span>NickolasGames</span><LanguageSwitcher lang={lang} setLang={setLang} label={t.language} /></nav>
+      <AppStatus lang={lang} />
       <Hero t={t} />
       <PlaneFlight title={t.flight} />
       <GamesGrid games={t.games} t={t} onPlay={(k) => choose(k, true)} />
-      <CardStackPreview game={game} games={t.games} t={t} lang={lang} onGame={(k) => choose(k, false)} />
+      {game === "crocodile"
+        ? <CharadesGame key={`${lang}-${game}`} games={t.games} t={t} lang={lang} onGame={(k) => choose(k, false)} />
+        : <CardStackPreview key={`${lang}-${game}`} game={game} games={t.games} t={t} lang={lang} onGame={(k) => choose(k, false)} />}
       <HowItWorks t={t} />
       <Testimonials t={t} />
       <FinalCta t={t} />
@@ -797,4 +511,3 @@ export default function NickolasGames() {
     </>
   );
 }
-
