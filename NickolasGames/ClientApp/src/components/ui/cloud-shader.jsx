@@ -1,5 +1,5 @@
 "use client";;
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const VERT = `
@@ -130,7 +130,7 @@ void main() {
   vec3 color = sky;
 
   // faint haze band near the horizon
-  color = mix(color, u_skyBottom * 1.06, smoothstep(0.35, 0.0, v_uv.y) * 0.5);
+  color = mix(color, u_skyBottom * 1.06, (1.0 - smoothstep(0.0, 0.35, v_uv.y)) * 0.5);
 
   // soft sun glow, upper area
   vec2 sunPos = vec2(aspect * 0.78, 0.92);
@@ -217,6 +217,7 @@ export const CloudShader = ({
   skyBottomColor = "#8cbfe8"
 }) => {
   const canvasRef = useRef(null);
+  const [contextVersion, setContextVersion] = useState(0);
   const paramsRef = useRef({
     speed,
     count,
@@ -236,34 +237,82 @@ export const CloudShader = ({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    canvas.style.visibility = "hidden";
 
     const gl = canvas.getContext("webgl", {
-      alpha: false,
+      alpha: true,
       antialias: false,
+      depth: false,
+      stencil: false,
       premultipliedAlpha: false,
+      // Keep the last frame while an embedded browser recomposites during scroll.
+      preserveDrawingBuffer: true,
     });
     if (!gl) return;
 
-    const vert = compile(gl, gl.VERTEX_SHADER, VERT);
-    const frag = compile(gl, gl.FRAGMENT_SHADER, FRAG);
-    if (!vert || !frag) return;
+    let frame = 0;
+    let running = true;
+    let contextLost = false;
+    let inView = true;
+    let observer;
+    let visibilityObserver;
+    let vert;
+    let frag;
+    let program;
+    let buffer;
+    const lost = (event) => {
+      event.preventDefault();
+      contextLost = true;
+      cancelAnimationFrame(frame);
+      frame = 0;
+      canvas.style.visibility = "hidden";
+    };
+    const restored = () => setContextVersion((version) => version + 1);
+    canvas.addEventListener("webglcontextlost", lost);
+    canvas.addEventListener("webglcontextrestored", restored);
 
-    const program = gl.createProgram();
-    if (!program) return;
+    const cleanup = () => {
+      running = false;
+      cancelAnimationFrame(frame);
+      observer?.disconnect();
+      visibilityObserver?.disconnect();
+      document.removeEventListener("visibilitychange", visibility);
+      canvas.removeEventListener("webglcontextlost", lost);
+      canvas.removeEventListener("webglcontextrestored", restored);
+      canvas.style.visibility = "hidden";
+      if (!contextLost) {
+        if (buffer) gl.deleteBuffer(buffer);
+        if (program) gl.deleteProgram(program);
+        if (vert) gl.deleteShader(vert);
+        if (frag) gl.deleteShader(frag);
+      }
+    };
+
+    function visibility() {
+      cancelAnimationFrame(frame);
+      frame = 0;
+      if (!document.hidden) {
+        resize();
+        schedule();
+      }
+    }
+
+    vert = compile(gl, gl.VERTEX_SHADER, VERT);
+    frag = compile(gl, gl.FRAGMENT_SHADER, FRAG);
+    if (!vert || !frag) return cleanup;
+    program = gl.createProgram();
+    if (!program) return cleanup;
     gl.attachShader(program, vert);
     gl.attachShader(program, frag);
     gl.bindAttribLocation(program, 0, "a_pos");
     gl.linkProgram(program);
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return;
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return cleanup;
     gl.useProgram(program);
 
-    const buffer = gl.createBuffer();
+    buffer = gl.createBuffer();
+    if (!buffer) return cleanup;
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.bufferData(
-      gl.ARRAY_BUFFER,
-      new Float32Array([-1, -1, 3, -1, -1, 3]),
-      gl.STATIC_DRAW,
-    );
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
     gl.enableVertexAttribArray(0);
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
@@ -275,64 +324,79 @@ export const CloudShader = ({
       skyTop: gl.getUniformLocation(program, "u_skyTop"),
       skyBottom: gl.getUniformLocation(program, "u_skyBottom"),
     };
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const interval = window.matchMedia("(pointer: coarse)").matches ? 1000 / 30 : 0;
+    const start = performance.now();
+    let lastDraw = -Infinity;
 
-    let frame = 0;
-    let running = true;
-    const reduceMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
+    function render(now) {
+      if (!running || contextLost || gl.isContextLost()) return;
+      const p = paramsRef.current;
+      const cloud = parseHex(p.cloudColor);
+      const skyTop = parseHex(p.skyTopColor);
+      const skyBottom = parseHex(p.skyBottomColor);
+      gl.clearColor(skyBottom[0], skyBottom[1], skyBottom[2], 1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.uniform1f(loc.time, reduceMotion ? 0 : ((now - start) / 1000) * p.speed);
+      gl.uniform1f(loc.count, Math.min(6, Math.max(1, p.count)));
+      gl.uniform3f(loc.cloud, ...cloud);
+      gl.uniform3f(loc.skyTop, ...skyTop);
+      gl.uniform3f(loc.skyBottom, ...skyBottom);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      canvas.style.visibility = "visible";
+      lastDraw = now;
+    }
 
-    const resize = () => {
+    function resize() {
+      if (!running || contextLost || gl.isContextLost()) return;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const width = canvas.clientWidth;
-      const height = canvas.clientHeight;
-      const w = Math.max(1, Math.floor(width * dpr));
-      const h = Math.max(1, Math.floor(height * dpr));
+      const w = Math.max(1, Math.floor(canvas.clientWidth * dpr));
+      const h = Math.max(1, Math.floor(canvas.clientHeight * dpr));
       if (canvas.width !== w || canvas.height !== h) {
         canvas.width = w;
         canvas.height = h;
       }
       gl.viewport(0, 0, w, h);
       gl.uniform2f(loc.res, w, h);
-    };
+      // Resizing clears the buffer; paint before the browser can show that frame.
+      render(performance.now());
+    }
 
-    const observer = new ResizeObserver(resize);
+    function schedule() {
+      if (!frame && running && inView && !document.hidden && !reduceMotion && !contextLost && !gl.isContextLost()) {
+        frame = requestAnimationFrame(draw);
+      }
+    }
+
+    function draw(now) {
+      frame = 0;
+      if (!running || !inView || document.hidden || contextLost || gl.isContextLost()) return;
+      if (now - lastDraw >= interval) render(now);
+      schedule();
+    }
+
+    observer = new ResizeObserver(resize);
     observer.observe(canvas);
+    visibilityObserver = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      if (!inView) {
+        cancelAnimationFrame(frame);
+        frame = 0;
+      } else {
+        render(performance.now());
+        schedule();
+      }
+    });
+    visibilityObserver.observe(canvas);
+    document.addEventListener("visibilitychange", visibility);
     resize();
-
-    const start = performance.now();
-    const draw = (now) => {
-      if (!running) return;
-      const p = paramsRef.current;
-      const elapsed = reduceMotion ? 0 : ((now - start) / 1000) * p.speed;
-      const cloud = parseHex(p.cloudColor);
-      const skyTop = parseHex(p.skyTopColor);
-      const skyBottom = parseHex(p.skyBottomColor);
-
-      gl.uniform1f(loc.time, elapsed);
-      gl.uniform1f(loc.count, Math.min(6, Math.max(1, p.count)));
-      gl.uniform3f(loc.cloud, cloud[0], cloud[1], cloud[2]);
-      gl.uniform3f(loc.skyTop, skyTop[0], skyTop[1], skyTop[2]);
-      gl.uniform3f(loc.skyBottom, skyBottom[0], skyBottom[1], skyBottom[2]);
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
-      frame = requestAnimationFrame(draw);
-    };
-
-    frame = requestAnimationFrame(draw);
-
-    return () => {
-      running = false;
-      cancelAnimationFrame(frame);
-      observer.disconnect();
-      gl.deleteBuffer(buffer);
-      gl.deleteProgram(program);
-      gl.deleteShader(vert);
-      gl.deleteShader(frag);
-    };
-  }, []);
+    schedule();
+    return cleanup;
+  }, [contextVersion, speed, count, cloudColor, skyTopColor, skyBottomColor]);
 
   return (
     <div
+      style={{ background: `linear-gradient(180deg, ${skyTopColor}, ${skyBottomColor})` }}
       className={cn(
         "relative h-full min-h-80 w-full overflow-hidden",
         className,
@@ -340,6 +404,7 @@ export const CloudShader = ({
     >
       <canvas
         ref={canvasRef}
+        style={{ visibility: "hidden" }}
         className="pointer-events-none absolute inset-0 h-full w-full"
       />
       {children ? (
