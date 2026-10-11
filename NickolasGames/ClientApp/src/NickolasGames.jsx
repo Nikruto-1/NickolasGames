@@ -128,18 +128,50 @@ const DIFFICULTIES = ["easy", "medium", "hard"];
 const ALL_CATEGORIES = "__all__";
 const RM = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const shuffle = (a) => a.map((v) => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map((x) => x[1]);
-const wordDifficultyScore = (word) => {
-  const clean = String(word).replace(/[€$#@&*+?.,!()\-]/g, "").trim();
-  const words = clean.split(/\s+/).filter(Boolean).length;
-  return clean.length + Math.max(0, words - 1) * 5;
+// Parallel translations share manually assigned semantic difficulty.
+const WORD_LEVELS = {
+  whoami: [["medium", "easy", "hard", "medium", "hard"], ["medium", "hard", "medium", "easy", "easy"], ["easy", "easy", "medium", "hard", "medium"], ["easy", "easy", "medium", "easy", "easy", "easy", "easy", "easy", "medium", "easy", "easy", "easy", "easy", "hard", "medium", "medium", "easy", "medium", "hard", "easy", "medium", "hard"]],
+  crocodile: [["easy", "easy", "medium", "hard", "medium"], ["hard", "hard", "easy", "medium", "medium"], ["easy", "medium", "easy", "medium", "hard"]],
+  alias: [["easy", "medium", "easy", "easy", "medium"], ["easy", "easy", "hard", "easy", "medium"], ["medium", "easy", "medium", "hard", "hard"]],
+  truth: [["easy", "medium", "hard"], ["hard", "medium", "easy"]],
 };
-const wordsByDifficulty = (words, difficulty) => {
-  if (!Array.isArray(words) || words.length < 3) return words || [];
-  const sorted = [...words].sort((a, b) => wordDifficultyScore(a) - wordDifficultyScore(b));
-  const third = Math.ceil(sorted.length / 3);
-  if (difficulty === "easy") return sorted.slice(0, third);
-  if (difficulty === "hard") return sorted.slice(third * 2);
-  return sorted.slice(third, Math.max(third + 1, third * 2));
+const difficultyByWord = new Map();
+for (const copy of Object.values(COPY)) {
+  for (const game of PLAYABLE) {
+    Object.values(copy.games[game].c).forEach((words, category) => {
+      words.forEach((word, index) => difficultyByWord.set(game + ":" + word, WORD_LEVELS[game][category][index]));
+    });
+  }
+}
+const wordsByDifficulty = (words, difficulty, game) => (words || []).filter((word) => difficultyByWord.get(game + ":" + word) === difficulty);
+const uniqueWords = (words) => [...new Map(words.map((word) => [word.trim().toLocaleLowerCase(), word.trim()])).values()].filter(Boolean);
+const SESSION_KEY = "nickolasgames-session-v1";
+const readSession = () => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SESSION_KEY));
+    if (!saved || !PLAYABLE.includes(saved.game) || !DIFFICULTIES.includes(saved.difficulty)) return {};
+    if (!Array.isArray(saved.queue) || !saved.queue.every((word) => typeof word === "string")) return {};
+    if (!Array.isArray(saved.assignments) || !saved.assignments.every((item) =>
+      item && typeof item.id === "string" && typeof item.name === "string" &&
+      typeof item.word === "string" && Array.isArray(item.usedWords) &&
+      item.usedWords.every((word) => typeof word === "string"))) return {};
+    if (!Number.isInteger(saved.idx) || saved.idx < 0 || saved.idx > saved.queue.length) return {};
+    if (typeof saved.playerNames !== "string" || typeof saved.customWords !== "string" ||
+      typeof saved.cat !== "string" || typeof saved.configuration !== "string" ||
+      typeof saved.customOnly !== "boolean") return {};
+    if (!Number.isFinite(saved.roundSeconds) || saved.roundSeconds < 10 || saved.roundSeconds > 600 ||
+      !Number.isFinite(saved.left) || saved.left < 0 || saved.left > saved.roundSeconds) return {};
+    if (!Number.isInteger(saved.score?.got) || saved.score.got < 0 ||
+      !Number.isInteger(saved.score?.skipped) || saved.score.skipped < 0) return {};
+    return saved;
+  } catch { return {}; }
+};
+const ROUND_MESSAGES = {
+  uk: { exhausted: "Слова закінчилися. Обери іншу категорію або почни нову гру.", restart: "Нова гра", pause: "Пауза", resume: "Продовжити" },
+  en: { exhausted: "All words have been used. Choose another category or start a new game.", restart: "New game", pause: "Pause", resume: "Resume" },
+  sv: { exhausted: "Alla ord har använts. Välj en annan kategori eller börja ett nytt spel.", restart: "Nytt spel", pause: "Pausa", resume: "Fortsätt" },
+  de: { exhausted: "Alle Wörter wurden verwendet. Wähle eine andere Kategorie oder starte ein neues Spiel.", restart: "Neues Spiel", pause: "Pause", resume: "Fortsetzen" },
+  es: { exhausted: "Se han usado todas las palabras. Elige otra categoría o empieza una nueva partida.", restart: "Nueva partida", pause: "Pausa", resume: "Continuar" },
 };
 const go = (id) => document.querySelector(id)?.scrollIntoView({ behavior: RM ? "auto" : "smooth" });
 const pickRandom = () => PLAYABLE[Math.floor(Math.random() * PLAYABLE.length)];
@@ -380,50 +412,81 @@ const PLAYER_SETUP = {
 };
 
 function CardStackPreview({ game, games, t, lang, onGame }) {
+  const [saved] = useState(readSession);
+  const roundCopy = ROUND_MESSAGES[lang] || ROUND_MESSAGES.en;
   const cats = useMemo(() => Object.keys(games[game].c), [game, games]);
-  const [cat, setCat] = useState(ALL_CATEGORIES);
-  const [difficulty, setDifficulty] = useState("medium");
-  const [queue, setQueue] = useState([]);
-  const [idx, setIdx] = useState(0);
+  const [cat, setCat] = useState(saved.cat || ALL_CATEGORIES);
+  const [difficulty, setDifficulty] = useState(saved.difficulty || "medium");
+  const [queue, setQueue] = useState(saved.queue || []);
+  const [idx, setIdx] = useState(saved.idx || 0);
   const [shown, setShown] = useState(false);
   const [text, setText] = useState("");
   const [enc, setEnc] = useState(false);
   const [exit, setExit] = useState(null);
-  const [score, setScore] = useState({ got: 0, skipped: 0 });
-  const [roundSeconds, setRoundSeconds] = useState(60);
-  const [left, setLeft] = useState(60);
+  const [score, setScore] = useState(saved.score || { got: 0, skipped: 0 });
+  const [roundSeconds, setRoundSeconds] = useState(saved.roundSeconds || 60);
+  const [left, setLeft] = useState(saved.left ?? 60);
   const [running, setRunning] = useState(false);
-  const [playerNames, setPlayerNames] = useState("Nickolas\nSofia\nDmytro");
-  const [customWords, setCustomWords] = useState("");
-  const [customOnly, setCustomOnly] = useState(false);
-  const [assignments, setAssignments] = useState([]);
+  const [playerNames, setPlayerNames] = useState(saved.playerNames ?? "Nickolas\nSofia\nDmytro");
+  const [customWords, setCustomWords] = useState(saved.customWords || "");
+  const [customOnly, setCustomOnly] = useState(saved.customOnly || false);
+  const [assignments, setAssignments] = useState(saved.assignments || []);
   const [visibleCards, setVisibleCards] = useState({});
   const [pendingWords, setPendingWords] = useState({});
   const [dealWarning, setDealWarning] = useState("");
   const scr = useRef(0);
+  const advanceTimeout = useRef(0);
   const playerCopy = PLAYER_SETUP[lang] || PLAYER_SETUP.en;
 
-  const parsedCustomWords = useMemo(() => [...new Set(customWords.split(/[\n,]+/).map((word) => word.trim()).filter(Boolean))], [customWords]);
+  const parsedCustomWords = useMemo(() => uniqueWords(customWords.split(/[\n,]+/)), [customWords]);
   const getWordsForCategory = (category) => category === ALL_CATEGORIES
-    ? cats.flatMap((name) => wordsByDifficulty(games[game].c[name] || [], difficulty))
-    : wordsByDifficulty(games[game].c[category] || [], difficulty);
-  const filteredWhoAmIWords = useMemo(() => Object.values(games.whoami.c).flatMap((words) => wordsByDifficulty(words, difficulty)), [games, difficulty]);
-  const whoAmIWordPool = useMemo(() => customOnly ? parsedCustomWords : [...new Set([...filteredWhoAmIWords, ...parsedCustomWords])], [customOnly, filteredWhoAmIWords, parsedCustomWords]);
+    ? cats.flatMap((name) => wordsByDifficulty(games[game].c[name] || [], difficulty, game))
+    : wordsByDifficulty(games[game].c[category] || [], difficulty, game);
+  const filteredWhoAmIWords = useMemo(() => Object.values(games.whoami.c).flatMap((words) => wordsByDifficulty(words, difficulty, "whoami")), [games, difficulty]);
+  const whoAmIWordPool = useMemo(() => customOnly ? parsedCustomWords : uniqueWords([...filteredWhoAmIWords, ...parsedCustomWords]), [customOnly, filteredWhoAmIWords, parsedCustomWords]);
 
-  useEffect(() => { setCat(ALL_CATEGORIES); }, [game, games]);
+  const configuration = JSON.stringify([game, lang, cat, difficulty, customOnly, parsedCustomWords]);
+  const previousConfiguration = useRef(saved.configuration || "");
+  const previousGame = useRef(game);
+  const [restart, setRestart] = useState(0);
+  const previousRestart = useRef(0);
+  const configurationChanged = configuration !== previousConfiguration.current || restart !== previousRestart.current;
+
   useEffect(() => {
+    if (previousGame.current !== game || !cats.includes(cat) && cat !== ALL_CATEGORIES) {
+      previousGame.current = game;
+      setCat(ALL_CATEGORIES);
+    }
+  }, [game, cats, cat]);
+  useEffect(() => {
+    if (!configurationChanged) return;
+    previousConfiguration.current = configuration;
+    previousRestart.current = restart;
     clearInterval(scr.current);
-    setQueue(shuffle(game === "whoami" ? (customOnly ? parsedCustomWords : [...new Set([...getWordsForCategory(cat), ...parsedCustomWords])]) : getWordsForCategory(cat)));
+    clearTimeout(advanceTimeout.current);
+    setRunning(false);
+    setLeft(roundSeconds);
+    setQueue(shuffle(game === "whoami" ? (customOnly ? parsedCustomWords : uniqueWords([...getWordsForCategory(cat), ...parsedCustomWords])) : getWordsForCategory(cat)));
     setIdx(0); setShown(false); setExit(null); setEnc(false); setText(""); setScore({ got: 0, skipped: 0 }); setAssignments([]); setVisibleCards({}); setPendingWords({}); setDealWarning("");
-  }, [game, cat, games, parsedCustomWords, customOnly, difficulty]);
+  }, [configuration, restart]);
+  useEffect(() => {
+    // Skip state from before a filter reset.
+    if (configurationChanged) return;
+    try {
+      localStorage.setItem(SESSION_KEY, JSON.stringify({ game, configuration, cat, difficulty, queue, idx: exit ? idx + 1 : idx, score, roundSeconds, left, playerNames, customWords, customOnly, assignments }));
+    } catch { /* The game remains playable when browser storage is unavailable. */ }
+  }, [game, configuration, cat, difficulty, queue, idx, score, roundSeconds, left, playerNames, customWords, customOnly, assignments, restart, exit]);
   useEffect(() => {
     if (!running) return;
     const id = setInterval(() => setLeft((l) => { if (l <= 1) { setRunning(false); return 0; } return l - 1; }), 1000);
     return () => clearInterval(id);
   }, [running]);
-  useEffect(() => () => clearInterval(scr.current), []);
+  useEffect(() => () => { clearInterval(scr.current); clearTimeout(advanceTimeout.current); }, []);
 
-  const word = queue.length ? queue[idx % queue.length] : "";
+  const word = queue[idx] || "";
+  useEffect(() => {
+    if (!word) setRunning(false);
+  }, [word]);
 
   const reveal = () => {
     if (shown || exit || !word) return;
@@ -445,9 +508,10 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
     if (exit || !word) return;
     if (!shown && dir === "next") return reveal();
     clearInterval(scr.current);
+    clearTimeout(advanceTimeout.current);
     setExit(dir);
     setScore((s) => (dir === "skip" ? { ...s, skipped: s.skipped + 1 } : { ...s, got: s.got + 1 }));
-    setTimeout(() => { setIdx((i) => i + 1); setShown(false); setEnc(false); setExit(null); setText(""); }, RM ? 0 : 380);
+    advanceTimeout.current = setTimeout(() => { setIdx((i) => i + 1); setShown(false); setEnc(false); setExit(null); setText(""); }, RM ? 0 : 380);
   };
 
   const cardStyle = (i) => i === 0 && exit
@@ -461,7 +525,11 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
   };
 
   const toggleTimer = () => {
-    if (running || left !== roundSeconds) { setRunning(false); setLeft(roundSeconds); } else setRunning(true);
+    if (running) setRunning(false);
+    else {
+      if (left === 0) setLeft(roundSeconds);
+      setRunning(true);
+    }
   };
 
   const allWhoAmIWords = whoAmIWordPool;
@@ -477,18 +545,18 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
     const preferredWords = customOnly ? parsedCustomWords : [...getWordsForCategory(cat), ...parsedCustomWords];
     const fallbackWords = customOnly || cat === ALL_CATEGORIES ? [] : Object.entries(categories)
       .filter(([category]) => category !== cat)
-      .flatMap(([, words]) => wordsByDifficulty(words, difficulty));
-    const uniqueWords = [...new Set([...shuffle(preferredWords), ...shuffle(fallbackWords)])];
-    const dealt = parsedNames.slice(0, uniqueWords.length).map((name, i) => ({
+      .flatMap(([, words]) => wordsByDifficulty(words, difficulty, "whoami"));
+    const availableWords = uniqueWords([...shuffle(preferredWords), ...shuffle(fallbackWords)]);
+    const dealt = parsedNames.slice(0, availableWords.length).map((name, i) => ({
       id: `${name}-${i}-${Date.now()}`,
       name,
-      word: uniqueWords[i],
-      usedWords: [uniqueWords[i]],
+      word: availableWords[i],
+      usedWords: [availableWords[i]],
     }));
     setAssignments(dealt);
     setVisibleCards({});
     setPendingWords({});
-    setDealWarning(parsedNames.length > uniqueWords.length ? playerCopy.notEnough : "");
+    setDealWarning(parsedNames.length > availableWords.length ? playerCopy.notEnough : "");
   };
 
   const toggleAssignedCard = (id) => {
@@ -497,17 +565,17 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
 
   const finishAssignedCard = (id, outcome) => {
     const target = assignments.find((item) => item.id === id);
-    if (!target) return;
-    const activeWords = new Set(assignments.filter((item) => item.id !== id).map((item) => item.word));
-    const usedByPlayer = new Set(target.usedWords || [target.word]);
-    const nextWord = shuffle(allWhoAmIWords).find((candidate) => !usedByPlayer.has(candidate) && !activeWords.has(candidate));
+    if (!target || !target.word) return;
+    const activeWords = new Set(assignments.filter((item) => item.id !== id).map((item) => item.word.toLocaleLowerCase()));
+    const usedByPlayer = new Set((target.usedWords || [target.word]).map((word) => word.toLocaleLowerCase()));
+    const nextWord = shuffle(allWhoAmIWords).find((candidate) => !usedByPlayer.has(candidate.toLocaleLowerCase()) && !activeWords.has(candidate.toLocaleLowerCase()));
     if (!nextWord) {
-      setAssignments((current) => current.map((item) => item.id === id ? { ...item, lastWord: item.word, lastOutcome: outcome, usedWords: [...new Set([...(item.usedWords || []), item.word])] } : item));
+      setAssignments((current) => current.map((item) => item.id === id ? { ...item, word: "", exhausted: true, lastWord: item.word, lastOutcome: outcome, usedWords: [...new Set([...(item.usedWords || []), item.word])] } : item));
       setVisibleCards((current) => ({ ...current, [id]: false }));
       setDealWarning(playerCopy.noNewWord);
       return;
     }
-    setAssignments((current) => current.map((item) => item.id === id ? { ...item, word: nextWord, lastWord: item.word, lastOutcome: outcome, usedWords: [...new Set([...(item.usedWords || []), item.word, nextWord])] } : item));
+    setAssignments((current) => current.map((item) => item.id === id ? { ...item, word: nextWord, exhausted: false, lastWord: item.word, lastOutcome: outcome, usedWords: [...new Set([...(item.usedWords || []), item.word, nextWord])] } : item));
     setVisibleCards((current) => ({ ...current, [id]: false }));
     setPendingWords((current) => ({ ...current, [id]: "" }));
     setDealWarning("");
@@ -531,7 +599,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
       setDealWarning(playerCopy.manualDuplicate);
       return;
     }
-    setAssignments((current) => current.map((item) => item.id === id ? { ...item, word, lastWord: item.word, lastOutcome: "manual", usedWords: [...new Set([...(item.usedWords || []), item.word, word])] } : item));
+    setAssignments((current) => current.map((item) => item.id === id ? { ...item, word, exhausted: false, lastWord: item.word || item.lastWord, lastOutcome: "manual", usedWords: [...new Set([...(item.usedWords || []), item.word, word])] } : item));
     setVisibleCards((current) => ({ ...current, [id]: false }));
     setPendingWords((current) => ({ ...current, [id]: "" }));
     setDealWarning("");
@@ -557,7 +625,8 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
           <div className="timer">
             <b>{left}</b>
             <div className="tbar"><i style={{ transform: `scaleX(${Math.max(0, Math.min(1, left / roundSeconds))})` }} /></div>
-            <button className="btn sm" onClick={toggleTimer}>{running || left !== roundSeconds ? t.reset : t.startTimer}</button>
+            <button className="btn sm" onClick={toggleTimer}>{running ? roundCopy.pause : left !== roundSeconds ? roundCopy.resume : t.startTimer}</button>
+            <button className="btn sm" onClick={() => { setRunning(false); setLeft(roundSeconds); }}>{t.reset}</button>
           </div>
           <div className="timer-options" aria-label={t.timerDuration}>
             <span>{t.timerDuration}</span>
@@ -590,13 +659,13 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
         </div>
         <div>
           <div className="deck" aria-live="polite">
-            {queue.length === 0 && (
+            {!word && (
               <div className="card empty-card">
                 <small>{games[game].n} · {cat === ALL_CATEGORIES ? t.allCategories : cat}</small>
-                <div className="w hid">{t.noWords}</div>
+                <div className="w hid">{queue.length ? roundCopy.exhausted : t.noWords}</div>
               </div>
             )}
-            {queue.length > 0 && [2, 1, 0].map((i) => {
+            {word && [2, 1, 0].map((i) => {
               const k = idx + i;
               return (
                 <div key={k} className="card" style={cardStyle(i)} onClick={i === 0 ? reveal : undefined}>
@@ -611,6 +680,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
             <button className="btn" onClick={() => advance("next")} disabled={!word}>{t.next}</button>
             <button className="btn" onClick={() => advance("skip")} disabled={!word}>{t.skip}</button>
           </div>
+          <button className="btn" onClick={() => setRestart((value) => value + 1)}>{roundCopy.restart}</button>
           <div className="score">{t.guessed} {score.got} · {t.skipped} {score.skipped}</div>
           {game === "whoami" && assignments.length > 0 && (
             <div className="assigned-grid">
@@ -620,12 +690,12 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
                   <article className="assigned-card" key={item.id}>
                     <small>{playerCopy.forPlayer}</small>
                     <h3>{item.name}</h3>
-                    <div className={"assigned-word" + (isVisible ? " visible" : "")}>{isVisible ? item.word : playerCopy.hidden}</div>
+                    <div role={item.word ? undefined : "status"} className={"assigned-word" + (isVisible ? " visible" : "")}>{item.word ? (isVisible ? item.word : playerCopy.hidden) : playerCopy.noNewWord}</div>
                     {item.lastWord && <div className="assigned-solved">{item.lastOutcome === "gaveUp" ? playerCopy.gaveUpWord : playerCopy.guessedWord}: <b>{item.lastWord}</b></div>}
                     <div className="assigned-actions">
-                      <button className="btn sm" onClick={() => toggleAssignedCard(item.id)}>{isVisible ? playerCopy.hide : playerCopy.show}</button>
-                      <button className="btn pri sm" onClick={() => markAssignedGuessed(item.id)}>{playerCopy.guessed}</button>
-                      <button className="btn sm" onClick={() => markAssignedGivenUp(item.id)}>{playerCopy.giveUp}</button>
+                      <button className="btn sm" disabled={!item.word} onClick={() => toggleAssignedCard(item.id)}>{isVisible ? playerCopy.hide : playerCopy.show}</button>
+                      <button className="btn pri sm" disabled={!item.word} onClick={() => markAssignedGuessed(item.id)}>{playerCopy.guessed}</button>
+                      <button className="btn sm" disabled={!item.word} onClick={() => markAssignedGivenUp(item.id)}>{playerCopy.giveUp}</button>
                     </div>
                     <div className="manual-word">
                       <label htmlFor={`manual-${item.id}`}>{playerCopy.manualLabel}</label>
@@ -701,7 +771,7 @@ function LanguageSwitcher({ lang, setLang, label }) {
 
 export default function NickolasGames() {
   const [lang, setLang] = useState(() => localStorage.getItem("nickolasgames-lang") || "en");
-  const [game, setGame] = useState("crocodile");
+  const [game, setGame] = useState(() => readSession().game || "crocodile");
   const t = COPY[lang] || COPY.en;
   const choose = (k, scroll) => {
     setGame(k === "random" ? pickRandom() : k);
