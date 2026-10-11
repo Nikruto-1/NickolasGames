@@ -204,5 +204,34 @@ export const WHOAMI_ES = {
       "Cíclope",
       "Grifo"
     ]
+  },
+  "Geografía": {
+    "easy": [
+      "Ucrania",
+      "Egipto (país de las pirámides)",
+      "París (ciudad del amor y de la Torre Eiffel)",
+      "Nueva York (ciudad de los rascacielos)",
+      "Londres (ciudad del Big Ben)",
+      "Roma (capital de Italia)",
+      "Japón",
+      "China",
+      "EE. UU.",
+      "Australia (país y continente con canguros)"
+    ],
+    "medium": [
+      "Torre Eiffel (París, Francia)",
+      "Estatua de la Libertad (Nueva York, EE. UU.)",
+      "Pirámide de Keops (Egipto)",
+      "Gran Muralla China (China)",
+      "Tokio (Japón)",
+      "Brasil",
+      "India",
+      "Canadá",
+      "Venecia (ciudad sobre el agua)",
+      "Atenas (Grecia)",
+      "Islandia (país de géiseres y glaciares)",
+      "Antártida (continente helado)"
+    ],
+    "hard": []
   }
 };
