@@ -2,8 +2,7 @@ import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { WHOAMI_UI } from '../locales/whoami-ui.js';
 import { PLAYER_SETUP } from '../locales/index.js';
 import { readValue, readProgress, writeValue } from '../utils/progress.js';
-import { DIFFICULTIES } from '../utils/difficulty.js';
-import { initialWhoami, validWhoami, WHOAMI_ALL, whoamiPool, whoamiReducer } from '../utils/whoami.js';
+import { initialWhoami, validWhoami, WHOAMI_ALL, WHOAMI_DIFFICULTIES, whoamiPool, whoamiReducer } from '../utils/whoami.js';
 
 export function WhoAmIGame({games,t,lang,onGame}) {
  const copy=WHOAMI_UI[lang]||WHOAMI_UI.en;
@@ -74,7 +73,7 @@ export function WhoAmIGame({games,t,lang,onGame}) {
        <div className="players-panel">
          <label className="players-label" htmlFor="whoami-category">{t.categoryLabel}</label>
          <select id="whoami-category" className="charades-category" value={state.category} onChange={event=>dispatch({type:'config',values:{category:event.target.value}})}><option value={WHOAMI_ALL}>{t.allCategories}</option>{Object.keys(games.whoami.c).map(cat=><option key={cat}>{cat}</option>)}</select>
-         <div className="difficulty" role="group" aria-label={t.difficultyLabel}><span>{t.difficultyLabel}</span>{DIFFICULTIES.map(level=><button className="chip" key={level} aria-pressed={state.difficulty===level} onClick={()=>dispatch({type:'config',values:{difficulty:level}})}>{t.difficulty[level]}</button>)}</div>
+         <div className="difficulty" role="group" aria-label={t.difficultyLabel}><span>{t.difficultyLabel}</span>{WHOAMI_DIFFICULTIES.map(level=><button className="chip" key={level} aria-pressed={state.difficulty===level} onClick={()=>dispatch({type:'config',values:{difficulty:level}})}>{level==='all'?copy.allLevels:t.difficulty[level]}</button>)}</div>
          <details className="whoami-advanced"><summary>{copy.advanced}</summary>
            <label className="players-label" htmlFor="whoami-custom">{pc.customLabel}</label><textarea id="whoami-custom" value={state.customWords} placeholder={pc.customPlaceholder} onChange={event=>dispatch({type:'config',values:{customWords:event.target.value}})}/>
            <p className="players-note">{pc.customHint}</p><label className="only-custom"><input type="checkbox" checked={state.customOnly} onChange={event=>dispatch({type:'config',values:{customOnly:event.target.checked}})}/>{pc.onlyCustom}</label>

@@ -1,9 +1,10 @@
 import { DIFFICULTIES, wordsByDifficulty } from './difficulty.js';
 export const WHOAMI_ALL = '__all__';
+export const WHOAMI_DIFFICULTIES = [...DIFFICULTIES, 'all'];
 export function whoamiPool(categories, category, difficulty, customWords, customOnly) {
   const custom = customWords.split(/[\n,]+/).map(w => w.trim()).filter(Boolean);
   const builtIn = customOnly ? [] : (category === WHOAMI_ALL ? Object.values(categories) : [categories[category]])
-    .flatMap(words => wordsByDifficulty(words, difficulty));
+    .flatMap(words => difficulty === 'all' ? DIFFICULTIES.flatMap(level => wordsByDifficulty(words, level)) : wordsByDifficulty(words, difficulty));
   const unique = [...new Map([...builtIn, ...custom].map(w => [w.toLocaleLowerCase(), w])).values()];
   for (let i = unique.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [unique[i], unique[j]] = [unique[j], unique[i]]; }
   return unique;
@@ -12,12 +13,12 @@ export function initialWhoami(legacy = null) {
   const assignments = Array.isArray(legacy?.assignments) ? legacy.assignments : [];
   const names = assignments.length ? assignments : (legacy?.playerNames || '').split(/[\n,]+/).map(name => ({ name: name.trim() })).filter(p => p.name);
   return { schema: 2, phase: assignments.length ? 'game' : 'setup', category: legacy?.cat || WHOAMI_ALL,
-    difficulty: DIFFICULTIES.includes(legacy?.difficulty) ? legacy.difficulty : 'medium', customWords: legacy?.customWords || '', customOnly: legacy?.customOnly || false,
+    difficulty: WHOAMI_DIFFICULTIES.includes(legacy?.difficulty) ? legacy.difficulty : 'medium', customWords: legacy?.customWords || '', customOnly: legacy?.customOnly || false,
     duration: legacy?.roundSeconds || 60, left: legacy?.left ?? 60, timerEnabled: false,
     players: names.map((p, i) => ({ id: p.id || `legacy-${i}`, name: p.name, word: p.word || '', usedWords: p.usedWords || [], guessed: 0, skipped: 0, revision: 0, lastOutcome: p.lastOutcome || null })), pool: [] };
 }
 export function validWhoami(s) {
-  return s?.schema === 2 && ['setup','game','summary'].includes(s.phase) && typeof s.category === 'string' && DIFFICULTIES.includes(s.difficulty) &&
+  return s?.schema === 2 && ['setup','game','summary'].includes(s.phase) && typeof s.category === 'string' && WHOAMI_DIFFICULTIES.includes(s.difficulty) &&
     typeof s.customWords === 'string' && typeof s.customOnly === 'boolean' && typeof s.timerEnabled === 'boolean' &&
     Number.isInteger(s.duration) && s.duration >= 10 && s.duration <= 600 && Number.isInteger(s.left) && s.left >= 0 && s.left <= s.duration &&
     Array.isArray(s.pool) && s.pool.every(w => typeof w === 'string') && Array.isArray(s.players) && s.players.every(p => p && typeof p.id === 'string' && typeof p.name === 'string' && p.name.trim() && typeof p.word === 'string' &&

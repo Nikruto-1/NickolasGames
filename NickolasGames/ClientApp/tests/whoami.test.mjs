@@ -45,3 +45,13 @@ test('legacy cards migrate without losing assigned words',()=>{
  const s=initialWhoami({assignments:[{id:'a',name:'Anna',word:'Cat',usedWords:['Cat']}],roundSeconds:90,left:40});
  assert.equal(s.phase,'game');assert.equal(s.players[0].word,'Cat');assert.equal(s.left,40);assert.equal(validWhoami(s),true);
 });
+
+test('all levels combines every tier, respects category and custom-only, and persists',()=>{
+ const c={A:{easy:['Easy'],medium:['Medium'],hard:['Hard']},B:{easy:['Other'],medium:['Medium'],hard:['Harder']}};
+ assert.deepEqual(new Set(whoamiPool(c,'A','all','',false)),new Set(['Easy','Medium','Hard']));
+ assert.deepEqual(new Set(whoamiPool(c,WHOAMI_ALL,'all','easy, Custom',false)),new Set(['easy','Medium','Hard','Other','Harder','Custom']));
+ assert.deepEqual(whoamiPool(c,WHOAMI_ALL,'all','Custom',true),['Custom']);
+ let s=reduce(initialWhoami(),{type:'config',values:{difficulty:'all'}});
+ assert.equal(validWhoami(JSON.parse(JSON.stringify(s))),true);
+ assert.equal(initialWhoami({difficulty:'all'}).difficulty,'all');
+});
