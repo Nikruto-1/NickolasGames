@@ -3,6 +3,8 @@ import { CloudShader } from "@/components/ui/cloud-shader";
 import "./nickolasgames.css";
 import { readValue, writeValue, readProgress } from "./utils/progress";
 import { AppStatus, PROGRESS_COPY } from "./components/AppStatus";
+import { PlayerScores, SCORE_COPY } from "./components/PlayerScores";
+import { POINTS_BY_DIFFICULTY, recordPlayerAnswer } from "./utils/playerScores";
 import { COPY, PLAYER_SETUP } from "./locales";
 import { DIFFICULTIES, wordsByDifficulty } from "./utils/difficulty";
 
@@ -134,6 +136,12 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
   const [enc, setEnc] = useState(false);
   const [exit, setExit] = useState(null);
   const [score, setScore] = useState(() => saved?.score ?? { got: 0, skipped: 0 });
+  const [players, setPlayers] = useState(() => saved?.players ?? []);
+  const [activePlayerId, setActivePlayerId] = useState(() => saved?.activePlayerId || saved?.players?.[0]?.id || "");
+  const [lastAward, setLastAward] = useState(null);
+  const scoringEnabled = game === "crocodile";
+  const scoreCopy = SCORE_COPY[lang] || SCORE_COPY.en;
+  const activePlayer = players.find(player => player.id === activePlayerId);
   const [roundSeconds, setRoundSeconds] = useState(() => saved?.roundSeconds ?? 60);
   const [left, setLeft] = useState(() => saved?.left ?? 60);
   const [running, setRunning] = useState(false);
@@ -161,7 +169,9 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
     if (previousConfiguration.current === configuration) return;
     previousConfiguration.current = configuration;
     clearTimeout(transition.current);
+    transition.current = 0;
     setRunning(false); setLeft(roundSeconds);
+    setLastAward(null);
     clearInterval(scr.current);
     setQueue(shuffle(game === "whoami" ? (customOnly ? parsedCustomWords : [...new Set([...getWordsForCategory(cat), ...parsedCustomWords])]) : getWordsForCategory(cat)));
     setIdx(0); setShown(false); setExit(null); setEnc(false); setText(""); setScore({ got: 0, skipped: 0 }); setAssignments([]); setVisibleCards({}); setPendingWords({}); setDealWarning("");
@@ -176,8 +186,8 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
   useEffect(() => {
     // Commit a pending card transition as one logical action, even during its animation.
     setStorageOk(writeValue(storageKey, { version: 1, cat, difficulty, queue,
-      idx: idx + (exit ? 1 : 0), score, roundSeconds, left, playerNames, customWords, customOnly, assignments }));
-  }, [storageKey, cat, difficulty, queue, idx, exit, score, roundSeconds, left, playerNames, customWords, customOnly, assignments]);
+      idx: idx + (exit ? 1 : 0), score, players, activePlayerId, roundSeconds, left, playerNames, customWords, customOnly, assignments }));
+  }, [storageKey, cat, difficulty, queue, idx, exit, score, players, activePlayerId, roundSeconds, left, playerNames, customWords, customOnly, assignments]);
   useEffect(() => {
     const pause = () => { if (document.hidden) { setRunning(false); setVisibleCards({}); } };
     document.addEventListener("visibilitychange", pause);
@@ -186,14 +196,35 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
   const newGame = () => {
     if (!window.confirm(progressCopy.confirm)) return;
     clearInterval(scr.current);
+    clearTimeout(transition.current); transition.current = 0;
     setQueue(shuffle(queue)); setIdx(0); setScore({ got: 0, skipped: 0 });
+    setPlayers(current => current.map(player => ({ ...player, points: 0, guessed: 0, skipped: 0 })));
+    setLastAward(null);
     setAssignments([]); setVisibleCards({}); setPendingWords({});
     setRunning(false); setLeft(roundSeconds); setShown(false); setText(""); setExit(null); setEnc(false);
   };
   const word = queue.length ? queue[idx % queue.length] : "";
 
+  const selectPlayer = id => {
+    if (exit || id === activePlayerId) return;
+    clearInterval(scr.current);
+    setActivePlayerId(id); setRunning(false); setLeft(roundSeconds);
+    setShown(false); setText(""); setEnc(false); setLastAward(null);
+  };
+  const addPlayer = name => {
+    const player = { id: crypto.randomUUID(), name, points: 0, guessed: 0, skipped: 0 };
+    setPlayers(current => [...current, player]);
+    if (!activePlayerId) selectPlayer(player.id);
+  };
+  const removePlayer = id => {
+    if (exit) return;
+    const remaining = players.filter(player => player.id !== id);
+    setPlayers(remaining);
+    if (activePlayerId === id) selectPlayer(remaining[0]?.id || "");
+  };
+
   const reveal = () => {
-    if (shown || exit || !word) return;
+    if (shown || exit || !word || (scoringEnabled && !activePlayer)) return;
     setShown(true);
     if (!running && left === roundSeconds) setRunning(true);
     if (RM) { setText(word); return; }
@@ -209,12 +240,16 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
   };
 
   const advance = (dir) => {
-    if (exit || !word) return;
+    if (exit || transition.current || !word || (scoringEnabled && !activePlayer)) return;
     if (!shown && dir === "next") return reveal();
     clearInterval(scr.current);
     setExit(dir);
     setScore((s) => (dir === "skip" ? { ...s, skipped: s.skipped + 1 } : { ...s, got: s.got + 1 }));
-    transition.current = setTimeout(() => { setIdx((i) => i + 1); setShown(false); setEnc(false); setExit(null); setText(""); }, RM ? 0 : 380);
+    if (scoringEnabled) {
+      setPlayers(current => recordPlayerAnswer(current, activePlayerId, difficulty, dir === "skip" ? "skip" : "correct"));
+      setLastAward(dir === "skip" ? null : { name: activePlayer.name, points: POINTS_BY_DIFFICULTY[difficulty] });
+    }
+    transition.current = setTimeout(() => { transition.current = 0; setIdx((i) => i + 1); setShown(false); setEnc(false); setExit(null); setText(""); }, RM ? 0 : 380);
   };
 
   const cardStyle = (i) => i === 0 && exit
@@ -336,6 +371,8 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
             ))}
             <input type="number" min="10" max="600" step="5" value={roundSeconds} aria-label={t.timerDuration} onChange={(e) => changeRoundSeconds(e.target.value)} />
           </div>
+          {scoringEnabled && <PlayerScores players={players} activeId={activePlayerId} difficulty={difficulty} lang={lang}
+            disabled={!!exit} onAdd={addPlayer} onSelect={selectPlayer} onRemove={removePlayer} />}
           {game === "whoami" && (
             <div className="players-panel">
               <h3>{playerCopy.title}</h3>
@@ -377,11 +414,12 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
             })}
           </div>
           <div className="ctrl">
-            <button className="btn pri" onClick={reveal} disabled={!word}>{t.reveal}</button>
-            <button className="btn" onClick={() => advance("next")} disabled={!word}>{t.next}</button>
-            <button className="btn" onClick={() => advance("skip")} disabled={!word}>{t.skip}</button>
+            <button className="btn pri" onClick={reveal} disabled={!word || !!exit || (scoringEnabled && !activePlayer)}>{t.reveal}</button>
+            <button className="btn" onClick={() => advance("next")} disabled={!word || !!exit || (scoringEnabled && (!activePlayer || !shown))}>{scoringEnabled ? `${scoreCopy.correct} +${POINTS_BY_DIFFICULTY[difficulty]}` : t.next}</button>
+            <button className="btn" onClick={() => advance("skip")} disabled={!word || !!exit || (scoringEnabled && !activePlayer)}>{t.skip}</button>
           </div>
           <div className="score">{t.guessed} {score.got} · {t.skipped} {score.skipped}</div>
+          {scoringEnabled && <div className="score award" role="status">{lastAward ? `${lastAward.name}: +${lastAward.points} · ${scoreCopy.points}` : ""}</div>}
           {game === "whoami" && assignments.length > 0 && (
             <div className="assigned-grid">
               {assignments.map((item) => {
