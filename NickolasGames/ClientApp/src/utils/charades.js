@@ -21,15 +21,50 @@ export function currentCharadesCard(state) {
   return Object.fromEntries(DIFFICULTIES.map(level => [level, state.deck[level][state.cardIndex] || '']));
 }
 export const hasCharadesCard = state => DIFFICULTIES.every(level => Boolean(state.deck[level]?.[state.cardIndex]));
+export const canCompleteRound = state =>
+  Math.min(...DIFFICULTIES.map(level => state.deck[level]?.length || 0)) - state.cardIndex >= state.players.length;
+
+export function charadesPoints(state, answeredAt) {
+  const guesserPoints = POINTS_BY_DIFFICULTY[state.selected] || 0;
+  if (!guesserPoints) return { guesserPoints: 0, presenterPoints: 0, bonus: 0 };
+  if (state.timed === false) return { guesserPoints, presenterPoints: guesserPoints, bonus: 0 };
+  if (!Number.isFinite(state.deadline) || answeredAt >= state.deadline) return { guesserPoints, presenterPoints: 0, bonus: 0 };
+  const elapsed = Math.max(0, answeredAt - (state.deadline - CHARADES_DURATION));
+  const bonus = elapsed <= 20_000 ? 2 : elapsed <= 40_000 ? 1 : 0;
+  return { guesserPoints, presenterPoints: guesserPoints + bonus, bonus };
+}
+
+export function restoreCharadesState(state) {
+  if (state.scoringVersion === 2) return { ...state, timed: state.timed ?? true };
+  // Older games counted only successful turns. Preserve scores and align the current round.
+  const completed = Math.min(...state.players.map(player => player.presented), Infinity);
+  const activeIndex = state.players.findIndex(player => player.id === state.activeId);
+  return { ...state, timed: state.timed ?? true, scoringVersion: 2,
+    players: state.players.map((player, index) => ({ ...player,
+      presented: (Number.isFinite(completed) ? completed : 0) + (index < activeIndex ? 1 : 0) })) };
+}
+
+function finishTurn(state, players, lastResult) {
+  const roundComplete = players.every(player => player.presented === players[0].presented);
+  const highest = Math.max(...players.map(player => player.points));
+  const winners = roundComplete && highest >= state.targetScore
+    ? players.filter(player => player.points === highest).map(player => player.id) : [];
+  const next = { ...state, players, cardIndex: state.cardIndex + 1 };
+  const exhausted = !hasCharadesCard(next) || (roundComplete && !canCompleteRound(next));
+  return { ...next, winners, phase: winners.length ? 'finished' : exhausted ? 'exhausted' : 'handoff',
+    activeId: winners.length ? state.activeId : nextPlayerId(players, state.activeId),
+    selected: null, deadline: null, answeredAt: null, lastResult };
+}
+
 export function newCharadesState(categories, legacy = null) {
   const oldPlayers = validPlayers(legacy?.players) ? legacy.players : [];
-  return { schema: 2, phase: 'setup', players: oldPlayers.map(p => ({ ...p, points: 0, guessed: 0, skipped: 0, presented: 0 })),
+  return { schema: 2, scoringVersion: 2, phase: 'setup', players: oldPlayers.map(p => ({ ...p, points: 0, guessed: 0, skipped: 0, presented: 0 })),
     activeId: oldPlayers[0]?.id || '', targetScore: validTargetScore(legacy?.targetScore) ? legacy.targetScore : DEFAULT_TARGET_SCORE,
     timed: true, category: ALL_CHARADES_CATEGORIES, deck: createCharadesDeck(categories), cardIndex: 0, selected: null, deadline: null,
     answeredAt: null, winners: [], lastResult: null };
 }
 export function validCharadesState(s) {
-  if (!s || s.schema !== 2 || !phases.includes(s.phase) || !validPlayers(s.players) ||
+  if (!s || s.schema !== 2 || (s.scoringVersion !== undefined && s.scoringVersion !== 2) || !phases.includes(s.phase) || !validPlayers(s.players) ||
     !s.players.every(p => Number.isSafeInteger(p.presented) && p.presented >= 0) ||
     !validTargetScore(s.targetScore) || (s.timed !== undefined && typeof s.timed !== 'boolean') || typeof s.category !== 'string' || !s.deck ||
     !DIFFICULTIES.every(level => Array.isArray(s.deck[level]) && s.deck[level].every(w => typeof w === 'string' && w)) ||
@@ -44,7 +79,7 @@ export function validCharadesState(s) {
   if (s.phase === 'confirming' && !Number.isFinite(s.answeredAt)) return false;
   if (s.phase === 'finished' && (!s.winners.length || !s.winners.every(id => s.players.find(p => p.id === id).points >= s.targetScore))) return false;
   if (s.lastResult !== null && (!s.lastResult || typeof s.lastResult.presenter !== 'string' || typeof s.lastResult.guesser !== 'string' ||
-    ![0, 1, 2, 3].includes(s.lastResult.presenterPoints) || ![1, 2, 3].includes(s.lastResult.guesserPoints))) return false;
+    ![0, 1, 2, 3, 4, 5].includes(s.lastResult.presenterPoints) || ![1, 2, 3].includes(s.lastResult.guesserPoints) || (s.lastResult.bonus !== undefined && ![0, 1, 2].includes(s.lastResult.bonus)))) return false;
   return true;
 }
 export function charadesReducer(state, action) {
@@ -67,7 +102,7 @@ export function charadesReducer(state, action) {
     case 'category':
       return state.phase === 'setup' ? { ...state, category: action.category, deck: action.deck, cardIndex: 0 } : state;
     case 'start':
-      return state.phase === 'setup' && state.players.length >= 2 && deckReady(state.deck)
+      return state.phase === 'setup' && state.players.length >= 2 && deckReady(state.deck) && canCompleteRound(state)
         ? { ...state, phase: 'handoff', activeId: state.players[0].id } : state;
     case 'reveal':
       return state.phase === 'handoff' && hasCharadesCard(state) ? { ...state, phase: 'choosing' } : state;
@@ -83,22 +118,19 @@ export function charadesReducer(state, action) {
       const presenter = state.players.find(p => p.id === state.activeId);
       const guesser = state.players.find(p => p.id === action.id);
       if (state.phase !== 'confirming' || !guesser || guesser.id === presenter.id) return state;
-      const guesserPoints = POINTS_BY_DIFFICULTY[state.selected];
-      const presenterPoints = state.timed === false || state.answeredAt < state.deadline ? guesserPoints : 0;
+      const { guesserPoints, presenterPoints, bonus } = charadesPoints(state, state.answeredAt);
       const players = state.players.map(p => p.id === presenter.id ? { ...p, points: p.points + presenterPoints, presented: p.presented + 1 }
         : p.id === guesser.id ? { ...p, points: p.points + guesserPoints, guessed: p.guessed + 1 } : p);
-      const winners = players.filter(p => p.points >= state.targetScore).map(p => p.id);
-      return { ...state, players, winners, phase: winners.length ? 'finished' : hasCharadesCard({ ...state, cardIndex: state.cardIndex + 1 }) ? 'handoff' : 'exhausted',
-        activeId: winners.length ? state.activeId : nextPlayerId(players, state.activeId), cardIndex: state.cardIndex + 1,
-        selected: null, deadline: null, answeredAt: null,
-        lastResult: { presenter: presenter.name, presenterPoints, guesser: guesser.name, guesserPoints } };
+      return finishTurn(state, players, { presenter: presenter.name, presenterPoints, guesser: guesser.name, guesserPoints, bonus });
     }
-    case 'skip':
-      return state.phase === 'acting' ? { ...state, phase: hasCharadesCard({ ...state, cardIndex: state.cardIndex + 1 }) ? 'handoff' : 'exhausted', cardIndex: state.cardIndex + 1,
-        players: state.players.map(p => p.id === state.activeId ? { ...p, skipped: p.skipped + 1 } : p),
-        selected: null, deadline: null, answeredAt: null, lastResult: null } : state;
+    case 'skip': {
+      if (state.phase !== 'acting') return state;
+      const players = state.players.map(p => p.id === state.activeId ? { ...p, skipped: p.skipped + 1, presented: p.presented + 1 } : p);
+      return finishTurn(state, players, null);
+    }
+
     case 'new':
-      return { ...state, phase: 'setup', players: state.players.map(p => ({ ...p, points: 0, guessed: 0, skipped: 0, presented: 0 })),
+      return { ...state, scoringVersion: 2, phase: 'setup', players: state.players.map(p => ({ ...p, points: 0, guessed: 0, skipped: 0, presented: 0 })),
         activeId: state.players[0]?.id || '', deck: action.deck, cardIndex: 0, selected: null, deadline: null, answeredAt: null, winners: [], lastResult: null };
     default: return state;
   }

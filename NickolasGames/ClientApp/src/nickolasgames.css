@@ -77,6 +77,7 @@ section.s{padding:96px 0}
 .player-score-list span{white-space:nowrap}
 .player-score-list .player-name{flex:1;min-width:0;padding:8px 16px;border:1px solid var(--line);border-radius:999px;white-space:normal;overflow-wrap:anywhere}
 .player-score-list .player-name.is-active{background:#006BB6;color:#fff;border-color:#006BB6}
+.player-turns{display:block;font-size:12px;font-weight:400;line-height:1.4;margin-top:2px}
 .player-remove{border:1px solid var(--line);border-radius:50%;background:transparent;width:40px;height:40px;flex-shrink:0;font-size:24px}
 .player-scores .current-player{color:var(--fg);margin-top:16px;overflow-wrap:anywhere}
 .award{min-height:24px;font-weight:700;color:var(--acc)}

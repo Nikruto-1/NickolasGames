@@ -1,6 +1,6 @@
 
-const CACHE = 'nickolasgames-299eda3f07de400f';
-const URLS = ["index.html","assets/index-C0iW_Cc2.js","assets/index-tzGgBupR.css","icons/icon-192.png","icons/icon-512.png","icons/apple-touch-icon.png","manifest.webmanifest"].map(p => new URL(p, self.registration.scope).href);
+const CACHE = 'nickolasgames-dce7aa2088c997e3';
+const URLS = ["index.html","assets/index-CeGBrMSY.js","assets/index-BOHvEVs3.css","icons/icon-192.png","icons/icon-512.png","icons/apple-touch-icon.png","manifest.webmanifest"].map(p => new URL(p, self.registration.scope).href);
 self.addEventListener('install', event => { event.waitUntil(caches.open(CACHE).then(c => c.addAll(URLS))); });
 // Wait for all old tabs to close before activating an update; never interrupt a game.
 self.addEventListener('activate', event => { event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith('nickolasgames-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });

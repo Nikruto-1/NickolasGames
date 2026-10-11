@@ -4,14 +4,14 @@ import { CHARADES_COPY, CHARADES_TIME_COPY } from '../locales/charades.js';
 import { DIFFICULTIES } from '../utils/difficulty.js';
 import { POINTS_BY_DIFFICULTY, validTargetScore } from '../utils/playerScores.js';
 import { readValue, writeValue } from '../utils/progress.js';
-import { ALL_CHARADES_CATEGORIES, charadesReducer, createCharadesDeck, currentCharadesCard, hasCharadesCard, deckReady, newCharadesState, validCharadesState } from '../utils/charades.js';
+import { ALL_CHARADES_CATEGORIES, charadesReducer, createCharadesDeck, currentCharadesCard, hasCharadesCard, deckReady, newCharadesState, validCharadesState, restoreCharadesState, charadesPoints, canCompleteRound } from '../utils/charades.js';
 
 export function CharadesGame({ games, t, lang, onGame }) {
   const copy = { ...(CHARADES_COPY[lang] || CHARADES_COPY.en), ...(CHARADES_TIME_COPY[lang] || CHARADES_TIME_COPY.en) };
   const key = `nickolasgames-charades-v2-${lang}`;
   const [state, dispatch] = useReducer(charadesReducer, null, () => {
     const saved = readValue(key);
-    return validCharadesState(saved) ? { ...saved, timed: saved.timed ?? true } : newCharadesState(games.crocodile.c, readValue(`nickolasgames-progress-v1-${lang}-crocodile`));
+    return validCharadesState(saved) ? restoreCharadesState(saved) : newCharadesState(games.crocodile.c, readValue(`nickolasgames-progress-v1-${lang}-crocodile`));
   });
   const [name, setName] = useState('');
   const [warning, setWarning] = useState('');
@@ -21,9 +21,11 @@ export function CharadesGame({ games, t, lang, onGame }) {
   const setup = state.phase === 'setup';
   const actor = state.players.find(p => p.id === state.activeId);
   const card = currentCharadesCard(state);
-  const exhausted = !setup && state.phase !== 'finished' && !hasCharadesCard(state);
+  const exhausted = !setup && state.phase !== 'finished' && (state.phase === 'exhausted' || !hasCharadesCard(state));
   const readingTime = state.phase === 'confirming' ? state.answeredAt : clock;
   const remaining = state.deadline === null ? 60 : Math.max(0, Math.ceil((state.deadline - readingTime) / 1000));
+  const award = charadesPoints(state, readingTime);
+  const roundPending = !setup && !exhausted && state.phase !== 'finished' && state.players.some(player => player.points >= state.targetScore);
   const expired = state.deadline !== null && readingTime >= state.deadline;
   useEffect(() => { setStorageOk(writeValue(key, state)); }, [key, state]);
   useEffect(() => {
@@ -82,7 +84,7 @@ export function CharadesGame({ games, t, lang, onGame }) {
           </form>
           <ul className="player-score-list">
             {state.players.map(player => <li key={player.id}>
-              <span className={`player-name${player.id === state.activeId ? ' is-active' : ''}`} aria-current={player.id === state.activeId ? 'true' : undefined}>{player.name}</span>
+              <span className={`player-name${player.id === state.activeId ? ' is-active' : ''}`} aria-current={player.id === state.activeId ? 'true' : undefined}>{player.name}<small className="player-turns">{copy.turns}: {player.presented}</small></span>
               <span><b>{player.points}</b> / {state.targetScore}</span>
               {setup && <button className="player-remove" aria-label={`${copy.remove}: ${player.name}`} onClick={() => dispatch({ type: 'remove', id: player.id })}>×</button>}
             </li>)}
@@ -106,9 +108,10 @@ export function CharadesGame({ games, t, lang, onGame }) {
             {Object.keys(games.crocodile.c).map(category => <option key={category} value={category}>{category}</option>)}
           </select>
           {!deckReady(state.deck) && <p role="status">{copy.noLevels}</p>}
+          {setup && deckReady(state.deck) && state.players.length >= 2 && !canCompleteRound(state) && <p role="status">{copy.noRound}</p>}
           {warning && <p role="alert">{warning}</p>}
           <div className="players-actions">
-            {setup && <button className="btn pri" disabled={state.players.length < 2 || !deckReady(state.deck)} onClick={() => dispatch({ type: 'start' })}>{copy.start}</button>}
+            {setup && <button className="btn pri" disabled={state.players.length < 2 || !deckReady(state.deck) || !canCompleteRound(state)} onClick={() => dispatch({ type: 'start' })}>{copy.start}</button>}
             <button className="btn sm" onClick={newGame}>{copy.newGame}</button>
           </div>
           <p className="players-note" role="status">{storageOk ? (state.timed ? copy.saved : copy.savedUntimed) : copy.failed}</p>
@@ -116,8 +119,9 @@ export function CharadesGame({ games, t, lang, onGame }) {
       </div>
       <div className="charades-round">
         {actor && <h3 className="current-player">{copy.active}: <b>{actor.name}</b></h3>}
+        {roundPending && <p className="charades-result" role="status">{copy.roundPending}</p>}
         {state.lastResult && <div className="charades-result" role="status">
-          {state.lastResult.presenter}: +{state.lastResult.presenterPoints} · {state.lastResult.guesser}: +{state.lastResult.guesserPoints}
+          {state.lastResult.presenter}: +{state.lastResult.presenterPoints}{state.lastResult.bonus > 0 && <span> ({copy.bonus}: +{state.lastResult.bonus})</span>} · {state.lastResult.guesser}: +{state.lastResult.guesserPoints}
         </div>}
         {state.phase === 'setup' && <div className="charades-card"><p>{copy.order}</p><p>{state.timed ? copy.choose : copy.chooseUntimed}</p></div>}
         {!exhausted && state.phase === 'handoff' && <div className="charades-card">
@@ -147,7 +151,7 @@ export function CharadesGame({ games, t, lang, onGame }) {
             </div>}
             {state.phase === 'confirming' && <div className="charades-guesser">
               <h3>{copy.whoGuessed}</h3>
-              <p>{expired ? copy.late : (state.timed ? copy.timed : copy.equalPoints).replace('{points}', POINTS_BY_DIFFICULTY[state.selected])}</p>
+              <p>{expired ? copy.late : (state.timed ? copy.timed : copy.equalPoints).replace('{points}', award.guesserPoints).replace('{actorPoints}', award.presenterPoints).replace('{bonus}', award.bonus)}</p>
               <p>{copy.awardHint}</p>
               <div className="players-actions">
                 {state.players.filter(p => p.id !== state.activeId).map(player => <button className="btn pri" key={player.id} onClick={() => dispatch({ type: 'award', id: player.id })}>{player.name} +{POINTS_BY_DIFFICULTY[state.selected]}</button>)}
@@ -157,7 +161,7 @@ export function CharadesGame({ games, t, lang, onGame }) {
           </div>
         </>}
         {exhausted && <div className="charades-card" role="status">
-          <p>{(ROUND_MESSAGES[lang] || ROUND_MESSAGES.en).exhausted}</p>
+          <p>{hasCharadesCard(state) ? copy.fairExhausted : (ROUND_MESSAGES[lang] || ROUND_MESSAGES.en).exhausted}</p>
           <button className="btn pri" onClick={newGame}>{copy.newGame}</button>
         </div>}
         {state.phase === 'finished' && <div className="winner-banner" role="status">
