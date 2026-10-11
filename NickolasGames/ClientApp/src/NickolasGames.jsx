@@ -4,7 +4,7 @@ import "./nickolasgames.css";
 import { readValue, writeValue, readProgress } from "./utils/progress";
 import { AppStatus, PROGRESS_COPY } from "./components/AppStatus";
 import { PlayerScores, SCORE_COPY } from "./components/PlayerScores";
-import { POINTS_BY_DIFFICULTY, DEFAULT_TARGET_SCORE, findWinner, recordPlayerAnswer } from "./utils/playerScores";
+import { POINTS_BY_DIFFICULTY, DEFAULT_TARGET_SCORE, findWinner, nextPlayerId, recordPlayerAnswer } from "./utils/playerScores";
 import { COPY, PLAYER_SETUP } from "./locales";
 import { DIFFICULTIES, wordsByDifficulty } from "./utils/difficulty";
 
@@ -203,6 +203,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
     clearTimeout(transition.current); transition.current = 0;
     setQueue(shuffle(queue)); setIdx(0); setScore({ got: 0, skipped: 0 });
     setPlayers(current => current.map(player => ({ ...player, points: 0, guessed: 0, skipped: 0 })));
+    setActivePlayerId(players[0]?.id || "");
     setLastAward(null);
     setAssignments([]); setVisibleCards({}); setPendingWords({});
     setRunning(false); setLeft(roundSeconds); setShown(false); setText(""); setExit(null); setEnc(false);
@@ -216,13 +217,13 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
     setShown(false); setText(""); setEnc(false); setLastAward(null);
   };
   const addPlayer = name => {
-    if (winner) return;
+    if (winner || targetLocked) return;
     const player = { id: crypto.randomUUID(), name, points: 0, guessed: 0, skipped: 0 };
     setPlayers(current => [...current, player]);
     if (!activePlayerId) selectPlayer(player.id);
   };
   const removePlayer = id => {
-    if (exit || winner) return;
+    if (exit || winner || targetLocked) return;
     const remaining = players.filter(player => player.id !== id);
     setPlayers(remaining);
     if (activePlayerId === id) selectPlayer(remaining[0]?.id || "");
@@ -251,8 +252,14 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
     setExit(dir);
     setScore((s) => (dir === "skip" ? { ...s, skipped: s.skipped + 1 } : { ...s, got: s.got + 1 }));
     if (scoringEnabled) {
-      setPlayers(current => recordPlayerAnswer(current, activePlayerId, difficulty, dir === "skip" ? "skip" : "correct"));
+      const updatedPlayers = recordPlayerAnswer(players, activePlayerId, difficulty, dir === "skip" ? "skip" : "correct");
+      setPlayers(updatedPlayers);
       setLastAward(dir === "skip" ? null : { name: activePlayer.name, points: POINTS_BY_DIFFICULTY[difficulty] });
+      if (dir === "next") {
+        // Award the actor first; keep the winning player selected when the game ends.
+        if (!findWinner(updatedPlayers, targetScore)) setActivePlayerId(nextPlayerId(updatedPlayers, activePlayerId));
+        setRunning(false); setLeft(roundSeconds); setShown(false); setText(""); setEnc(false);
+      }
     }
     transition.current = setTimeout(() => { transition.current = 0; setIdx((i) => i + 1); setShown(false); setEnc(false); setExit(null); setText(""); }, RM ? 0 : 380);
   };
@@ -380,7 +387,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
           </div>
           {scoringEnabled && <PlayerScores players={players} activeId={activePlayerId} difficulty={difficulty} lang={lang}
             disabled={!!exit || !!winner} targetScore={targetScore} targetLocked={targetLocked} winner={winner}
-            onTarget={setTargetScore} onAdd={addPlayer} onSelect={selectPlayer} onRemove={removePlayer} />}
+            onTarget={setTargetScore} onAdd={addPlayer} onRemove={removePlayer} />}
           {game === "whoami" && (
             <div className="players-panel">
               <h3>{playerCopy.title}</h3>

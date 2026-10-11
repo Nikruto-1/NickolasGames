@@ -3,6 +3,11 @@ export const DEFAULT_TARGET_SCORE = 30;
 export const validTargetScore = score => Number.isInteger(score) && score >= 1 && score <= 1000;
 export const findWinner = (players, targetScore) => validTargetScore(targetScore)
   ? players.find(player => player.points >= targetScore) || null : null;
+export const nextPlayerId = (players, activeId) => {
+  if (!players.length) return "";
+  const index = players.findIndex(player => player.id === activeId);
+  return players[(index + 1) % players.length].id;
+};
 
 export function recordPlayerAnswer(players, playerId, difficulty, outcome) {
   if (!POINTS_BY_DIFFICULTY[difficulty] || !["correct", "skip"].includes(outcome)) return players;

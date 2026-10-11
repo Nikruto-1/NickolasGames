@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { recordPlayerAnswer, validPlayers, findWinner, validTargetScore, DEFAULT_TARGET_SCORE } from "../src/utils/playerScores.js";
+import { recordPlayerAnswer, validPlayers, findWinner, validTargetScore, DEFAULT_TARGET_SCORE, nextPlayerId } from "../src/utils/playerScores.js";
 import { readProgress, writeValue } from "../src/utils/progress.js";
 
 const players = () => [
@@ -50,4 +50,13 @@ test("default and custom victory targets allow reaching or exceeding the goal", 
   for (const invalid of [0, -1, 1.5, 1001, Infinity, "30"]) assert.equal(validTargetScore(invalid), false);
   assert.equal(validTargetScore(1), true);
   assert.equal(validTargetScore(1000), true);
+});
+
+test("turns follow roster order, wrap around and support a single player", () => {
+  const roster = [...players(), { id: "c", name: "Sofia", points: 0, guessed: 0, skipped: 0 }];
+  assert.equal(nextPlayerId(roster, "a"), "b");
+  assert.equal(nextPlayerId(roster, "b"), "c");
+  assert.equal(nextPlayerId(roster, "c"), "a");
+  assert.equal(nextPlayerId([roster[0]], "a"), "a");
+  assert.equal(nextPlayerId([], "a"), "");
 });
