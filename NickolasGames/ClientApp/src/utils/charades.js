@@ -24,13 +24,13 @@ export function newCharadesState(categories, legacy = null) {
   const oldPlayers = validPlayers(legacy?.players) ? legacy.players : [];
   return { schema: 2, phase: 'setup', players: oldPlayers.map(p => ({ ...p, points: 0, guessed: 0, skipped: 0, presented: 0 })),
     activeId: oldPlayers[0]?.id || '', targetScore: validTargetScore(legacy?.targetScore) ? legacy.targetScore : DEFAULT_TARGET_SCORE,
-    category: ALL_CHARADES_CATEGORIES, deck: createCharadesDeck(categories), cardIndex: 0, selected: null, deadline: null,
+    timed: true, category: ALL_CHARADES_CATEGORIES, deck: createCharadesDeck(categories), cardIndex: 0, selected: null, deadline: null,
     answeredAt: null, winners: [], lastResult: null };
 }
 export function validCharadesState(s) {
   if (!s || s.schema !== 2 || !phases.includes(s.phase) || !validPlayers(s.players) ||
     !s.players.every(p => Number.isSafeInteger(p.presented) && p.presented >= 0) ||
-    !validTargetScore(s.targetScore) || typeof s.category !== 'string' || !s.deck ||
+    !validTargetScore(s.targetScore) || (s.timed !== undefined && typeof s.timed !== 'boolean') || typeof s.category !== 'string' || !s.deck ||
     !DIFFICULTIES.every(level => Array.isArray(s.deck[level]) && s.deck[level].every(w => typeof w === 'string' && w)) ||
     !Number.isSafeInteger(s.cardIndex) || s.cardIndex < 0 ||
     !(s.selected === null || DIFFICULTIES.includes(s.selected)) ||
@@ -38,7 +38,8 @@ export function validCharadesState(s) {
     !Array.isArray(s.winners) || !s.winners.every(id => s.players.some(p => p.id === id)) ||
     (s.players.length ? !s.players.some(p => p.id === s.activeId) : s.activeId !== '')) return false;
   if (s.phase !== 'setup' && (s.players.length < 2 || !deckReady(s.deck))) return false;
-  if (['acting', 'confirming'].includes(s.phase) && (!s.selected || !Number.isFinite(s.deadline))) return false;
+  if (['acting', 'confirming'].includes(s.phase) && (!s.selected || (s.timed !== false && !Number.isFinite(s.deadline)))) return false;
+  if (s.timed === false && s.deadline !== null) return false;
   if (s.phase === 'confirming' && !Number.isFinite(s.answeredAt)) return false;
   if (s.phase === 'finished' && (!s.winners.length || !s.winners.every(id => s.players.find(p => p.id === id).points >= s.targetScore))) return false;
   if (s.lastResult !== null && (!s.lastResult || typeof s.lastResult.presenter !== 'string' || typeof s.lastResult.guesser !== 'string' ||
@@ -60,6 +61,8 @@ export function charadesReducer(state, action) {
     }
     case 'target':
       return state.phase === 'setup' && validTargetScore(action.value) ? { ...state, targetScore: action.value } : state;
+    case 'timing':
+      return state.phase === 'setup' && typeof action.timed === 'boolean' ? { ...state, timed: action.timed } : state;
     case 'category':
       return state.phase === 'setup' ? { ...state, category: action.category, deck: action.deck, cardIndex: 0 } : state;
     case 'start':
@@ -69,7 +72,7 @@ export function charadesReducer(state, action) {
       return state.phase === 'handoff' ? { ...state, phase: 'choosing' } : state;
     case 'select':
       return state.phase === 'choosing' && DIFFICULTIES.includes(action.level) && Number.isFinite(action.now)
-        ? { ...state, phase: 'acting', selected: action.level, deadline: action.now + CHARADES_DURATION, answeredAt: null, lastResult: null } : state;
+        ? { ...state, phase: 'acting', selected: action.level, deadline: state.timed === false ? null : action.now + CHARADES_DURATION, answeredAt: null, lastResult: null } : state;
     case 'guess':
       return state.phase === 'acting' && Number.isFinite(action.now)
         ? { ...state, phase: 'confirming', answeredAt: action.now } : state;
@@ -80,7 +83,7 @@ export function charadesReducer(state, action) {
       const guesser = state.players.find(p => p.id === action.id);
       if (state.phase !== 'confirming' || !guesser || guesser.id === presenter.id) return state;
       const guesserPoints = POINTS_BY_DIFFICULTY[state.selected];
-      const presenterPoints = state.answeredAt < state.deadline ? guesserPoints : 0;
+      const presenterPoints = state.timed === false || state.answeredAt < state.deadline ? guesserPoints : 0;
       const players = state.players.map(p => p.id === presenter.id ? { ...p, points: p.points + presenterPoints, presented: p.presented + 1 }
         : p.id === guesser.id ? { ...p, points: p.points + guesserPoints, guessed: p.guessed + 1 } : p);
       const winners = players.filter(p => p.points >= state.targetScore).map(p => p.id);

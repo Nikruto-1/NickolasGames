@@ -81,3 +81,25 @@ test('all five languages provide complete three-tier cards in all-category mode'
     assert(deckReady(createCharadesDeck(mod[`CROCODILE_${lang.toUpperCase()}`])));
   }
 });
+
+for(const [level,points] of [['easy',1],['medium',2],['hard',3]]){
+  test(`untimed ${level}: equal points even after a long delay`,()=>{
+    const configured=reduce(setup(),{type:'timing',timed:false});
+    const s=acting(level,configured);
+    assert.equal(s.deadline,null);assert(validCharadesState(s));
+    assert.equal(reduce(s,{type:'timing',timed:true}),s);
+    const restored=JSON.parse(JSON.stringify(s));
+    const next=award(restored,1_000_000);
+    assert.deepEqual(next.players.map(p=>p.points),[points,points,0]);
+    assert(validCharadesState(next));
+    const fresh=reduce(next,{type:'new',deck:createCharadesDeck(categories)});
+    assert.equal(fresh.timed,false);
+    assert.equal(reduce(fresh,{type:'timing',timed:true}).timed,true);
+  });
+}
+test('saves from before the time-mode selector remain readable',()=>{
+  const old=acting();delete old.timed;
+  assert(validCharadesState(old));
+  assert.deepEqual(award(old,90_000).players.map(p=>p.points),[0,3,0]);
+  assert.equal(validCharadesState({...old,timed:'none'}),false);
+});
