@@ -89,7 +89,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
   const [roundSeconds, setRoundSeconds] = useState(() => saved?.roundSeconds ?? 60);
   const [left, setLeft] = useState(() => saved?.left ?? 60);
   const [running, setRunning] = useState(false);
-  const [playerNames, setPlayerNames] = useState(() => saved?.playerNames ?? "Nickolas\nSofia\nDmytro");
+  const [playerNames, setPlayerNames] = useState(() => saved?.playerNames ?? "");
   const [customWords, setCustomWords] = useState(() => saved?.customWords ?? "");
   const [customOnly, setCustomOnly] = useState(() => saved?.customOnly ?? false);
   const [assignments, setAssignments] = useState(() => saved?.assignments ?? []);

@@ -11,7 +11,7 @@ export function whoamiPool(categories, category, difficulty, customWords, custom
 }
 export function initialWhoami(legacy = null) {
   const assignments = Array.isArray(legacy?.assignments) ? legacy.assignments : [];
-  const names = assignments.length ? assignments : (legacy?.playerNames || '').split(/[\n,]+/).map(name => ({ name: name.trim() })).filter(p => p.name);
+  const names = assignments;
   return { schema: 2, phase: assignments.length ? 'game' : 'setup', category: legacy?.cat || WHOAMI_ALL,
     difficulty: WHOAMI_DIFFICULTIES.includes(legacy?.difficulty) ? legacy.difficulty : 'medium', customWords: legacy?.customWords || '', customOnly: legacy?.customOnly || false,
     duration: legacy?.roundSeconds || 60, left: legacy?.left ?? 60, timerEnabled: false,
@@ -53,7 +53,7 @@ export function whoamiReducer(s,a) {
     case 'resetTimer': return {...s,left:s.duration};
     case 'finish': return s.phase==='game' ? {...s,phase:'summary'}:s;
     case 'resume': return s.phase==='summary' ? {...s,phase:'game'}:s;
-    case 'setup': return {...s,phase:'setup',left:s.duration,players:s.players.map(p=>({...p,word:'',usedWords:[],guessed:0,skipped:0,lastOutcome:null,revision:p.revision+1}))};
+    case 'setup': return {...s,phase:'setup',left:s.duration,players:a.clearPlayers?[]:s.players.map(p=>({...p,word:'',usedWords:[],guessed:0,skipped:0,lastOutcome:null,revision:p.revision+1}))};
     default:return s;
   }
 }

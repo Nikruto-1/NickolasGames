@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { createTimerSound } from '../utils/timerSound.js';
 import { WHOAMI_UI } from '../locales/whoami-ui.js';
 import { PLAYER_SETUP } from '../locales/index.js';
 import { readValue, readProgress, writeValue } from '../utils/progress.js';
@@ -9,7 +10,7 @@ export function WhoAmIGame({games,t,lang,onGame}) {
  const pc=PLAYER_SETUP[lang]||PLAYER_SETUP.en;
  const key=`nickolasgames-whoami-v2-${lang}`;
  const [state,dispatch]=useReducer(whoamiReducer,null,()=>{
-   const saved=readValue(key);if(validWhoami(saved))return saved;
+   const saved=readValue(key);if(validWhoami(saved))return saved.phase==='setup'?{...saved,players:[]}:saved;
    const migrated=initialWhoami(readProgress(`nickolasgames-progress-v1-${lang}-whoami`));
    if(!(migrated.category in games.whoami.c))migrated.category=WHOAMI_ALL;
    migrated.pool=whoamiPool(games.whoami.c,migrated.category,migrated.difficulty,migrated.customWords,migrated.customOnly);
@@ -18,6 +19,10 @@ export function WhoAmIGame({games,t,lang,onGame}) {
  const [name,setName]=useState('');const [warning,setWarning]=useState('');
  const [activeId,setActiveId]=useState(null);const [held,setHeld]=useState(false);
  const [manual,setManual]=useState('');const [running,setRunning]=useState(false);const [storageOk,setStorageOk]=useState(true);
+ const sound=useRef(null);if(!sound.current)sound.current=createTimerSound();
+ const previousLeft=useRef(state.left);
+ useEffect(()=>()=>sound.current.dispose(),[]);
+ useEffect(()=>{if(running&&previousLeft.current>0&&state.left===0)sound.current.play();previousLeft.current=state.left;},[state.left,running]);
  const dialog=useRef(null);const closeButton=useRef(null);
  const active=state.players.find(p=>p.id===activeId);
  const pool=useMemo(()=>whoamiPool(games.whoami.c,state.category,state.difficulty,state.customWords,state.customOnly),[games,state.category,state.difficulty,state.customWords,state.customOnly]);
@@ -46,7 +51,7 @@ export function WhoAmIGame({games,t,lang,onGame}) {
  const close=()=>{setHeld(false);setActiveId(null);};
  const restart=(changeSettings=false)=>{
    if(state.phase==='game'&&!window.confirm(copy.confirm))return;
-   setRunning(false);close();dispatch({type:'setup'});setWarning('');
+   setRunning(false);close();dispatch({type:'setup',clearPlayers:changeSettings});setWarning('');
    if(!changeSettings&&pool.length>=state.players.length)dispatch({type:'deal',pool});
  };
  const answer=outcome=>{setHeld(false);dispatch({type:'answer',id:active.id,revision:active.revision,outcome});close();};
@@ -85,7 +90,7 @@ export function WhoAmIGame({games,t,lang,onGame}) {
      </div>}
      {state.phase==='game'&&<>
        <p className="whoami-privacy">{copy.privacy}</p>
-       {state.timerEnabled&&<div className="timer"><b>{state.left}</b><div className="tbar"><i style={{transform:`scaleX(${state.left/state.duration})`}}/></div><button className="btn sm" disabled={!state.left} onClick={()=>setRunning(value=>!value)}>{running?copy.pause:t.startTimer}</button><button className="btn sm" onClick={()=>{setRunning(false);dispatch({type:'resetTimer'});}}>{t.reset}</button></div>}
+       {state.timerEnabled&&<div className="timer"><b>{state.left}</b><div className="tbar"><i style={{transform:`scaleX(${state.left/state.duration})`}}/></div><button className="btn sm" disabled={!state.left} onClick={()=>{if(!running)sound.current.unlock();setRunning(value=>!value);}}>{running?copy.pause:t.startTimer}</button><button className="btn sm" onClick={()=>{setRunning(false);dispatch({type:'resetTimer'});}}>{t.reset}</button></div>}
        <div className="whoami-tiles">{state.players.map((player,index)=><button className="whoami-tile" key={player.id} onClick={()=>setActiveId(player.id)} aria-label={`${copy.open}: ${player.name}`}>
          <span className="whoami-avatar">{index+1}</span><strong>{player.name}</strong><span className="whoami-status">{!player.word?copy.empty:player.lastOutcome==='guessed'?pc.guessed:player.lastOutcome==='gaveUp'?pc.giveUp:copy.hidden}</span>
          <span className="whoami-tile-count">{t.guessed}: {player.guessed} · {t.skipped}: {player.skipped}</span><span className="whoami-open">{copy.open} →</span>
