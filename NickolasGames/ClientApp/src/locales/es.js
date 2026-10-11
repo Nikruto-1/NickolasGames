@@ -1,3 +1,4 @@
+import { CROCODILE_ES } from "../data/crocodile.es";
 import { WHOAMI_ES } from "../data/whoami.es";
 
 export const UI_COPY = {
@@ -66,32 +67,10 @@ export const UI_COPY = {
     },
     "crocodile": {
       "n": "Cocodrilo",
-      "d": "Representa palabras sin hablar.",
+      "d": "Usa solo gestos, expresiones faciales y movimientos del cuerpo: sin hablar ni utilizar objetos.",
       "p": "3-12 jugadores",
       "t": "15 min",
-      "c": {
-        "Animales": [
-          "Elefante",
-          "Pingüino",
-          "Pulpo",
-          "Flamenco",
-          "Canguro"
-        ],
-        "Profesiones": [
-          "Director de cine",
-          "Pizzero",
-          "Piloto",
-          "Barista",
-          "Mago"
-        ],
-        "Cosas": [
-          "Avión",
-          "Robot",
-          "Bicicleta",
-          "Monopatín",
-          "Ascensor"
-        ]
-      }
+      "c": CROCODILE_ES
     },
     "alias": {
       "n": "Alias",

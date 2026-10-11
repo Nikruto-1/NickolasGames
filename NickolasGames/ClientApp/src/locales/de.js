@@ -1,3 +1,4 @@
+import { CROCODILE_DE } from "../data/crocodile.de";
 import { WHOAMI_DE } from "../data/whoami.de";
 
 export const UI_COPY = {
@@ -66,32 +67,10 @@ export const UI_COPY = {
     },
     "crocodile": {
       "n": "Krokodil",
-      "d": "Stelle Wörter dar, ohne zu sprechen.",
+      "d": "Nur Gestik, Mimik und Körperbewegungen — ohne Sprechen oder Requisiten.",
       "p": "3-12 Spieler",
       "t": "15 Min",
-      "c": {
-        "Tiere": [
-          "Elefant",
-          "Pinguin",
-          "Oktopus",
-          "Flamingo",
-          "Känguru"
-        ],
-        "Berufe": [
-          "Filmregisseur",
-          "Pizzabäcker",
-          "Pilot",
-          "Barista",
-          "Magier"
-        ],
-        "Dinge": [
-          "Flugzeug",
-          "Roboter",
-          "Fahrrad",
-          "Skateboard",
-          "Aufzug"
-        ]
-      }
+      "c": CROCODILE_DE
     },
     "alias": {
       "n": "Alias",

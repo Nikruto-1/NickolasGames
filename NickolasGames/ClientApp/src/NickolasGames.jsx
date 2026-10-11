@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CloudShader } from "@/components/ui/cloud-shader";
 import "./nickolasgames.css";
+import { readValue, writeValue, readProgress } from "./utils/progress";
+import { AppStatus, PROGRESS_COPY } from "./components/AppStatus";
 import { COPY, PLAYER_SETUP } from "./locales";
 import { DIFFICULTIES, wordsByDifficulty } from "./utils/difficulty";
 
@@ -118,27 +120,32 @@ function GamesGrid({ games, t, onPlay }) {
 
 const SCRAMBLE = "▓▒░#@$%&*+?";
 function CardStackPreview({ game, games, t, lang, onGame }) {
+  const storageKey = `nickolasgames-progress-v1-${lang}-${game}`;
+  const [saved] = useState(() => readProgress(storageKey));
+  const [storageOk, setStorageOk] = useState(true);
+  const progressCopy = PROGRESS_COPY[lang] || PROGRESS_COPY.en;
   const cats = useMemo(() => Object.keys(games[game].c), [game, games]);
-  const [cat, setCat] = useState(ALL_CATEGORIES);
-  const [difficulty, setDifficulty] = useState("medium");
-  const [queue, setQueue] = useState([]);
-  const [idx, setIdx] = useState(0);
+  const [cat, setCat] = useState(() => saved?.cat ?? ALL_CATEGORIES);
+  const [difficulty, setDifficulty] = useState(() => saved?.difficulty ?? "medium");
+  const [queue, setQueue] = useState(() => saved?.queue ?? []);
+  const [idx, setIdx] = useState(() => saved?.idx ?? 0);
   const [shown, setShown] = useState(false);
   const [text, setText] = useState("");
   const [enc, setEnc] = useState(false);
   const [exit, setExit] = useState(null);
-  const [score, setScore] = useState({ got: 0, skipped: 0 });
-  const [roundSeconds, setRoundSeconds] = useState(60);
-  const [left, setLeft] = useState(60);
+  const [score, setScore] = useState(() => saved?.score ?? { got: 0, skipped: 0 });
+  const [roundSeconds, setRoundSeconds] = useState(() => saved?.roundSeconds ?? 60);
+  const [left, setLeft] = useState(() => saved?.left ?? 60);
   const [running, setRunning] = useState(false);
-  const [playerNames, setPlayerNames] = useState("Nickolas\nSofia\nDmytro");
-  const [customWords, setCustomWords] = useState("");
-  const [customOnly, setCustomOnly] = useState(false);
-  const [assignments, setAssignments] = useState([]);
+  const [playerNames, setPlayerNames] = useState(() => saved?.playerNames ?? "Nickolas\nSofia\nDmytro");
+  const [customWords, setCustomWords] = useState(() => saved?.customWords ?? "");
+  const [customOnly, setCustomOnly] = useState(() => saved?.customOnly ?? false);
+  const [assignments, setAssignments] = useState(() => saved?.assignments ?? []);
   const [visibleCards, setVisibleCards] = useState({});
   const [pendingWords, setPendingWords] = useState({});
   const [dealWarning, setDealWarning] = useState("");
   const scr = useRef(0);
+  const transition = useRef(0);
   const playerCopy = PLAYER_SETUP[lang] || PLAYER_SETUP.en;
 
   const parsedCustomWords = useMemo(() => [...new Set(customWords.split(/[\n,]+/).map((word) => word.trim()).filter(Boolean))], [customWords]);
@@ -148,8 +155,13 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
   const filteredWhoAmIWords = useMemo(() => Object.values(games.whoami.c).flatMap((words) => wordsByDifficulty(words, difficulty)), [games, difficulty]);
   const whoAmIWordPool = useMemo(() => customOnly ? parsedCustomWords : [...new Set([...filteredWhoAmIWords, ...parsedCustomWords])], [customOnly, filteredWhoAmIWords, parsedCustomWords]);
 
-  useEffect(() => { setCat(ALL_CATEGORIES); }, [game, games]);
+  const configuration = JSON.stringify([game, lang, cat, difficulty, customWords, customOnly]);
+  const previousConfiguration = useRef(saved ? configuration : null);
   useEffect(() => {
+    if (previousConfiguration.current === configuration) return;
+    previousConfiguration.current = configuration;
+    clearTimeout(transition.current);
+    setRunning(false); setLeft(roundSeconds);
     clearInterval(scr.current);
     setQueue(shuffle(game === "whoami" ? (customOnly ? parsedCustomWords : [...new Set([...getWordsForCategory(cat), ...parsedCustomWords])]) : getWordsForCategory(cat)));
     setIdx(0); setShown(false); setExit(null); setEnc(false); setText(""); setScore({ got: 0, skipped: 0 }); setAssignments([]); setVisibleCards({}); setPendingWords({}); setDealWarning("");
@@ -159,8 +171,25 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
     const id = setInterval(() => setLeft((l) => { if (l <= 1) { setRunning(false); return 0; } return l - 1; }), 1000);
     return () => clearInterval(id);
   }, [running]);
-  useEffect(() => () => clearInterval(scr.current), []);
+  useEffect(() => () => { clearInterval(scr.current); clearTimeout(transition.current); }, []);
 
+  useEffect(() => {
+    // Commit a pending card transition as one logical action, even during its animation.
+    setStorageOk(writeValue(storageKey, { version: 1, cat, difficulty, queue,
+      idx: idx + (exit ? 1 : 0), score, roundSeconds, left, playerNames, customWords, customOnly, assignments }));
+  }, [storageKey, cat, difficulty, queue, idx, exit, score, roundSeconds, left, playerNames, customWords, customOnly, assignments]);
+  useEffect(() => {
+    const pause = () => { if (document.hidden) { setRunning(false); setVisibleCards({}); } };
+    document.addEventListener("visibilitychange", pause);
+    return () => document.removeEventListener("visibilitychange", pause);
+  }, []);
+  const newGame = () => {
+    if (!window.confirm(progressCopy.confirm)) return;
+    clearInterval(scr.current);
+    setQueue(shuffle(queue)); setIdx(0); setScore({ got: 0, skipped: 0 });
+    setAssignments([]); setVisibleCards({}); setPendingWords({});
+    setRunning(false); setLeft(roundSeconds); setShown(false); setText(""); setExit(null); setEnc(false);
+  };
   const word = queue.length ? queue[idx % queue.length] : "";
 
   const reveal = () => {
@@ -185,7 +214,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
     clearInterval(scr.current);
     setExit(dir);
     setScore((s) => (dir === "skip" ? { ...s, skipped: s.skipped + 1 } : { ...s, got: s.got + 1 }));
-    setTimeout(() => { setIdx((i) => i + 1); setShown(false); setEnc(false); setExit(null); setText(""); }, RM ? 0 : 380);
+    transition.current = setTimeout(() => { setIdx((i) => i + 1); setShown(false); setEnc(false); setExit(null); setText(""); }, RM ? 0 : 380);
   };
 
   const cardStyle = (i) => i === 0 && exit
@@ -292,6 +321,9 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
             <span>{t.difficultyLabel}</span>
             {DIFFICULTIES.map((level) => <button key={level} className="chip" aria-pressed={level === difficulty} onClick={() => setDifficulty(level)}>{t.difficulty[level]}</button>)}
           </div>
+          <div className="players-note" role="status">{storageOk ? (saved ? progressCopy.restored : progressCopy.saved) : progressCopy.failed}</div>
+          <button className="btn sm" disabled={!!exit} onClick={newGame}>{progressCopy.newGame}</button>
+          {left > 0 && !running && <button className="btn sm" onClick={() => setRunning(true)}>{progressCopy.resume}</button>}
           <div className="timer">
             <b>{left}</b>
             <div className="tbar"><i style={{ transform: `scaleX(${Math.max(0, Math.min(1, left / roundSeconds))})` }} /></div>
@@ -438,8 +470,9 @@ function LanguageSwitcher({ lang, setLang, label }) {
 }
 
 export default function NickolasGames() {
-  const [lang, setLang] = useState(() => localStorage.getItem("nickolasgames-lang") || "en");
-  const [game, setGame] = useState("crocodile");
+  const [lang, setLang] = useState(() => { try { const l = localStorage.getItem("nickolasgames-lang"); return COPY[l] ? l : "en"; } catch { return "en"; } });
+  const [game, setGame] = useState(() => { const g = readValue("nickolasgames-active-game"); return PLAYABLE.includes(g) ? g : "crocodile"; });
+  useEffect(() => { writeValue("nickolasgames-active-game", game); }, [game]);
   const t = COPY[lang] || COPY.en;
   const choose = (k, scroll) => {
     setGame(k === "random" ? pickRandom() : k);
@@ -447,17 +480,18 @@ export default function NickolasGames() {
   };
 
   useEffect(() => {
-    localStorage.setItem("nickolasgames-lang", lang);
+    try { localStorage.setItem("nickolasgames-lang", lang); } catch {}
     document.documentElement.lang = lang;
   }, [lang]);
 
   return (
     <>
       <nav><span>NickolasGames</span><LanguageSwitcher lang={lang} setLang={setLang} label={t.language} /></nav>
+      <AppStatus lang={lang} />
       <Hero t={t} />
       <PlaneFlight title={t.flight} />
       <GamesGrid games={t.games} t={t} onPlay={(k) => choose(k, true)} />
-      <CardStackPreview game={game} games={t.games} t={t} lang={lang} onGame={(k) => choose(k, false)} />
+      <CardStackPreview key={`${lang}-${game}`} game={game} games={t.games} t={t} lang={lang} onGame={(k) => choose(k, false)} />
       <HowItWorks t={t} />
       <Testimonials t={t} />
       <FinalCta t={t} />

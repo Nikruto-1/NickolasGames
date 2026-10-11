@@ -1,3 +1,4 @@
+import { CROCODILE_EN } from "../data/crocodile.en";
 import { WHOAMI_EN } from "../data/whoami.en";
 
 export const UI_COPY = {
@@ -66,32 +67,10 @@ export const UI_COPY = {
     },
     "crocodile": {
       "n": "Crocodile",
-      "d": "Act out words without speaking.",
+      "d": "Use only gestures, facial expressions and body movements — no speaking or props.",
       "p": "3-12 players",
       "t": "15 min",
-      "c": {
-        "Animals": [
-          "Elephant",
-          "Penguin",
-          "Octopus",
-          "Flamingo",
-          "Kangaroo"
-        ],
-        "Jobs": [
-          "Movie director",
-          "Pizza chef",
-          "Pilot",
-          "Barista",
-          "Magician"
-        ],
-        "Things": [
-          "Airplane",
-          "Robot",
-          "Bicycle",
-          "Skateboard",
-          "Elevator"
-        ]
-      }
+      "c": CROCODILE_EN
     },
     "alias": {
       "n": "Alias",

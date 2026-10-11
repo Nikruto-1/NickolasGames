@@ -1,3 +1,4 @@
+import { CROCODILE_SV } from "../data/crocodile.sv";
 import { WHOAMI_SV } from "../data/whoami.sv";
 
 export const UI_COPY = {
@@ -66,32 +67,10 @@ export const UI_COPY = {
     },
     "crocodile": {
       "n": "Krokodil",
-      "d": "Spela upp ord utan att prata.",
+      "d": "Använd bara gester, mimik och kroppsrörelser — inget prat eller rekvisita.",
       "p": "3-12 spelare",
       "t": "15 min",
-      "c": {
-        "Djur": [
-          "Elefant",
-          "Pingvin",
-          "Bläckfisk",
-          "Flamingo",
-          "Känguru"
-        ],
-        "Jobb": [
-          "Filmregissör",
-          "Pizzakock",
-          "Pilot",
-          "Barista",
-          "Magiker"
-        ],
-        "Saker": [
-          "Flygplan",
-          "Robot",
-          "Cykel",
-          "Skateboard",
-          "Hiss"
-        ]
-      }
+      "c": CROCODILE_SV
     },
     "alias": {
       "n": "Alias",
