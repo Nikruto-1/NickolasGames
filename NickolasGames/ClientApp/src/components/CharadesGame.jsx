@@ -140,7 +140,7 @@ export function CharadesGame({ games, t, lang, onGame }) {
             </div>}
             {state.phase === 'confirming' && <div className="charades-guesser">
               <h3>{copy.whoGuessed}</h3>
-              <p>{expired ? copy.late : copy.timed}</p>
+              <p>{expired ? copy.late : copy.timed.replace('{points}', POINTS_BY_DIFFICULTY[state.selected])}</p>
               <p>{copy.awardHint}</p>
               <div className="players-actions">
                 {state.players.filter(p => p.id !== state.activeId).map(player => <button className="btn pri" key={player.id} onClick={() => dispatch({ type: 'award', id: player.id })}>{player.name} +{POINTS_BY_DIFFICULTY[state.selected]}</button>)}

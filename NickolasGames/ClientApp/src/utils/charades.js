@@ -42,7 +42,7 @@ export function validCharadesState(s) {
   if (s.phase === 'confirming' && !Number.isFinite(s.answeredAt)) return false;
   if (s.phase === 'finished' && (!s.winners.length || !s.winners.every(id => s.players.find(p => p.id === id).points >= s.targetScore))) return false;
   if (s.lastResult !== null && (!s.lastResult || typeof s.lastResult.presenter !== 'string' || typeof s.lastResult.guesser !== 'string' ||
-    ![0, 2].includes(s.lastResult.presenterPoints) || ![1, 2, 3].includes(s.lastResult.guesserPoints))) return false;
+    ![0, 1, 2, 3].includes(s.lastResult.presenterPoints) || ![1, 2, 3].includes(s.lastResult.guesserPoints))) return false;
   return true;
 }
 export function charadesReducer(state, action) {
@@ -79,8 +79,8 @@ export function charadesReducer(state, action) {
       const presenter = state.players.find(p => p.id === state.activeId);
       const guesser = state.players.find(p => p.id === action.id);
       if (state.phase !== 'confirming' || !guesser || guesser.id === presenter.id) return state;
-      const presenterPoints = state.answeredAt < state.deadline ? 2 : 0;
       const guesserPoints = POINTS_BY_DIFFICULTY[state.selected];
+      const presenterPoints = state.answeredAt < state.deadline ? guesserPoints : 0;
       const players = state.players.map(p => p.id === presenter.id ? { ...p, points: p.points + presenterPoints, presented: p.presented + 1 }
         : p.id === guesser.id ? { ...p, points: p.points + guesserPoints, guessed: p.guessed + 1 } : p);
       const winners = players.filter(p => p.points >= state.targetScore).map(p => p.id);

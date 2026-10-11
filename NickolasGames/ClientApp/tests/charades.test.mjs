@@ -26,9 +26,9 @@ test('a card contains one word per tier; selecting a word starts exactly one min
   assert(validCharadesState(s));
 });
 for(const [level,points] of [['easy',1],['medium',2],['hard',3]]){
-  test(`timely ${level}: actor gets 2 and a different guesser gets ${points}`,()=>{
+  test(`timely ${level}: actor and guesser each get ${points}`,()=>{
     const s = award(acting(level));
-    assert.deepEqual(s.players.map(p=>p.points),[2,points,0]);
+    assert.deepEqual(s.players.map(p=>p.points),[points,points,0]);
     assert.equal(s.activeId,'b');assert.equal(s.phase,'handoff');assert.equal(s.cardIndex,1);
     assert(validCharadesState(s));
     assert.equal(reduce(s,{type:'award',id:'c'}),s); // cannot credit the same card twice
@@ -44,7 +44,7 @@ test('confirmation delay does not change the moment the word was guessed; actor 
   const s=reduce(acting('easy'),{type:'guess',now:60_999});
   assert.equal(reduce(s,{type:'award',id:'a'}),s);
   const next=reduce(s,{type:'award',id:'b',now:100_000});
-  assert.deepEqual(next.players.map(p=>p.points),[2,1,0]);
+  assert.deepEqual(next.players.map(p=>p.points),[1,1,0]);
   const cancelled=reduce(s,{type:'cancelGuess'});assert.equal(cancelled.deadline,61_000);
   assert.deepEqual(award(cancelled,61_500).players.map(p=>p.points),[0,1,0]);
 });
