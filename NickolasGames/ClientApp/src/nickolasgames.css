@@ -71,6 +71,8 @@ section.s{padding:96px 0}
 .player-remove{border:1px solid var(--line);border-radius:50%;background:transparent;width:40px;height:40px;flex-shrink:0;font-size:24px}
 .player-scores .current-player{color:var(--fg);margin-top:16px;overflow-wrap:anywhere}
 .award{min-height:24px;font-weight:700;color:var(--acc)}
+.winner-banner{margin-top:18px;padding:18px;border:2px solid var(--acc);border-radius:16px;background:#e7f4ff;overflow-wrap:anywhere}
+.winner-banner h4{font-size:24px;margin-bottom:8px}
 .players-panel{margin-top:28px;border:1px solid var(--line);background:rgba(247,251,255,.72);border-radius:18px;padding:20px;box-shadow:0 18px 42px -32px rgba(0,80,125,.38)}
 .players-panel h3{font-size:24px;margin-bottom:8px}.players-panel p{color:var(--mut);font-size:15px;line-height:1.45}.players-label{display:block;margin-top:16px;margin-bottom:8px;font-size:14px;font-weight:700;color:var(--fg)}
 .players-panel textarea{width:100%;min-height:116px;resize:vertical;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--fg);padding:12px 14px;font:inherit;line-height:1.35;outline:none}.players-panel textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(0,151,255,.16)}.only-custom{margin-top:12px;display:flex;align-items:center;gap:10px;color:var(--fg);font-size:14px;font-weight:700}.only-custom input{width:18px;height:18px;accent-color:var(--acc)}

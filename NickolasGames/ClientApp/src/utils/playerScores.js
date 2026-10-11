@@ -1,4 +1,8 @@
 export const POINTS_BY_DIFFICULTY = { easy: 1, medium: 2, hard: 3 };
+export const DEFAULT_TARGET_SCORE = 30;
+export const validTargetScore = score => Number.isInteger(score) && score >= 1 && score <= 1000;
+export const findWinner = (players, targetScore) => validTargetScore(targetScore)
+  ? players.find(player => player.points >= targetScore) || null : null;
 
 export function recordPlayerAnswer(players, playerId, difficulty, outcome) {
   if (!POINTS_BY_DIFFICULTY[difficulty] || !["correct", "skip"].includes(outcome)) return players;

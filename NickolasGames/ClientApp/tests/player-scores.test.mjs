@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { recordPlayerAnswer, validPlayers } from "../src/utils/playerScores.js";
+import { recordPlayerAnswer, validPlayers, findWinner, validTargetScore, DEFAULT_TARGET_SCORE } from "../src/utils/playerScores.js";
 import { readProgress, writeValue } from "../src/utils/progress.js";
 
 const players = () => [
@@ -36,4 +36,18 @@ test("player scores restore alongside the active player; old saves stay readable
   assert.equal(readProgress("save"), null);
   assert.equal(validPlayers([{ ...players()[0], points: -1 }]), false);
   assert.equal(validPlayers([players()[0], players()[0]]), false);
+});
+
+test("default and custom victory targets allow reaching or exceeding the goal", () => {
+  assert.equal(DEFAULT_TARGET_SCORE, 30);
+  const roster = players();
+  roster[0].points = 29;
+  assert.equal(findWinner(roster, 30), null);
+  const winning = recordPlayerAnswer(roster, "a", "hard", "correct");
+  assert.equal(findWinner(winning, 30).id, "a");
+  assert.equal(findWinner(winning, 32).id, "a");
+  assert.equal(findWinner(winning, 50), null);
+  for (const invalid of [0, -1, 1.5, 1001, Infinity, "30"]) assert.equal(validTargetScore(invalid), false);
+  assert.equal(validTargetScore(1), true);
+  assert.equal(validTargetScore(1000), true);
 });
