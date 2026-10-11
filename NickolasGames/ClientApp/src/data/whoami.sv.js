@@ -204,5 +204,34 @@ export const WHOAMI_SV = {
       "Cyklop",
       "Grip"
     ]
+  },
+  "Geografi": {
+    "easy": [
+      "Ukraina",
+      "Egypten (pyramidernas land)",
+      "Paris (kärlekens och Eiffeltornets stad)",
+      "New York (skyskrapornas stad)",
+      "London (staden med Big Ben)",
+      "Rom (Italiens huvudstad)",
+      "Japan",
+      "Kina",
+      "USA",
+      "Australien (land och kontinent med kängurur)"
+    ],
+    "medium": [
+      "Eiffeltornet (Paris, Frankrike)",
+      "Frihetsgudinnan (New York, USA)",
+      "Cheopspyramiden (Egypten)",
+      "Kinesiska muren (Kina)",
+      "Tokyo (Japan)",
+      "Brasilien",
+      "Indien",
+      "Kanada",
+      "Venedig (staden på vattnet)",
+      "Aten (Grekland)",
+      "Island (gejsrarnas och glaciärernas land)",
+      "Antarktis (den isiga kontinenten)"
+    ],
+    "hard": []
   }
 };
