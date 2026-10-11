@@ -190,7 +190,19 @@ export const WHOAMI_DE = {
       "Taubenfrau (Kevin – Allein in New York)",
       "Dobby (Harry Potter)",
       "Fliegender Teppich (Aladdin)",
-      "Groot (Guardians of the Galaxy)"
+      "Groot (Guardians of the Galaxy)",
+      "Hofnarr",
+      "Ladybug",
+      "Cat Noir",
+      "Mozart",
+      "Beethoven",
+      "Zeus",
+      "Hades (Gott der Unterwelt)",
+      "Poseidon",
+      "Medusa",
+      "Minotaurus",
+      "Zyklop",
+      "Greif"
     ]
   }
 };

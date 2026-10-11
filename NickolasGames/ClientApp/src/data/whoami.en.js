@@ -190,7 +190,19 @@ export const WHOAMI_EN = {
       "Pigeon Lady (Home Alone 2)",
       "Dobby (Harry Potter)",
       "Magic Carpet (Aladdin)",
-      "Groot (Guardians of the Galaxy)"
+      "Groot (Guardians of the Galaxy)",
+      "Jester",
+      "Ladybug",
+      "Cat Noir",
+      "Mozart",
+      "Beethoven",
+      "Zeus",
+      "Hades (god of the underworld)",
+      "Poseidon",
+      "Medusa",
+      "Minotaur",
+      "Cyclops",
+      "Griffin"
     ]
   }
 };

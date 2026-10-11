@@ -190,7 +190,19 @@ export const WHOAMI_SV = {
       "Duvdamen (Ensam hemma 2)",
       "Dobby (Harry Potter)",
       "Den flygande mattan (Aladdin)",
-      "Groot (Guardians of the Galaxy)"
+      "Groot (Guardians of the Galaxy)",
+      "Hovnarr",
+      "Ladybug",
+      "Cat Noir",
+      "Mozart",
+      "Beethoven",
+      "Zeus",
+      "Hades (underjordens gud)",
+      "Poseidon",
+      "Medusa",
+      "Minotauros",
+      "Cyklop",
+      "Grip"
     ]
   }
 };

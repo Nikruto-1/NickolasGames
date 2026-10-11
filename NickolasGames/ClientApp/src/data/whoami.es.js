@@ -190,7 +190,19 @@ export const WHOAMI_ES = {
       "La mujer de las palomas (Solo en casa 2)",
       "Dobby (Harry Potter)",
       "Alfombra Mágica (Aladdín)",
-      "Groot (Guardianes de la Galaxia)"
+      "Groot (Guardianes de la Galaxia)",
+      "Bufón",
+      "Ladybug",
+      "Cat Noir",
+      "Mozart",
+      "Beethoven",
+      "Zeus",
+      "Hades (dios del inframundo)",
+      "Poseidón",
+      "Medusa",
+      "Minotauro",
+      "Cíclope",
+      "Grifo"
     ]
   }
 };
