@@ -22,7 +22,7 @@ export function WhoAmIGame({games,t,lang,onGame}) {
  const sound=useRef(null);if(!sound.current)sound.current=createTimerSound();
  const previousLeft=useRef(state.left);
  useEffect(()=>()=>sound.current.dispose(),[]);
- useEffect(()=>{if(running&&previousLeft.current>0&&state.left===0)sound.current.play();previousLeft.current=state.left;},[state.left,running]);
+ useEffect(()=>{if(running&&previousLeft.current>0&&state.left===0)sound.current.announce(copy.timeUp,lang);previousLeft.current=state.left;},[state.left,running,copy.timeUp,lang]);
  const dialog=useRef(null);const closeButton=useRef(null);
  const active=state.players.find(p=>p.id===activeId);
  const pool=useMemo(()=>whoamiPool(games.whoami.c,state.category,state.difficulty,state.customWords,state.customOnly),[games,state.category,state.difficulty,state.customWords,state.customOnly]);
@@ -90,7 +90,7 @@ export function WhoAmIGame({games,t,lang,onGame}) {
      </div>}
      {state.phase==='game'&&<>
        <p className="whoami-privacy">{copy.privacy}</p>
-       {state.timerEnabled&&<div className="timer"><b>{state.left}</b><div className="tbar"><i style={{transform:`scaleX(${state.left/state.duration})`}}/></div><button className="btn sm" disabled={!state.left} onClick={()=>{if(!running)sound.current.unlock();setRunning(value=>!value);}}>{running?copy.pause:t.startTimer}</button><button className="btn sm" onClick={()=>{setRunning(false);dispatch({type:'resetTimer'});}}>{t.reset}</button></div>}
+       {state.timerEnabled&&<div className="timer"><b>{state.left}</b><div className="tbar"><i style={{transform:`scaleX(${state.left/state.duration})`}}/></div><button className="btn sm" disabled={!state.left} onClick={()=>{if(!running)sound.current.unlock(lang);setRunning(value=>!value);}}>{running?copy.pause:t.startTimer}</button><button className="btn sm" onClick={()=>{setRunning(false);dispatch({type:'resetTimer'});}}>{t.reset}</button></div>}
        <div className="whoami-tiles">{state.players.map((player,index)=><button className="whoami-tile" key={player.id} onClick={()=>setActiveId(player.id)} aria-label={`${copy.open}: ${player.name}`}>
          <span className="whoami-avatar">{index+1}</span><strong>{player.name}</strong><span className="whoami-status">{!player.word?copy.empty:player.lastOutcome==='guessed'?pc.guessed:player.lastOutcome==='gaveUp'?pc.giveUp:copy.hidden}</span>
          <span className="whoami-tile-count">{t.guessed}: {player.guessed} · {t.skipped}: {player.skipped}</span><span className="whoami-open">{copy.open} →</span>

@@ -18,3 +18,14 @@ test('new setup starts empty while saved active cards migrate; changing settings
  const active=initialWhoami({assignments:[{id:'a',name:'Anna',word:'Cat',usedWords:['Cat']}]});assert.equal(active.players.length,1);
  assert.equal(whoamiReducer(active,{type:'setup',clearPlayers:true}).players.length,0);
 });
+test('Holmes speaks the localized phrase using an available local voice',()=>{
+ const calls=[];const local={lang:'uk-UA',localService:true};class Utterance {constructor(text){this.text=text;}}
+ const synthesis={getVoices:()=>[{lang:'en-US',localService:true},{lang:'uk-UA',localService:false},local],speak:m=>calls.push(m),cancel(){}};
+ const s=createTimerSound(()=>undefined,()=>({synthesis,Utterance}));s.unlock('uk');assert.equal(calls[0].volume,0);
+ s.announce('Холмс повідомляє, що час закінчився','uk');assert.equal(calls[1].text,'Холмс повідомляє, що час закінчився');assert.equal(calls[1].lang,'uk');assert.equal(calls[1].voice,local);s.dispose();
+});
+test('voice failure falls back to the timer signal',()=>{
+ let tones=0;class Context {state='running';currentTime=0;sampleRate=44100;destination={};resume(){}close(){}createBuffer(){return {};}createBufferSource(){return {connect(){},start(){}};}createOscillator(){return {frequency:{},connect(){},start(){tones++;},stop(){}};}createGain(){return {gain:{setValueAtTime(){},linearRampToValueAtTime(){}},connect(){}};}}
+ let message;class Utterance {constructor(text){this.text=text;}}
+ const s=createTimerSound(()=>Context,()=>({Utterance,synthesis:{getVoices:()=>[],speak:m=>{message=m;},cancel(){}}}));s.unlock();s.announce('Time is up','en');message.onerror();assert.equal(tones,3);s.dispose();
+});
