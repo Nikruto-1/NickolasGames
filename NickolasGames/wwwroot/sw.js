@@ -1,15 +1,33 @@
 
-const CACHE = 'nickolasgames-008611e2ddd2a511';
-const URLS = ["index.html","assets/index-DCQqL9-n.js","assets/holmes2d-HfpnUkk8.js","assets/holmes-closeup-hd-B8arRi3x.png","assets/holmes-lying-hd-DRZtvmqM.png","assets/holmes-pet-CrRfbT2E.png","assets/index-DbKgypKM.css","icons/icon-192.png","icons/icon-512.png","icons/apple-touch-icon.png","manifest.webmanifest"].map(p => new URL(p, self.registration.scope).href);
-self.addEventListener('install', event => { event.waitUntil(caches.open(CACHE).then(c => c.addAll(URLS))); });
-// Wait for all old tabs to close before activating an update; never interrupt a game.
-self.addEventListener('activate', event => { event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith('nickolasgames-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
+const CACHE = 'nickolasgames-03bd296dc4e34e87';
+const BUILD_ID = "mv4a33cz";
+const URLS = ["index.html","assets/index-D1rJcOvH.js","assets/holmes2d-CF6mwglN.js","assets/holmes-closeup-hd-B8arRi3x.png","assets/holmes-lying-hd-DRZtvmqM.png","assets/holmes-pet-CrRfbT2E.png","assets/index-BCqvPDpc.css","icons/icon-192.png","icons/icon-512.png","icons/apple-touch-icon.png","manifest.webmanifest"].map(p => new URL(p, self.registration.scope).href);
+self.addEventListener('install', event => {
+ event.waitUntil(caches.open(CACHE).then(c => c.addAll(URLS.map(url => new Request(url, {cache:"reload"})))).then(() => self.skipWaiting()));
+});
+self.addEventListener('activate', event => {
+ event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith('nickolasgames-') && k !== CACHE).map(k => caches.delete(k))))
+  .then(() => self.clients.claim())
+  .then(() => self.clients.matchAll({type:'window'}))
+  .then(clients => clients.forEach(client => client.postMessage({type:'APP_VERSION',version:BUILD_ID}))));
+});
+self.addEventListener('message', event => {
+ if(event.data?.type === 'GET_VERSION') event.source?.postMessage({type:'APP_VERSION',version:BUILD_ID});
+});
 self.addEventListener('fetch', event => {
  const req = event.request;
  const url = new URL(req.url);
  if(req.method !== 'GET' || url.origin !== self.location.origin || !url.href.startsWith(self.registration.scope)) return;
  if(req.mode === 'navigate') {
-  event.respondWith(caches.open(CACHE).then(async c => (await c.match(new URL('index.html', self.registration.scope).href)) || fetch(req)));
+  event.respondWith((async () => {
+   try {
+    const response = await fetch(req, {cache:'no-store'});
+    if(response.ok) return response;
+   } catch {}
+   const cached = await (await caches.open(CACHE)).match(new URL('index.html', self.registration.scope).href);
+   if(cached) return cached;
+   return fetch(req, {cache:'no-store'});
+  })());
  } else if(URLS.includes(url.href)) {
   event.respondWith(caches.open(CACHE).then(async c => (await c.match(req)) || fetch(req)));
  }

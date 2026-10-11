@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { hasAppUpdate, subscribeAppUpdate } from "../utils/pwaUpdates";
+const UPDATE_COPY = {uk:["Доступна нова версія сайту","Оновити"],en:["A new version is available","Update"],sv:["En ny version finns tillgänglig","Uppdatera"],de:["Eine neue Version ist verfügbar","Aktualisieren"],es:["Hay una nueva versión disponible","Actualizar"]};
 export const PROGRESS_COPY = {
  uk: {saved:"Прогрес зберігається на цьому пристрої автоматично.",restored:"Прогрес відновлено. Таймер на паузі.",failed:"Не вдалося зберегти прогрес. Перевірте сховище браузера.",newGame:"Нова гра",confirm:"Очистити рахунок і картки поточної гри?",resume:"Продовжити таймер",install:"Встановити гру",offline:"Ви офлайн",ready:"Гра готова до офлайн-режиму",loading:"Для підготовки офлайн-режиму потрібен інтернет",details:"Детальніше",hideDetails:"Згорнути",android:"На Android: Chrome → меню ⋮ → Встановити застосунок або На головний екран.",ios:"На iPhone: Safari → Поділитися → На початковий екран."},
  en: {saved:"Progress is saved automatically on this device.",restored:"Progress restored. Timer paused.",failed:"Progress could not be saved. Check browser storage.",newGame:"New game",confirm:"Clear the score and cards for this game?",resume:"Resume timer",install:"Install game",offline:"You are offline",ready:"Ready to play offline",loading:"Internet is needed to prepare offline mode",details:"Learn more",hideDetails:"Hide details",android:"On Android: Chrome → menu ⋮ → Install app or Add to Home screen.",ios:"On iPhone: Safari → Share → Add to Home Screen."},
@@ -8,6 +10,9 @@ export const PROGRESS_COPY = {
 };
 export function AppStatus({lang}) {
  const t = PROGRESS_COPY[lang] || PROGRESS_COPY.en;
+ const [updateAvailable,setUpdateAvailable] = useState(hasAppUpdate);
+ useEffect(() => subscribeAppUpdate(setUpdateAvailable), []);
+ const updateCopy = UPDATE_COPY[lang] || UPDATE_COPY.en;
  const [prompt, setPrompt] = useState(null);
  const [detailsOpen, setDetailsOpen] = useState(false);
  const [online, setOnline] = useState(navigator.onLine);
@@ -24,6 +29,7 @@ export function AppStatus({lang}) {
    return () => {active = false; removeEventListener("online", update); removeEventListener("offline", update); removeEventListener("beforeinstallprompt", install); removeEventListener("appinstalled", done);};
  }, []);
  return <aside className="wrap app-status" aria-label="App status">
+   {updateAvailable && <div className="app-update-notice" role="status"><span>{updateCopy[0]}</span><button className="btn sm" onClick={() => window.location.reload()}>{updateCopy[1]}</button></div>}
    <div className="app-status-line">
      <p role="status">{!online ? `${t.offline} · ` : ""}{ready ? t.ready : t.loading}</p>
      {!installed && <button type="button" className="app-status-more" aria-expanded={detailsOpen} aria-controls="app-install-details" onClick={() => setDetailsOpen(open => !open)}>
