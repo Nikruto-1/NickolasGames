@@ -442,7 +442,7 @@ function LanguageSwitcher({ lang, setLang, label }) {
 }
 
 export default function NickolasGames() {
-  const [showIntro, setShowIntro] = useState(true);
+  const [showIntro, setShowIntro] = useState(false);
   const [startRequest,setStartRequest]=useState(0);
   const requestStart=()=>{setStartRequest(value=>value+1);document.querySelector("#preview")?.scrollIntoView({behavior:"instant",block:"start"});};
   const finishIntro = useCallback(() => setShowIntro(false), []);
