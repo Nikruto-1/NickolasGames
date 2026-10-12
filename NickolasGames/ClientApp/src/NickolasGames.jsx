@@ -1,3 +1,5 @@
+import holmesLogo from './assets/holmes-logo.webp';
+import { createHolmesTimerSound, HOLMES_TIME_UP } from './utils/holmesTimerSound.js';
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { HolmesFloor } from "./components/HolmesFloor";
 import "./nickolasgames.css";
@@ -5,6 +7,7 @@ import { HolmesIntro } from "./components/HolmesIntro";
 import { readValue, writeValue, readProgress } from "./utils/progress";
 import { AppStatus, PROGRESS_COPY } from "./components/AppStatus";
 import { CharadesGame } from "./components/CharadesGame";
+import { WhoAmIGame } from "./components/WhoAmIGame";
 import { COPY, PLAYER_SETUP } from "./locales";
 import { DIFFICULTIES, wordsByDifficulty } from "./utils/difficulty";
 import { ROUND_MESSAGES } from "./locales/round";
@@ -88,7 +91,11 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
   const [roundSeconds, setRoundSeconds] = useState(() => saved?.roundSeconds ?? 60);
   const [left, setLeft] = useState(() => saved?.left ?? 60);
   const [running, setRunning] = useState(false);
-  const [playerNames, setPlayerNames] = useState(() => saved?.playerNames ?? "Nickolas\nSofia\nDmytro");
+  const sound=useRef(null);if(!sound.current)sound.current=createHolmesTimerSound();
+  const timerArmed=useRef(false);const previousLeft=useRef(left);
+  useEffect(()=>()=>sound.current.dispose(),[]);
+  useEffect(()=>{if(timerArmed.current&&previousLeft.current>0&&left===0){timerArmed.current=false;sound.current.announce(HOLMES_TIME_UP,lang);}previousLeft.current=left;},[left,lang]);
+  const [playerNames, setPlayerNames] = useState(() => saved?.playerNames ?? "");
   const [customWords, setCustomWords] = useState(() => saved?.customWords ?? "");
   const [customOnly, setCustomOnly] = useState(() => saved?.customOnly ?? false);
   const [assignments, setAssignments] = useState(() => saved?.assignments ?? []);
@@ -113,7 +120,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
     if (!configurationChanged) return;
     previousConfiguration.current = configuration;
     clearTimeout(transition.current); transition.current = 0;
-    setRunning(false); setLeft(roundSeconds);
+    timerArmed.current=false;setRunning(false); setLeft(roundSeconds);
     clearInterval(scr.current);
     setQueue(shuffle(game === "whoami" ? (customOnly ? parsedCustomWords : uniqueWords([...getWordsForCategory(cat), ...parsedCustomWords])) : getWordsForCategory(cat)));
     setIdx(0); setShown(false); setExit(null); setEnc(false); setText(""); setScore({ got: 0, skipped: 0 }); setAssignments([]); setVisibleCards({}); setPendingWords({}); setDealWarning("");
@@ -142,7 +149,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
     clearTimeout(transition.current); transition.current = 0;
     setQueue(shuffle(queue)); setIdx(0); setScore({ got: 0, skipped: 0 });
     setAssignments([]); setVisibleCards({}); setPendingWords({});
-    setRunning(false); setLeft(roundSeconds); setShown(false); setText(""); setExit(null); setEnc(false);
+    timerArmed.current=false;setRunning(false); setLeft(roundSeconds); setShown(false); setText(""); setExit(null); setEnc(false);
   };
   const word = queue[idx] || "";
   useEffect(() => { if (!word) setRunning(false); }, [word]);
@@ -150,7 +157,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
   const reveal = () => {
     if (shown || exit || !word) return;
     setShown(true);
-    if (!running && left === roundSeconds) setRunning(true);
+    if (!running && left === roundSeconds) {sound.current.unlock(lang);timerArmed.current=true;setRunning(true);}
     if (RM) { setText(word); return; }
     setEnc(true);
     let f = 0;
@@ -179,12 +186,12 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
     const seconds = Math.max(10, Math.min(600, Number(value) || 10));
     setRoundSeconds(seconds);
     setLeft(seconds);
-    setRunning(false);
+    timerArmed.current=false;setRunning(false);
   };
 
   const toggleTimer = () => {
-    if (running) setRunning(false);
-    else { if (left === 0) setLeft(roundSeconds); setRunning(true); }
+    if (running) {timerArmed.current=false;setRunning(false);}
+    else {sound.current.unlock(lang);timerArmed.current=true;if (left === 0) setLeft(roundSeconds); setRunning(true);}
   };
 
   const allWhoAmIWords = whoAmIWordPool;
@@ -284,7 +291,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
             <b>{left}</b>
             <div className="tbar"><i style={{ transform: `scaleX(${Math.max(0, Math.min(1, left / roundSeconds))})` }} /></div>
             <button className="btn sm" onClick={toggleTimer}>{running ? roundCopy.pause : left !== roundSeconds ? progressCopy.resume : t.startTimer}</button>
-            <button className="btn sm" onClick={() => { setRunning(false); setLeft(roundSeconds); }}>{t.reset}</button>
+            <button className="btn sm" onClick={() => { timerArmed.current=false;setRunning(false); setLeft(roundSeconds); }}>{t.reset}</button>
           </div>
           <div className="timer-options" aria-label={t.timerDuration}>
             <span>{t.timerDuration}</span>
@@ -447,12 +454,13 @@ export default function NickolasGames() {
     <>
       {showIntro && <HolmesIntro lang={lang} onComplete={finishIntro} />}
       <div inert={showIntro ? true : undefined}>
-      <nav><span>NickolasGames</span><LanguageSwitcher lang={lang} setLang={setLang} label={t.language} /></nav>
+      <nav><a className="site-logo" href="#" aria-label="NickolasGames"><img src={holmesLogo} alt="NickolasGames" width="1024" height="341" /></a><LanguageSwitcher lang={lang} setLang={setLang} label={t.language} /></nav>
       <AppStatus lang={lang} />
       <Hero t={t} />
       <GamesGrid games={t.games} t={t} onPlay={(k) => choose(k, true)} />
       {game === "crocodile"
         ? <CharadesGame key={`${lang}-${game}`} games={t.games} t={t} lang={lang} onGame={(k) => choose(k, false)} />
+        : game === "whoami" ? <WhoAmIGame key={`${lang}-${game}`} games={t.games} t={t} lang={lang} onGame={(k) => choose(k, false)} />
         : <CardStackPreview key={`${lang}-${game}`} game={game} games={t.games} t={t} lang={lang} onGame={(k) => choose(k, false)} />}
       <HowItWorks t={t} />
       <Testimonials t={t} />
