@@ -28,15 +28,18 @@ export function AppStatus({lang}) {
    if ("serviceWorker" in navigator) navigator.serviceWorker.ready.then(() => {if(active) setReady(true);});
    return () => {active = false; removeEventListener("online", update); removeEventListener("offline", update); removeEventListener("beforeinstallprompt", install); removeEventListener("appinstalled", done);};
  }, []);
+ const showInstallDetails = !installed && (prompt || detailsOpen);
+ const showStatus = updateAvailable || !online || showInstallDetails;
+ if (!showStatus) return null;
  return <aside className="wrap app-status" aria-label="App status">
    {updateAvailable && <div className="app-update-notice" role="status"><span>{updateCopy[0]}</span><button className="btn sm" onClick={() => window.location.reload()}>{updateCopy[1]}</button></div>}
    <div className="app-status-line">
-     <p role="status">{!online ? `${t.offline} · ` : ""}{ready ? t.ready : t.loading}</p>
-     {!installed && <button type="button" className="app-status-more" aria-expanded={detailsOpen} aria-controls="app-install-details" onClick={() => setDetailsOpen(open => !open)}>
+     <p role="status">{!online ? t.offline : prompt ? t.install : ready ? t.ready : t.loading}</p>
+     {showInstallDetails && <button type="button" className="app-status-more" aria-expanded={detailsOpen} aria-controls="app-install-details" onClick={() => setDetailsOpen(open => !open)}>
        {detailsOpen ? t.hideDetails : t.details}
      </button>}
    </div>
-   {!installed && <div id="app-install-details" className="app-install-details" hidden={!detailsOpen}>
+   {showInstallDetails && <div id="app-install-details" className="app-install-details" hidden={!detailsOpen}>
      <p>{t.android}</p>
      <p>{t.ios}</p>
      {prompt && <button className="btn sm" onClick={async () => {await prompt.prompt(); await prompt.userChoice; setPrompt(null);}}>{t.install}</button>}
