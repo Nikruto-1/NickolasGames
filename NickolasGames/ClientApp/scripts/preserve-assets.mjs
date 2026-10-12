@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, openSync, closeSync, renameSync, unlinkSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -21,7 +21,20 @@ export function preserveAssets({ repo = defaultRepo, output = resolve(repo, pref
       if (existsSync(destination)) continue;
       // Hashed files are immutable: never replace an asset from the current build.
       mkdirSync(dirname(destination), { recursive: true });
-      writeFileSync(destination, git(['show', commit + ':' + path]));
+      // Stream binary blobs to disk: HD images exceed execFileSync's stdout buffer.
+      const temporary = destination + '.restoring';
+      const descriptor = openSync(temporary, 'w');
+      try {
+        try {
+          execFileSync('git', ['show', commit + ':' + path], {
+            cwd: repo, stdio: ['ignore', descriptor, 'pipe']
+          });
+        } finally { closeSync(descriptor); }
+        renameSync(temporary, destination);
+      } catch (error) {
+        if (existsSync(temporary)) unlinkSync(temporary);
+        throw error;
+      }
       retained++;
     }
   }
