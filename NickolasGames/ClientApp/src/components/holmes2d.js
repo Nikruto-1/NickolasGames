@@ -1,4 +1,4 @@
-import holmesThrowHD from "../assets/holmes-throw-hd.png";
+import holmesThrowHD from "../assets/holmes-throw-optimized.jpg";
 
 export function createHolmesScene(container,{reduced=false,loop=false,onPhase,onFinish,onFailure}) {
  const stage=document.createElement("div");stage.className="holmes-pet-stage";

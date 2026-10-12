@@ -6,7 +6,14 @@ export function offlinePlugin() {
  return { name: 'nickolasgames-offline', apply: 'build',
   config() { return {define:{__APP_BUILD_ID__:JSON.stringify(buildId)}}; },
   generateBundle(_, bundle) {
-  const files = [...new Set(['index.html', ...Object.keys(bundle)]), 'icons/holmes-192.png', 'icons/holmes-512.png', 'icons/holmes-apple-touch.png', 'manifest.webmanifest'];
+  const files = [...new Set([
+   'index.html',
+   ...Object.keys(bundle).filter(file => /\.(?:html|css|js)$/.test(file)),
+   'icons/holmes-192.png',
+   'icons/holmes-512.png',
+   'icons/holmes-apple-touch.png',
+   'manifest.webmanifest'
+  ])];
   const version = createHash('sha256').update(readFileSync(new URL('./index.html', import.meta.url))).update(Object.values(bundle).map(f => f.code || f.source || '').join('')).digest('hex').slice(0,16);
   this.emitFile({type:'asset', fileName:'sw.js', source: `
 const CACHE = 'nickolasgames-${version}';

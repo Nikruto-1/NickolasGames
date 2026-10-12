@@ -1,4 +1,4 @@
-import holmesLying from "../assets/holmes-lying-hd.png";
+import holmesLying from "../assets/holmes-lying-hero.jpg";
 import "./HolmesFloor.css";
 
 export function HolmesFloor({games}) {
@@ -8,7 +8,9 @@ export function HolmesFloor({games}) {
   <div className="holmes-floor-cards">
    {Object.entries(games).slice(0,4).map(([key,game],i)=><div className={`holmes-floor-card holmes-floor-card-${i}`} key={key}><span>{symbols[i]}</span><strong>{game.n}</strong><small>NickolasGames</small></div>)}
   </div>
-  <div className="holmes-resting"><img src={holmesLying} alt="" draggable="false"/></div>
+  <div className="holmes-resting">
+    <img src={holmesLying} alt="" width="900" height="600" fetchPriority="high" decoding="async" draggable="false"/>
+  </div>
   <svg className="holmes-yarn-thread" viewBox="0 0 600 400"><path d="M510 340c-70 30-60-30-110-4s-15 43-65 39-74-10-85 7" fill="none" stroke="#AC7865" strokeWidth="2.5" strokeLinecap="round"/></svg>
   <div className="holmes-yarn-motion"><svg className="holmes-yarn" viewBox="0 0 100 100">
    <defs><radialGradient id="holmes-yarn-color" cx="35%" cy="25%"><stop stopColor="#CBB89A"/><stop offset="1" stopColor="#AC7865"/></radialGradient><clipPath id="holmes-yarn-clip"><circle cx="50" cy="50" r="44"/></clipPath></defs>

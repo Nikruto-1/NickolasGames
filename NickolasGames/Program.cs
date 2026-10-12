@@ -12,7 +12,22 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseDefaultFiles();
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = context =>
+    {
+        var fileName = context.File.Name;
+        var headers = context.Context.Response.Headers;
+
+        if (string.Equals(fileName, "index.html", StringComparison.OrdinalIgnoreCase))
+        {
+            headers.CacheControl = "no-cache";
+            return;
+        }
+
+        headers.CacheControl = "public,max-age=31536000,immutable";
+    }
+});
 app.UseAuthorization();
 
 app.MapControllers();
