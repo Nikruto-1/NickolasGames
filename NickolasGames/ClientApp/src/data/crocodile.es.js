@@ -1,26 +1,45 @@
-// Existing categories retain their original difficulty behavior. New cards use explicit levels.
+// Built-in words use explicit difficulty levels based on how hard they are to act out.
 export const CROCODILE_ES = {
-  "Animales": [
-    "Elefante",
-    "Pingüino",
-    "Pulpo",
-    "Flamenco",
-    "Canguro"
-  ],
-  "Profesiones": [
-    "Director de cine",
-    "Pizzero",
-    "Piloto",
-    "Barista",
-    "Mago"
-  ],
-  "Cosas": [
-    "Avión",
-    "Robot",
-    "Bicicleta",
-    "Monopatín",
-    "Ascensor"
-  ],
+  "Animales": {
+    "easy": [
+      "Elefante",
+      "Pingüino"
+    ],
+    "medium": [
+      "Pulpo",
+      "Flamenco",
+      "Canguro"
+    ],
+    "hard": [
+      "Capibara",
+      "Camaleón",
+      "Ornitorrinco"
+    ]
+  },
+  "Profesiones": {
+    "easy": [
+      "Piloto",
+      "Mago"
+    ],
+    "medium": [
+      "Director de cine",
+      "Pizzero",
+      "Barista"
+    ],
+    "hard": []
+  },
+  "Cosas": {
+    "easy": [
+      "Avión",
+      "Robot",
+      "Bicicleta",
+      "Monopatín"
+    ],
+    "medium": [
+      "Ascensor"
+    ],
+    "hard": []
+  },
   "Acciones y procesos": {
     "easy": [
       "Cepillarse los dientes",
@@ -32,7 +51,8 @@ export const CROCODILE_ES = {
       "Poner papel pintado",
       "Hacerse un selfi",
       "Acariciar a un gato",
-      "Beber té caliente"
+      "Beber té caliente",
+      "Leer un libro"
     ],
     "medium": [],
     "hard": []
@@ -47,10 +67,11 @@ export const CROCODILE_ES = {
       "Paraguas",
       "Plancha",
       "Tijeras",
-      "Aspiradora",
       "Despertador"
     ],
-    "medium": [],
+    "medium": [
+      "Aspiradora"
+    ],
     "hard": []
   },
   "Conceptos y objetos": {
@@ -65,7 +86,8 @@ export const CROCODILE_ES = {
       "Un mosquito debajo de la manta",
       "Una bicicleta con ruedas cuadradas",
       "El tan esperado viernes",
-      "Un jefe estricto"
+      "Un jefe estricto",
+      "Terremoto"
     ],
     "hard": []
   },
@@ -98,7 +120,8 @@ export const CROCODILE_ES = {
       "Conciencia moral",
       "Insomnio",
       "Intuición",
-      "Gravedad"
+      "Gravedad",
+      "Evolución"
     ]
   },
   "Situaciones difíciles y papeles": {

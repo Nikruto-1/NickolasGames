@@ -1,26 +1,45 @@
-// Existing categories retain their original difficulty behavior. New cards use explicit levels.
+// Built-in words use explicit difficulty levels based on how hard they are to act out.
 export const CROCODILE_DE = {
-  "Tiere": [
-    "Elefant",
-    "Pinguin",
-    "Oktopus",
-    "Flamingo",
-    "Känguru"
-  ],
-  "Berufe": [
-    "Filmregisseur",
-    "Pizzabäcker",
-    "Pilot",
-    "Barista",
-    "Magier"
-  ],
-  "Dinge": [
-    "Flugzeug",
-    "Roboter",
-    "Fahrrad",
-    "Skateboard",
-    "Aufzug"
-  ],
+  "Tiere": {
+    "easy": [
+      "Elefant",
+      "Pinguin"
+    ],
+    "medium": [
+      "Oktopus",
+      "Flamingo",
+      "Känguru"
+    ],
+    "hard": [
+      "Capybara",
+      "Chamäleon",
+      "Schnabeltier"
+    ]
+  },
+  "Berufe": {
+    "easy": [
+      "Pilot",
+      "Magier"
+    ],
+    "medium": [
+      "Filmregisseur",
+      "Pizzabäcker",
+      "Barista"
+    ],
+    "hard": []
+  },
+  "Dinge": {
+    "easy": [
+      "Flugzeug",
+      "Roboter",
+      "Fahrrad",
+      "Skateboard"
+    ],
+    "medium": [
+      "Aufzug"
+    ],
+    "hard": []
+  },
   "Handlungen und Abläufe": {
     "easy": [
       "Zähne putzen",
@@ -32,7 +51,8 @@ export const CROCODILE_DE = {
       "Tapezieren",
       "Ein Selfie machen",
       "Eine Katze streicheln",
-      "Heißen Tee trinken"
+      "Heißen Tee trinken",
+      "Ein Buch lesen"
     ],
     "medium": [],
     "hard": []
@@ -47,10 +67,11 @@ export const CROCODILE_DE = {
       "Regenschirm",
       "Bügeleisen",
       "Schere",
-      "Staubsauger",
       "Wecker"
     ],
-    "medium": [],
+    "medium": [
+      "Staubsauger"
+    ],
     "hard": []
   },
   "Begriffe und Objekte": {
@@ -65,7 +86,8 @@ export const CROCODILE_DE = {
       "Eine Mücke unter der Bettdecke",
       "Ein Fahrrad mit quadratischen Rädern",
       "Der lang ersehnte Freitag",
-      "Ein strenger Chef"
+      "Ein strenger Chef",
+      "Erdbeben"
     ],
     "hard": []
   },
@@ -98,7 +120,8 @@ export const CROCODILE_DE = {
       "Gewissen",
       "Schlaflosigkeit",
       "Intuition",
-      "Schwerkraft"
+      "Schwerkraft",
+      "Evolution"
     ]
   },
   "Knifflige Situationen und Rollen": {

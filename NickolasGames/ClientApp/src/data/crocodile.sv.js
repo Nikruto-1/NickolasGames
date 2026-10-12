@@ -1,26 +1,45 @@
-// Existing categories retain their original difficulty behavior. New cards use explicit levels.
+// Built-in words use explicit difficulty levels based on how hard they are to act out.
 export const CROCODILE_SV = {
-  "Djur": [
-    "Elefant",
-    "Pingvin",
-    "Bläckfisk",
-    "Flamingo",
-    "Känguru"
-  ],
-  "Jobb": [
-    "Filmregissör",
-    "Pizzakock",
-    "Pilot",
-    "Barista",
-    "Magiker"
-  ],
-  "Saker": [
-    "Flygplan",
-    "Robot",
-    "Cykel",
-    "Skateboard",
-    "Hiss"
-  ],
+  "Djur": {
+    "easy": [
+      "Elefant",
+      "Pingvin"
+    ],
+    "medium": [
+      "Bläckfisk",
+      "Flamingo",
+      "Känguru"
+    ],
+    "hard": [
+      "Kapibara",
+      "Kameleont",
+      "Näbbdjur"
+    ]
+  },
+  "Jobb": {
+    "easy": [
+      "Pilot",
+      "Magiker"
+    ],
+    "medium": [
+      "Filmregissör",
+      "Pizzakock",
+      "Barista"
+    ],
+    "hard": []
+  },
+  "Saker": {
+    "easy": [
+      "Flygplan",
+      "Robot",
+      "Cykel",
+      "Skateboard"
+    ],
+    "medium": [
+      "Hiss"
+    ],
+    "hard": []
+  },
   "Handlingar och processer": {
     "easy": [
       "Borsta tänderna",
@@ -32,7 +51,8 @@ export const CROCODILE_SV = {
       "Tapetsera",
       "Ta en selfie",
       "Klappa en katt",
-      "Dricka varmt te"
+      "Dricka varmt te",
+      "Läsa en bok"
     ],
     "medium": [],
     "hard": []
@@ -47,10 +67,11 @@ export const CROCODILE_SV = {
       "Paraply",
       "Strykjärn",
       "Sax",
-      "Dammsugare",
       "Väckarklocka"
     ],
-    "medium": [],
+    "medium": [
+      "Dammsugare"
+    ],
     "hard": []
   },
   "Begrepp och föremål": {
@@ -65,7 +86,8 @@ export const CROCODILE_SV = {
       "En mygga under täcket",
       "En cykel med fyrkantiga hjul",
       "Den efterlängtade fredagen",
-      "En sträng chef"
+      "En sträng chef",
+      "Jordbävning"
     ],
     "hard": []
   },
@@ -98,7 +120,8 @@ export const CROCODILE_SV = {
       "Samvete",
       "Sömnlöshet",
       "Intuition",
-      "Gravitation"
+      "Gravitation",
+      "Evolution"
     ]
   },
   "Svåra situationer och roller": {

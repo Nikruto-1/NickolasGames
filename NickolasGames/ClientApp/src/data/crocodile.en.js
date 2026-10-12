@@ -1,26 +1,45 @@
-// Existing categories retain their original difficulty behavior. New cards use explicit levels.
+// Built-in words use explicit difficulty levels based on how hard they are to act out.
 export const CROCODILE_EN = {
-  "Animals": [
-    "Elephant",
-    "Penguin",
-    "Octopus",
-    "Flamingo",
-    "Kangaroo"
-  ],
-  "Jobs": [
-    "Movie director",
-    "Pizza chef",
-    "Pilot",
-    "Barista",
-    "Magician"
-  ],
-  "Things": [
-    "Airplane",
-    "Robot",
-    "Bicycle",
-    "Skateboard",
-    "Elevator"
-  ],
+  "Animals": {
+    "easy": [
+      "Elephant",
+      "Penguin"
+    ],
+    "medium": [
+      "Octopus",
+      "Flamingo",
+      "Kangaroo"
+    ],
+    "hard": [
+      "Capybara",
+      "Chameleon",
+      "Platypus"
+    ]
+  },
+  "Jobs": {
+    "easy": [
+      "Pilot",
+      "Magician"
+    ],
+    "medium": [
+      "Movie director",
+      "Pizza chef",
+      "Barista"
+    ],
+    "hard": []
+  },
+  "Things": {
+    "easy": [
+      "Airplane",
+      "Robot",
+      "Bicycle",
+      "Skateboard"
+    ],
+    "medium": [
+      "Elevator"
+    ],
+    "hard": []
+  },
   "Actions and processes": {
     "easy": [
       "Brushing your teeth",
@@ -32,7 +51,8 @@ export const CROCODILE_EN = {
       "Hanging wallpaper",
       "Taking a selfie",
       "Stroking a cat",
-      "Drinking hot tea"
+      "Drinking hot tea",
+      "Reading a book"
     ],
     "medium": [],
     "hard": []
@@ -47,10 +67,11 @@ export const CROCODILE_EN = {
       "Umbrella",
       "Iron",
       "Scissors",
-      "Vacuum cleaner",
       "Alarm clock"
     ],
-    "medium": [],
+    "medium": [
+      "Vacuum cleaner"
+    ],
     "hard": []
   },
   "Concepts and objects": {
@@ -65,7 +86,8 @@ export const CROCODILE_EN = {
       "A mosquito under the blanket",
       "A bicycle with square wheels",
       "The long-awaited Friday",
-      "A strict boss"
+      "A strict boss",
+      "Earthquake"
     ],
     "hard": []
   },
@@ -98,7 +120,8 @@ export const CROCODILE_EN = {
       "Conscience",
       "Insomnia",
       "Intuition",
-      "Gravity"
+      "Gravity",
+      "Evolution"
     ]
   },
   "Challenging situations and roles": {

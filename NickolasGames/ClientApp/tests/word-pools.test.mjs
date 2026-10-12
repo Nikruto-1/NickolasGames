@@ -30,3 +30,25 @@ for (const language of ['uk', 'en', 'sv', 'de', 'es']) {
     }
   });
 }
+
+for (const language of ['uk', 'en', 'sv', 'de', 'es']) {
+ test(language + ': every Crocodile category has explicit levels and no duplicated words', async () => {
+  const module=await import('../src/data/crocodile.'+language+'.js');
+  const categories=Object.values(module)[0];
+  const all=[];
+  for(const category of Object.values(categories)){
+   assert(!Array.isArray(category));
+   for(const level of ['easy','medium','hard']){assert(Array.isArray(category[level]));all.push(...wordsByDifficulty(category,level));}
+  }
+  assert.equal(all.length,new Set(all).size);
+ });
+}
+test('requested Ukrainian Crocodile levels are preserved and legacy words remain playable',async()=>{
+ const {CROCODILE_UK:categories}=await import('../src/data/crocodile.uk.js');
+ const at=level=>Object.values(categories).flatMap(category=>wordsByDifficulty(category,level));
+ for(const [level,words] of Object.entries({easy:['Читати книгу'],medium:['Землетрус','Пилосос'],hard:['Капібара','Хамелеон','Качкодзьоб','Еволюція']})){
+  for(const word of words){assert(at(level).includes(word),word);for(const other of ['easy','medium','hard'].filter(value=>value!==level))assert(!at(other).includes(word),word);}
+ }
+ const all=['easy','medium','hard'].flatMap(at);
+ for(const word of ['Слон','Пінгвін','Восьминіг','Фламінго','Кенгуру','Кінорежисер','Піцайоло','Пілот','Бариста','Фокусник','Літак','Робот','Велосипед','Скейтборд','Ліфт'])assert(all.includes(word),word);
+});
