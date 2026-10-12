@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {initialWhoami,validWhoami,whoamiReducer as reduce,whoamiPool,WHOAMI_ALL} from '../src/utils/whoami.js';
+import {initialWhoami,restoreWhoamiCategory,validWhoami,whoamiReducer as reduce,whoamiPool,WHOAMI_ALL} from '../src/utils/whoami.js';
 function game(pool=['Cat','Dog','Fox','Bear']) {
  let s=initialWhoami();
  s=reduce(s,{type:'add',id:'a',name:'Anna'});s=reduce(s,{type:'add',id:'b',name:'Bohdan'});
@@ -55,3 +55,34 @@ test('all levels combines every tier, respects category and custom-only, and per
  assert.equal(validWhoami(JSON.parse(JSON.stringify(s))),true);
  assert.equal(initialWhoami({difficulty:'all'}).difficulty,'all');
 });
+
+for (const [language, oldName, newName] of [
+ ['uk', 'Люди', 'Професії'], ['en', 'People', 'Professions'], ['sv', 'Personer', 'Yrken'],
+ ['de', 'Personen', 'Berufe'], ['es', 'Personas', 'Profesiones'],
+]) {
+ test(language + ': profession category rename preserves saved games and remains playable', async () => {
+  const module = await import('../src/data/whoami.' + language + '.js');
+  const categories = Object.values(module)[0];
+  assert(Object.hasOwn(categories, newName));
+  assert(!Object.hasOwn(categories, oldName));
+  for (const phase of ['setup', 'game', 'summary']) {
+   const saved = { ...game(), category: oldName, phase, timerEnabled: true, left: 27 };
+   saved.players[0].guessed = 3;
+   saved.players[0].usedWords.push('Previously guessed word');
+   const restored = restoreWhoamiCategory(JSON.parse(JSON.stringify(saved)), categories);
+   assert.equal(restored.category, newName);
+   assert.deepEqual({ ...restored, category: oldName }, saved);
+   assert(validWhoami(restored));
+   const pool = whoamiPool(categories, restored.category, restored.difficulty, restored.customWords, restored.customOnly);
+   assert(pool.length >= restored.players.length);
+   const replay = reduce(reduce(restored, { type: 'setup' }), { type: 'deal', pool });
+   assert.equal(replay.phase, 'game');
+   assert(replay.players.every(player => categories[newName][restored.difficulty].includes(player.word)));
+  }
+  const legacy = initialWhoami({ cat: oldName, assignments: [{ id: 'a', name: 'Anna', word: 'Existing card', usedWords: ['Existing card'] }], roundSeconds: 90, left: 40 });
+  const restoredLegacy = restoreWhoamiCategory(legacy, categories);
+  assert.equal(restoredLegacy.category, newName);
+  assert.deepEqual({ ...restoredLegacy, category: oldName }, legacy);
+  assert.equal(restoreWhoamiCategory({ ...legacy, category: newName }, categories).category, newName);
+ });
+}

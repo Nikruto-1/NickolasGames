@@ -1,5 +1,5 @@
 export const WHOAMI_SV = {
-  "Personer": {
+  "Yrken": {
     "easy": [
       "Astronaut",
       "Lärare",

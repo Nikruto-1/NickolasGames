@@ -1,5 +1,5 @@
 export const WHOAMI_EN = {
-  "People": {
+  "Professions": {
     "easy": [
       "Astronaut",
       "Teacher",

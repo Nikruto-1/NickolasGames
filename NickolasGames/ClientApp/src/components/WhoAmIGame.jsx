@@ -5,16 +5,19 @@ import { createHolmesTimerSound } from '../utils/holmesTimerSound.js';
 import { WHOAMI_UI } from '../locales/whoami-ui.js';
 import { PLAYER_SETUP } from '../locales/index.js';
 import { readValue, readProgress, writeValue } from '../utils/progress.js';
-import { initialWhoami, validWhoami, WHOAMI_ALL, WHOAMI_DIFFICULTIES, whoamiPool, whoamiReducer } from '../utils/whoami.js';
+import { initialWhoami, restoreWhoamiCategory, validWhoami, WHOAMI_ALL, WHOAMI_DIFFICULTIES, whoamiPool, whoamiReducer } from '../utils/whoami.js';
 
 export function WhoAmIGame({games,t,lang,onGame,startRequest=0}) {
  const copy=WHOAMI_UI[lang]||WHOAMI_UI.en;
  const pc=PLAYER_SETUP[lang]||PLAYER_SETUP.en;
  const key=`nickolasgames-whoami-v2-${lang}`;
  const [state,dispatch]=useReducer(whoamiReducer,null,()=>{
-   const saved=readValue(key);if(validWhoami(saved))return saved.phase==='setup'?{...saved,players:[]}:saved;
-   const migrated=initialWhoami(readProgress(`nickolasgames-progress-v1-${lang}-whoami`));
-   if(!(migrated.category in games.whoami.c))migrated.category=WHOAMI_ALL;
+   const saved=readValue(key);
+   if(validWhoami(saved)){
+     const restored=restoreWhoamiCategory(saved,games.whoami.c);
+     return restored.phase==='setup'?{...restored,players:[]}:restored;
+   }
+   const migrated=restoreWhoamiCategory(initialWhoami(readProgress(`nickolasgames-progress-v1-${lang}-whoami`)),games.whoami.c);
    migrated.pool=whoamiPool(games.whoami.c,migrated.category,migrated.difficulty,migrated.customWords,migrated.customOnly);
    return migrated;
  });

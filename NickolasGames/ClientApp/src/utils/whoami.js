@@ -1,6 +1,12 @@
 import { DIFFICULTIES, wordsByDifficulty } from './difficulty.js';
 export const WHOAMI_ALL = '__all__';
 export const WHOAMI_DIFFICULTIES = [...DIFFICULTIES, 'all'];
+const CATEGORY_ALIASES = { Люди: 'Професії', People: 'Professions', Personer: 'Yrken', Personen: 'Berufe', Personas: 'Profesiones' };
+export function restoreWhoamiCategory(state, categories) {
+  const category = Object.hasOwn(CATEGORY_ALIASES, state.category) ? CATEGORY_ALIASES[state.category] : state.category;
+  return { ...state, category: category === WHOAMI_ALL || Object.hasOwn(categories, category) ? category : WHOAMI_ALL };
+}
+
 export function whoamiPool(categories, category, difficulty, customWords, customOnly) {
   const custom = customWords.split(/[\n,]+/).map(w => w.trim()).filter(Boolean);
   const builtIn = customOnly ? [] : (category === WHOAMI_ALL ? Object.values(categories) : [categories[category]])
