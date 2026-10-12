@@ -1,7 +1,18 @@
 import { DIFFICULTIES, wordsByDifficulty } from './difficulty.js';
 export const WHOAMI_ALL = '__all__';
 export const WHOAMI_DIFFICULTIES = [...DIFFICULTIES, 'all'];
-const CATEGORY_ALIASES = { Люди: 'Професії', People: 'Professions', Personer: 'Yrken', Personen: 'Berufe', Personas: 'Profesiones' };
+const CATEGORY_ALIASES = {
+  "Люди": "Професії",
+  "People": "Professions",
+  "Personer": "Yrken",
+  "Personen": "Berufe",
+  "Personas": "Profesiones",
+  "Герої, люди та тварини": "Персонажі",
+  "Heroes, people and animals": "Characters",
+  "Hjältar, personer och djur": "Karaktärer",
+  "Helden, Menschen und Tiere": "Figuren",
+  "Héroes, personas y animales": "Personajes"
+};
 export function restoreWhoamiCategory(state, categories) {
   const category = Object.hasOwn(CATEGORY_ALIASES, state.category) ? CATEGORY_ALIASES[state.category] : state.category;
   return { ...state, category: category === WHOAMI_ALL || Object.hasOwn(categories, category) ? category : WHOAMI_ALL };

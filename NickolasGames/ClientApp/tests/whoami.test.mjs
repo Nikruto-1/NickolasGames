@@ -59,8 +59,13 @@ test('all levels combines every tier, respects category and custom-only, and per
 for (const [language, oldName, newName] of [
  ['uk', 'Люди', 'Професії'], ['en', 'People', 'Professions'], ['sv', 'Personer', 'Yrken'],
  ['de', 'Personen', 'Berufe'], ['es', 'Personas', 'Profesiones'],
+ ["uk", "Герої, люди та тварини", "Персонажі"],
+ ["en", "Heroes, people and animals", "Characters"],
+ ["sv", "Hjältar, personer och djur", "Karaktärer"],
+ ["de", "Helden, Menschen und Tiere", "Figuren"],
+ ["es", "Héroes, personas y animales", "Personajes"],
 ]) {
- test(language + ': profession category rename preserves saved games and remains playable', async () => {
+ test(language + ': category migration from ' + oldName + ' preserves saved games and remains playable', async () => {
   const module = await import('../src/data/whoami.' + language + '.js');
   const categories = Object.values(module)[0];
   assert(Object.hasOwn(categories, newName));

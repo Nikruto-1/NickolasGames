@@ -40,11 +40,22 @@ for (const language of ['uk', 'en', 'sv', 'de', 'es']) {
   test(language + ': expanded Who Am I categories can deal distinct cards at every difficulty', async () => {
     const module = await import('../src/data/whoami.' + language + '.js');
     const categories = Object.values(module)[0];
-    const previousCounts = language === 'uk' ? [5, 5, 5, 22, 198, 22] : [5, 5, 5, 0, 177, 22];
-    assert.equal(Object.keys(categories).length, previousCounts.length);
-    for (const [index, [name, words]] of Object.entries(categories).entries()) {
+    const categoryNames = {
+      uk: ['Професії', 'Персонажі', 'Предмети', 'Нові', 'Географія'],
+      en: ['Professions', 'Characters', 'Objects', 'New cards', 'Geography'],
+      sv: ['Yrken', 'Karaktärer', 'Saker', 'Nya kort', 'Geografi'],
+      de: ['Berufe', 'Figuren', 'Dinge', 'Neue Karten', 'Geografie'],
+      es: ['Profesiones', 'Personajes', 'Objetos', 'Nuevas tarjetas', 'Geografía'],
+    }[language];
+    const minimumCounts = language === 'uk' ? [55, 302, 55, 72, 72] : [55, 281, 55, 50, 72];
+    assert.deepEqual(Object.keys(categories), categoryNames);
+    const characterName = categoryNames[1];
+    const sherlock = { uk: 'Шерлок Холмс', en: 'Sherlock Holmes', sv: 'Sherlock Holmes', de: 'Sherlock Holmes', es: 'Sherlock Holmes' }[language];
+    assert.deepEqual(['easy', 'medium', 'hard'].filter(level => categories[characterName][level].includes(sherlock)), ['medium']);
+    for (const [index, name] of categoryNames.entries()) {
+      const words = categories[name];
       const count = ['easy', 'medium', 'hard'].reduce((sum, level) => sum + words[level].length, 0);
-      assert(count >= previousCounts[index] + 50, name + ': at least 50 additional cards');
+      assert(count >= minimumCounts[index], name + ': expanded cards remain available');
       for (const level of ['easy', 'medium', 'hard', 'all']) {
         const pool = whoamiPool(categories, name, level, '', false);
         assert(pool.length >= 16, name + '/' + level + ': enough distinct identities');
