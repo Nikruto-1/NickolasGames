@@ -1,4 +1,4 @@
-import holmesLying from "../assets/holmes-lying-hero.jpg";
+import holmesLying from "../assets/holmes-lying-hero.png";
 import "./HolmesFloor.css";
 
 export function HolmesFloor({games}) {
