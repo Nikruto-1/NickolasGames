@@ -1,7 +1,7 @@
 
-const CACHE = 'nickolasgames-03bd296dc4e34e87';
-const BUILD_ID = "mv4a33cz";
-const URLS = ["index.html","assets/index-D1rJcOvH.js","assets/holmes2d-CF6mwglN.js","assets/holmes-closeup-hd-B8arRi3x.png","assets/holmes-lying-hd-DRZtvmqM.png","assets/holmes-pet-CrRfbT2E.png","assets/index-BCqvPDpc.css","icons/icon-192.png","icons/icon-512.png","icons/apple-touch-icon.png","manifest.webmanifest"].map(p => new URL(p, self.registration.scope).href);
+const CACHE = 'nickolasgames-4bd722959104e5b3';
+const BUILD_ID = "mv4wsxik";
+const URLS = ["index.html","assets/index-Diq9RdNv.js","assets/holmes2d-D3AQjJE_.js","assets/holmes-lying-hd-DRZtvmqM.png","assets/holmes-pet-CrRfbT2E.png","assets/holmes-throw-hd-B7Vac-Jf.png","assets/index-C_rOdfeo.css","icons/icon-192.png","icons/icon-512.png","icons/apple-touch-icon.png","manifest.webmanifest"].map(p => new URL(p, self.registration.scope).href);
 self.addEventListener('install', event => {
  event.waitUntil(caches.open(CACHE).then(c => c.addAll(URLS.map(url => new Request(url, {cache:"reload"})))).then(() => self.skipWaiting()));
 });

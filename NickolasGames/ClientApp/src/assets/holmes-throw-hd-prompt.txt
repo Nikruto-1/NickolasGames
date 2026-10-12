@@ -1,0 +1,2 @@
+Tool: built-in ImageGen
+Use case: background-extraction. Edit target: supplied horizontal strip of four poses of Holmes the silver tabby Scottish Fold cat. Remove only magenta, replace it with genuine transparent alpha. Preserve all four cats, exact identity, folded ears, stripes, fur textures, poses, body positions and common paw baseline. One row of four equally sized cells, no overlaps. Preserve framing and spacing, uncut tails and paws. High resolution crisp fur, at least 2048 pixels wide. No redesign, shadows, floor, text or baked background.
