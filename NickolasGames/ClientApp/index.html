@@ -10,7 +10,11 @@
     <meta property="og:url" content="https://games.nickolasspace.com/" />
     <meta property="og:title" content="NickolasGames | Free Party Games With Friends" />
     <meta property="og:description" content="Play Who Am I?, Charades, Alias and Truth or Dare with friends. Free party games, no download needed." />
+    <meta property="og:site_name" content="NickolasGames" />
+    <meta property="og:locale" content="en_US" />
     <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="NickolasGames | Free Party Games With Friends" />
+    <meta name="twitter:description" content="Play Who Am I?, Charades, Alias and Truth or Dare with friends. Free party games, no download needed." />
     <meta name="theme-color" content="#F5EFE3" />
     <link rel="icon" type="image/png" sizes="64x64" href="/src/assets/holmes-favicon.png" />
     <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
@@ -19,15 +23,16 @@
     <title>NickolasGames | Free Party Games With Friends</title>
     <style>
       html,body{margin:0;background:#F5EFE3;color:#292724}
-      #app-startup{min-height:100vh;max-width:760px;margin:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:36px 24px;box-sizing:border-box;font:16px/1.5 system-ui,sans-serif;text-align:center}
-      #app-startup h1{margin:0;font-size:32px}
-      #app-startup p{margin:0;max-width:54ch}
-      #app-startup h2{margin:0;font-size:22px}
-      #app-startup ul{text-align:left;padding-left:24px;margin:0;display:grid;gap:12px;max-width:54ch}
+      #app-startup{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:36px 24px;box-sizing:border-box;font:16px/1.5 system-ui,sans-serif;text-align:center}
+      #app-startup h1{margin:0;font-size:32px;letter-spacing:-.04em}
+      #app-startup p{margin:0;max-width:34ch}
       #app-startup-status{font-size:14px}
       .startup-state{display:grid;justify-items:center;gap:12px}
+      .startup-mark{width:46px;height:46px;border-radius:50%;background:#B78B4F;box-shadow:0 18px 42px #B78B4F33;animation:startup-pulse 1.4s ease-in-out infinite}
       #app-startup button{font:inherit;color:#fff;background:#B78B4F;border:0;border-radius:8px;padding:12px 20px;cursor:pointer}
       #app-startup button[hidden]{display:none}
+      .seo-content{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+      @keyframes startup-pulse{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.12);opacity:1}}
     </style>
     <script>
       (function () {
@@ -70,16 +75,72 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebSite",
+      "@type": "WebApplication",
       "name": "NickolasGames",
+      "alternateName": "Nickolas Games",
       "url": "https://games.nickolasspace.com/",
-      "description": "Free party games including Who Am I, Charades, Alias and Truth or Dare.",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Any",
+      "isAccessibleForFree": true,
+      "description": "Free browser-based party games for friends, teams and parties, including Who Am I, Charades, Alias and Truth or Dare. Play together on one phone with no download required.",
       "inLanguage": [
         "uk",
         "en",
         "de",
         "sv",
         "es"
+      ],
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "about": [
+        {
+          "@type": "Thing",
+          "name": "Party games"
+        },
+        {
+          "@type": "Thing",
+          "name": "Group games"
+        },
+        {
+          "@type": "Thing",
+          "name": "Offline web games"
+        }
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "NickolasGames party games",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Who Am I?",
+          "description": "Ask questions and guess the character on your hidden card."
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Charades",
+          "description": "Show a word using gestures while the other players guess."
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Alias",
+          "description": "Explain words to your friends without saying the word itself."
+        },
+        {
+          "@type": "ListItem",
+          "position": 4,
+          "name": "Truth or Dare",
+          "description": "Choose a question or a challenge for your group."
+        }
       ]
     }
     </script>
@@ -87,19 +148,15 @@
   <body>
     <div id="root">
       <section id="app-startup" aria-label="NickolasGames">
+        <div class="startup-mark" aria-hidden="true"></div>
         <h1>NickolasGames</h1>
-        <h2>Free party games for friends, teams and parties</h2>
-        <p>Play together on one phone. Choose a game, add your players and enjoy the next round. NickolasGames is available in Ukrainian, English, Swedish, German and Spanish.</p>
-        <ul aria-label="Available games">
-          <li><strong>Who Am I?</strong> — ask questions and guess the character on your hidden card.</li>
-          <li><strong>Charades</strong> — show a word using gestures while the other players guess.</li>
-          <li><strong>Alias</strong> — explain words to your friends without saying the word itself.</li>
-          <li><strong>Truth or Dare</strong> — choose a question or a challenge for your group.</li>
-        </ul>
-        <p>After the first online visit, you can keep playing offline. Your game progress is saved on this device.</p>
         <div class="startup-state" data-nosnippet>
           <p id="app-startup-status" role="status">Preparing the games…</p>
           <button id="app-startup-retry" type="button" hidden>Try again</button>
+        </div>
+        <div class="seo-content">
+          <h2>Free party games for friends, teams and parties</h2>
+          <p>Play Who Am I?, Charades, Alias and Truth or Dare together on one phone. NickolasGames is available in Ukrainian, English, Swedish, German and Spanish.</p>
         </div>
         <noscript><p>Enable JavaScript in your browser to start the interactive games.</p></noscript>
       </section>
