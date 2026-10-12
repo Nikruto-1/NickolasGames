@@ -1,7 +1,7 @@
 
-const CACHE = 'nickolasgames-c63ffba29a110660';
-const BUILD_ID = "mv4wv1fn";
-const URLS = ["index.html","assets/index-BEzten5k.js","assets/holmes2d-D3AQjJE_.js","assets/holmes-favicon-B9sUNuDe.png","assets/holmes-logo-CWbdQEEP.webp","assets/holmes-lying-hd-DRZtvmqM.png","assets/holmes-meow-DSDk068_.mp3","assets/holmes-pet-CrRfbT2E.png","assets/holmes-throw-hd-B7Vac-Jf.png","assets/holmes-time-up-uk-B-Td4S7t.mp3","assets/index-CohHf5-L.css","icons/holmes-192.png","icons/holmes-512.png","icons/holmes-apple-touch.png","manifest.webmanifest"].map(p => new URL(p, self.registration.scope).href);
+const CACHE = 'nickolasgames-b8357828aa0eb016';
+const BUILD_ID = "mv51bjqg";
+const URLS = ["index.html","assets/index-D1YYDryM.js","assets/holmes2d-D3AQjJE_.js","assets/holmes-favicon-B9sUNuDe.png","assets/holmes-logo-CWbdQEEP.webp","assets/holmes-lying-hd-DRZtvmqM.png","assets/holmes-meow-DSDk068_.mp3","assets/holmes-pet-CrRfbT2E.png","assets/holmes-throw-hd-B7Vac-Jf.png","assets/holmes-time-up-uk-B-Td4S7t.mp3","assets/index-v46fpz-R.css","icons/holmes-192.png","icons/holmes-512.png","icons/holmes-apple-touch.png","manifest.webmanifest"].map(p => new URL(p, self.registration.scope).href);
 self.addEventListener('install', event => {
  event.waitUntil(caches.open(CACHE).then(c => c.addAll(URLS.map(url => new Request(url, {cache:"reload"})))).then(() => self.skipWaiting()));
 });

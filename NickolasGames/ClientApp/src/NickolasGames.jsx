@@ -1,3 +1,5 @@
+import { StartFeedback } from "./components/StartFeedback";
+import { validateCardStart } from "./utils/startValidation";
 import holmesLogo from './assets/holmes-logo.webp';
 import { createHolmesTimerSound, HOLMES_TIME_UP } from './utils/holmesTimerSound.js';
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -29,14 +31,14 @@ const shuffle = (a) => a.map((v) => [Math.random(), v]).sort((x, y) => x[0] - y[
 const go = (id) => document.querySelector(id)?.scrollIntoView({ behavior: RM ? "auto" : "smooth" });
 const pickRandom = () => PLAYABLE[Math.floor(Math.random() * PLAYABLE.length)];
 
-function Hero({ t }) {
+function Hero({ t, onStart }) {
   return (
     <header className="hero holmes-home">
       <div className="wrap">
         <div className="hero-copy"><h1>{t.heroTitle}</h1>
         <p>{t.heroText}</p>
         <div className="cta-row">
-          <button className="btn pri" onClick={() => go("#preview")}>{t.start}</button>
+          <button className="btn pri" onClick={onStart}>{t.start}</button>
           <button className="btn" onClick={() => go("#games")}>{t.explore}</button>
         </div></div>
         <HolmesFloor games={t.games} />
@@ -72,7 +74,7 @@ function GamesGrid({ games, t, onPlay }) {
 }
 
 const SCRAMBLE = "▓▒░#@$%&*+?";
-function CardStackPreview({ game, games, t, lang, onGame }) {
+function CardStackPreview({ game, games, t, lang, onGame, startRequest=0 }) {
   const storageKey = `nickolasgames-progress-v1-${lang}-${game}`;
   const [saved] = useState(() => readProgress(storageKey));
   const [storageOk, setStorageOk] = useState(true);
@@ -91,6 +93,8 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
   const [roundSeconds, setRoundSeconds] = useState(() => saved?.roundSeconds ?? 60);
   const [left, setLeft] = useState(() => saved?.left ?? 60);
   const [running, setRunning] = useState(false);
+  const [startAttempt,setStartAttempt]=useState(0);
+  useEffect(()=>{if(startRequest>0)setStartAttempt(value=>value+1);},[startRequest]);
   const sound=useRef(null);if(!sound.current)sound.current=createHolmesTimerSound();
   const timerArmed=useRef(false);const previousLeft=useRef(left);
   useEffect(()=>()=>sound.current.dispose(),[]);
@@ -145,6 +149,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
   }, []);
   const newGame = () => {
     if (!window.confirm(progressCopy.confirm)) return;
+    setStartAttempt(0);
     clearInterval(scr.current);
     clearTimeout(transition.current); transition.current = 0;
     setQueue(shuffle(queue)); setIdx(0); setScore({ got: 0, skipped: 0 });
@@ -189,7 +194,9 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
     timerArmed.current=false;setRunning(false);
   };
 
+  const startErrors=startAttempt?validateCardStart({word}):[];
   const toggleTimer = () => {
+    if(!running){setStartAttempt(value=>value+1);if(validateCardStart({word}).length)return;}
     if (running) {timerArmed.current=false;setRunning(false);}
     else {sound.current.unlock(lang);timerArmed.current=true;if (left === 0) setLeft(roundSeconds); setRunning(true);}
   };
@@ -287,6 +294,7 @@ function CardStackPreview({ game, games, t, lang, onGame }) {
           <div className="players-note" role="status">{storageOk ? (saved ? progressCopy.restored : progressCopy.saved) : progressCopy.failed}</div>
           <button className="btn sm" disabled={!!exit} onClick={newGame}>{progressCopy.newGame}</button>
 
+          <StartFeedback errors={startErrors} attempt={startAttempt} lang={lang} />
           <div className="timer">
             <b>{left}</b>
             <div className="tbar"><i style={{ transform: `scaleX(${Math.max(0, Math.min(1, left / roundSeconds))})` }} /></div>
@@ -409,13 +417,13 @@ function Testimonials({ t }) {
   );
 }
 
-function FinalCta({ t }) {
+function FinalCta({ t, onStart }) {
   return (
     <section className="fin">
       <div className="wrap">
         <h2>{t.finalTitle}</h2>
         <p>{t.finalText}</p>
-        <button className="btn pri" onClick={() => go("#preview")}>{t.start}</button>
+        <button className="btn pri" onClick={onStart}>{t.start}</button>
       </div>
     </section>
   );
@@ -435,12 +443,15 @@ function LanguageSwitcher({ lang, setLang, label }) {
 
 export default function NickolasGames() {
   const [showIntro, setShowIntro] = useState(true);
+  const [startRequest,setStartRequest]=useState(0);
+  const requestStart=()=>{setStartRequest(value=>value+1);document.querySelector("#preview")?.scrollIntoView({behavior:"instant",block:"start"});};
   const finishIntro = useCallback(() => setShowIntro(false), []);
   const [lang, setLang] = useState(() => { try { const l = localStorage.getItem("nickolasgames-lang"); return COPY[l] ? l : "en"; } catch { return "en"; } });
   const [game, setGame] = useState(() => { const g = readValue("nickolasgames-active-game"); return PLAYABLE.includes(g) ? g : "crocodile"; });
   useEffect(() => { writeValue("nickolasgames-active-game", game); }, [game]);
   const t = COPY[lang] || COPY.en;
   const choose = (k, scroll) => {
+    setStartRequest(0);
     setGame(k === "random" ? pickRandom() : k);
     if (scroll) go("#preview");
   };
@@ -456,15 +467,15 @@ export default function NickolasGames() {
       <div inert={showIntro ? true : undefined}>
       <nav><a className="site-logo" href="#" aria-label="NickolasGames"><img src={holmesLogo} alt="NickolasGames" width="1024" height="341" /></a><LanguageSwitcher lang={lang} setLang={setLang} label={t.language} /></nav>
       <AppStatus lang={lang} />
-      <Hero t={t} />
+      <Hero t={t} onStart={requestStart} />
       <GamesGrid games={t.games} t={t} onPlay={(k) => choose(k, true)} />
       {game === "crocodile"
-        ? <CharadesGame key={`${lang}-${game}`} games={t.games} t={t} lang={lang} onGame={(k) => choose(k, false)} />
-        : game === "whoami" ? <WhoAmIGame key={`${lang}-${game}`} games={t.games} t={t} lang={lang} onGame={(k) => choose(k, false)} />
-        : <CardStackPreview key={`${lang}-${game}`} game={game} games={t.games} t={t} lang={lang} onGame={(k) => choose(k, false)} />}
+        ? <CharadesGame key={`${lang}-${game}`} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={(k) => choose(k, false)} />
+        : game === "whoami" ? <WhoAmIGame key={`${lang}-${game}`} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={(k) => choose(k, false)} />
+        : <CardStackPreview key={`${lang}-${game}`} game={game} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={(k) => choose(k, false)} />}
       <HowItWorks t={t} />
       <Testimonials t={t} />
-      <FinalCta t={t} />
+      <FinalCta t={t} onStart={requestStart} />
       <footer>{t.footer}<button className="btn sm" onClick={() => setShowIntro(true)}>{({uk:"Холмс · 2D-вступ",en:"Holmes · 2D intro",sv:"Holmes · 2D-intro",de:"Holmes · 2D-Intro",es:"Holmes · Intro 2D"})[lang]}</button></footer>
       </div>
     </>

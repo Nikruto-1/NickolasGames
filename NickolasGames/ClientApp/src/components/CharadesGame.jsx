@@ -1,3 +1,5 @@
+import { StartFeedback } from "./StartFeedback";
+import { validateCharadesStart } from "../utils/startValidation";
 import { createHolmesTimerSound, HOLMES_TIME_UP } from '../utils/holmesTimerSound.js';
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { ROUND_MESSAGES } from '../locales/round.js';
@@ -7,7 +9,7 @@ import { POINTS_BY_DIFFICULTY, validTargetScore } from '../utils/playerScores.js
 import { readValue, writeValue } from '../utils/progress.js';
 import { ALL_CHARADES_CATEGORIES, charadesReducer, createCharadesDeck, currentCharadesCard, hasCharadesCard, deckReady, newCharadesState, validCharadesState, restoreCharadesState, charadesPoints, canCompleteRound } from '../utils/charades.js';
 
-export function CharadesGame({ games, t, lang, onGame }) {
+export function CharadesGame({ games, t, lang, onGame, startRequest=0 }) {
   const copy = { ...(CHARADES_COPY[lang] || CHARADES_COPY.en), ...(CHARADES_TIME_COPY[lang] || CHARADES_TIME_COPY.en) };
   const key = `nickolasgames-charades-v2-${lang}`;
   const [state, dispatch] = useReducer(charadesReducer, null, () => {
@@ -17,6 +19,8 @@ export function CharadesGame({ games, t, lang, onGame }) {
   const [name, setName] = useState('');
   const [warning, setWarning] = useState('');
   const [targetDraft, setTargetDraft] = useState(String(state.targetScore));
+  const [startAttempt,setStartAttempt]=useState(0);
+  useEffect(()=>{if(startRequest>0)setStartAttempt(value=>value+1);},[startRequest]);
   const [storageOk, setStorageOk] = useState(true);
   const [clock, setClock] = useState(Date.now());
   const sound=useRef(null);if(!sound.current)sound.current=createHolmesTimerSound();
@@ -47,6 +51,13 @@ export function CharadesGame({ games, t, lang, onGame }) {
   }, [state.phase, state.deadline, state.timed]);
   useEffect(() => { setTargetDraft(String(state.targetScore)); setWarning(''); }, [state.targetScore, setup]);
 
+  const startErrors=setup&&startAttempt?validateCharadesStart({state,targetDraft,pendingName:name}):[];
+  const startGame=()=>{
+    setStartAttempt(value=>value+1);
+    if(validateCharadesStart({state,targetDraft,pendingName:name}).length)return;
+    dispatch({type:'target',value:Number(targetDraft)});
+    dispatch({type:'start'});setWarning('');
+  };
   const add = event => {
     event.preventDefault();
     const clean = name.trim();
@@ -57,6 +68,7 @@ export function CharadesGame({ games, t, lang, onGame }) {
   };
   const newGame = () => {
     if (!window.confirm(copy.confirm)) return;
+    setStartAttempt(0);
     dispatch({ type: 'new', deck: createCharadesDeck(games.crocodile.c, state.category) });
   };
   const selectWord = level => {
@@ -88,7 +100,7 @@ export function CharadesGame({ games, t, lang, onGame }) {
           <form onSubmit={add}>
             <label className="players-label" htmlFor="score-player-name">{copy.name}</label>
             <div className="player-add">
-              <input id="score-player-name" maxLength={60} value={name} disabled={!setup} onChange={event => { setName(event.target.value); setWarning(''); }} />
+              <input id="score-player-name" aria-invalid={startErrors.includes("charadesPlayers")||startErrors.includes("pendingPlayer")} aria-describedby={startErrors.length?"start-validation":undefined} maxLength={60} value={name} disabled={!setup} onChange={event => { setName(event.target.value); setWarning(''); }} />
               <button className="btn sm" disabled={!setup || !name.trim()}>{copy.add}</button>
             </div>
           </form>
@@ -107,7 +119,7 @@ export function CharadesGame({ games, t, lang, onGame }) {
           }}>
             <label className="players-label" htmlFor="target-score">{copy.target}</label>
             <div className="player-add">
-              <input id="target-score" type="number" min="1" max="1000" step="1" value={targetDraft} disabled={!setup} onChange={event => setTargetDraft(event.target.value)} />
+              <input id="target-score" aria-invalid={startErrors.includes("invalidTarget")} aria-describedby={startErrors.includes("invalidTarget")?"start-validation":undefined} type="number" min="1" max="1000" step="1" value={targetDraft} disabled={!setup} onChange={event => setTargetDraft(event.target.value)} />
               <button className="btn sm" disabled={!setup}>{copy.apply}</button>
             </div>
             {!setup && <p className="players-note">{copy.locked}</p>}
@@ -120,8 +132,9 @@ export function CharadesGame({ games, t, lang, onGame }) {
           {!deckReady(state.deck) && <p role="status">{copy.noLevels}</p>}
           {setup && deckReady(state.deck) && state.players.length >= 2 && !canCompleteRound(state) && <p role="status">{copy.noRound}</p>}
           {warning && <p role="alert">{warning}</p>}
+          <StartFeedback errors={startErrors} attempt={startAttempt} lang={lang} />
           <div className="players-actions">
-            {setup && <button className="btn pri" disabled={state.players.length < 2 || !deckReady(state.deck) || !canCompleteRound(state)} onClick={() => dispatch({ type: 'start' })}>{copy.start}</button>}
+            {setup && <button className="btn pri" onClick={startGame}>{copy.start}</button>}
             <button className="btn sm" onClick={newGame}>{copy.newGame}</button>
           </div>
           <p className="players-note" role="status">{storageOk ? (state.timed ? copy.saved : copy.savedUntimed) : copy.failed}</p>

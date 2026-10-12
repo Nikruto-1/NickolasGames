@@ -1,3 +1,5 @@
+import { StartFeedback } from "./StartFeedback";
+import { validateWhoamiStart } from "../utils/startValidation";
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { createHolmesTimerSound } from '../utils/holmesTimerSound.js';
 import { WHOAMI_UI } from '../locales/whoami-ui.js';
@@ -5,7 +7,7 @@ import { PLAYER_SETUP } from '../locales/index.js';
 import { readValue, readProgress, writeValue } from '../utils/progress.js';
 import { initialWhoami, validWhoami, WHOAMI_ALL, WHOAMI_DIFFICULTIES, whoamiPool, whoamiReducer } from '../utils/whoami.js';
 
-export function WhoAmIGame({games,t,lang,onGame}) {
+export function WhoAmIGame({games,t,lang,onGame,startRequest=0}) {
  const copy=WHOAMI_UI[lang]||WHOAMI_UI.en;
  const pc=PLAYER_SETUP[lang]||PLAYER_SETUP.en;
  const key=`nickolasgames-whoami-v2-${lang}`;
@@ -17,6 +19,8 @@ export function WhoAmIGame({games,t,lang,onGame}) {
    return migrated;
  });
  const [name,setName]=useState('');const [warning,setWarning]=useState('');
+ const [startAttempt,setStartAttempt]=useState(0);
+ useEffect(()=>{if(startRequest>0)setStartAttempt(value=>value+1);},[startRequest]);
  const [activeId,setActiveId]=useState(null);const [held,setHeld]=useState(false);
  const [manual,setManual]=useState('');const [running,setRunning]=useState(false);const [storageOk,setStorageOk]=useState(true);
  const sound=useRef(null);if(!sound.current)sound.current=createHolmesTimerSound();
@@ -47,11 +51,12 @@ export function WhoAmIGame({games,t,lang,onGame}) {
  const add=event=>{event.preventDefault();const clean=name.trim();if(!clean)return;
    if(state.players.some(p=>p.name.toLocaleLowerCase()===clean.toLocaleLowerCase())){setWarning(copy.duplicate);return;}
    dispatch({type:'add',id:crypto.randomUUID(),name:clean});setName('');setWarning('');};
- const deal=()=>{if(pool.length<state.players.length){setWarning(pc.notEnough);return;}dispatch({type:'deal',pool});setWarning('');};
+ const startErrors=state.phase==='setup'&&startAttempt?validateWhoamiStart({players:state.players,pool,pendingName:name}):[];
+ const deal=()=>{setStartAttempt(value=>value+1);if(validateWhoamiStart({players:state.players,pool,pendingName:name}).length)return;dispatch({type:'deal',pool});setWarning('');};
  const close=()=>{setHeld(false);setActiveId(null);};
  const restart=(changeSettings=false)=>{
    if(state.phase==='game'&&!window.confirm(copy.confirm))return;
-   setRunning(false);close();dispatch({type:'setup',clearPlayers:changeSettings});setWarning('');
+   setStartAttempt(0);setRunning(false);close();dispatch({type:'setup',clearPlayers:changeSettings});setWarning('');
    if(!changeSettings&&pool.length>=state.players.length)dispatch({type:'deal',pool});
  };
  const answer=outcome=>{setHeld(false);dispatch({type:'answer',id:active.id,revision:active.revision,outcome});close();};
@@ -72,7 +77,7 @@ export function WhoAmIGame({games,t,lang,onGame}) {
      {state.phase==='setup'&&<div className="whoami-setup">
        <div className="players-panel">
          <h3>{copy.players}</h3>
-         <form onSubmit={add}><label className="players-label" htmlFor="whoami-name">{copy.name}</label><div className="player-add"><input id="whoami-name" placeholder={copy.placeholder} maxLength={60} value={name} onChange={event=>setName(event.target.value)}/><button className="btn sm" disabled={!name.trim()}>{copy.add} +</button></div></form>
+         <form onSubmit={add}><label className="players-label" htmlFor="whoami-name">{copy.name}</label><div className="player-add"><input id="whoami-name" aria-invalid={startErrors.includes("whoamiPlayers")||startErrors.includes("pendingPlayer")} aria-describedby={startErrors.length?"start-validation":undefined} placeholder={copy.placeholder} maxLength={60} value={name} onChange={event=>setName(event.target.value)}/><button className="btn sm" disabled={!name.trim()}>{copy.add} +</button></div></form>
          <ul className="player-score-list">{state.players.map(player=><li key={player.id}><span className="player-name">{player.name}</span><button className="player-remove" aria-label={`${copy.remove}: ${player.name}`} onClick={()=>dispatch({type:'remove',id:player.id})}>×</button></li>)}</ul>
        </div>
        <div className="players-panel">
@@ -86,7 +91,7 @@ export function WhoAmIGame({games,t,lang,onGame}) {
            {state.timerEnabled&&<><label className="players-label" htmlFor="whoami-duration">{t.timerDuration}</label><input id="whoami-duration" className="whoami-input" type="number" min="10" max="600" value={state.duration} onChange={event=>{const duration=Math.max(10,Math.min(600,Math.trunc(Number(event.target.value)||10)));dispatch({type:'config',values:{duration,left:duration}});}}/></>}
          </details>
        </div>
-       <div className="whoami-start"><button className="btn pri" disabled={!state.players.length||pool.length<state.players.length} onClick={deal}>{copy.start}</button>{pool.length<state.players.length&&<p role="status">{pc.notEnough}</p>}</div>
+       <div className="whoami-start"><StartFeedback errors={startErrors} attempt={startAttempt} lang={lang} /><button className="btn pri" onClick={deal}>{copy.start}</button>{pool.length<state.players.length&&<p role="status">{pc.notEnough}</p>}</div>
      </div>}
      {state.phase==='game'&&<>
        <p className="whoami-privacy">{copy.privacy}</p>
