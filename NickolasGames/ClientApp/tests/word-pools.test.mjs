@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { wordsByDifficulty } from '../src/utils/difficulty.js';
 import { uniqueWords } from '../src/utils/words.js';
 import { canCompleteRound, createCharadesDeck, deckReady } from '../src/utils/charades.js';
+import { initialWhoami, whoamiPool, whoamiReducer } from '../src/utils/whoami.js';
 
 test('difficulty follows explicit content labels rather than word length', () => {
   const category = { easy: ['A very familiar long phrase'], medium: ['Astronaut'], hard: ['Quark'] };
@@ -24,10 +25,35 @@ for (const language of ['uk', 'en', 'sv', 'de', 'es']) {
     for (const category of Object.values(categories)) {
       assert(!Array.isArray(category));
       const words = ['easy', 'medium', 'hard'].flatMap(level => wordsByDifficulty(category, level));
-      assert.equal(words.length, new Set(words).size);
+      assert(words.every(word => typeof word === 'string' && word.trim() === word && word.length > 0));
+      const normalized = words.map(word => word.normalize('NFKC').replace(/[’ʼ]/g, "'").replace(/\s+/g, ' ').toLocaleLowerCase());
+      assert.equal(words.length, new Set(normalized).size);
     }
     for (const level of ['easy', 'medium', 'hard']) {
       assert(Object.values(categories).flatMap(category => wordsByDifficulty(category, level)).length > 0);
+    }
+  });
+}
+
+
+for (const language of ['uk', 'en', 'sv', 'de', 'es']) {
+  test(language + ': expanded Who Am I categories can deal distinct cards at every difficulty', async () => {
+    const module = await import('../src/data/whoami.' + language + '.js');
+    const categories = Object.values(module)[0];
+    const previousCounts = language === 'uk' ? [5, 5, 5, 22, 198, 22] : [5, 5, 5, 0, 177, 22];
+    assert.equal(Object.keys(categories).length, previousCounts.length);
+    for (const [index, [name, words]] of Object.entries(categories).entries()) {
+      const count = ['easy', 'medium', 'hard'].reduce((sum, level) => sum + words[level].length, 0);
+      assert(count >= previousCounts[index] + 50, name + ': at least 50 additional cards');
+      for (const level of ['easy', 'medium', 'hard', 'all']) {
+        const pool = whoamiPool(categories, name, level, '', false);
+        assert(pool.length >= 16, name + '/' + level + ': enough distinct identities');
+        let state = initialWhoami();
+        for (let i = 0; i < 12; i++) state = whoamiReducer(state, { type: 'add', id: 'player-' + i, name: 'Player ' + i });
+        state = whoamiReducer(state, { type: 'deal', pool });
+        assert.equal(state.phase, 'game', name + '/' + level);
+        assert.equal(new Set(state.players.map(player => player.word.toLocaleLowerCase())).size, 12);
+      }
     }
   });
 }
