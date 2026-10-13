@@ -1,5 +1,5 @@
-import { CROCODILE_UK } from "../data/crocodile.uk";
-import { WHOAMI_UK } from "../data/whoami.uk";
+import { CROCODILE_UK } from "../data/crocodile.uk.js";
+import { WHOAMI_UK } from "../data/whoami.uk.js";
 
 export const UI_COPY = {
   "heroTitle": "Ігри для справжніх моментів.",

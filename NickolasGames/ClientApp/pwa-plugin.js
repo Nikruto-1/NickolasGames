@@ -8,7 +8,7 @@ export function offlinePlugin() {
   generateBundle(_, bundle) {
   const files = [...new Set([
    'index.html',
-   ...Object.keys(bundle).filter(file => /\.(?:html|css|js)$/.test(file)),
+   ...Object.keys(bundle).filter(file => /\.(?:html|css|js|png|jpe?g|webp|mp3)$/.test(file)),
    'icons/holmes-192.png',
    'icons/holmes-512.png',
    'icons/holmes-apple-touch.png',

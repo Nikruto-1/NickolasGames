@@ -1,5 +1,5 @@
-import { CROCODILE_EN } from "../data/crocodile.en";
-import { WHOAMI_EN } from "../data/whoami.en";
+import { CROCODILE_EN } from "../data/crocodile.en.js";
+import { WHOAMI_EN } from "../data/whoami.en.js";
 
 export const UI_COPY = {
   "heroTitle": "Games for real moments.",

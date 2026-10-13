@@ -1,3 +1,8 @@
+import { PrivacyPanel } from "./components/PrivacyPanel.jsx";
+import { initialLanguage, updateSiteMetadata, LANGUAGE_PATHS } from "./utils/siteMetadata.js";
+import { PRIVACY_COPY } from "./locales/privacy.js";
+import { CloudShader } from "./components/ui/cloud-shader.jsx";
+import holmesPortrait from "./assets/holmes-lying-hero.png";
 import { StartFeedback } from "./components/StartFeedback";
 import { validateCardStart } from "./utils/startValidation";
 import holmesLogo from './assets/holmes-logo.webp';
@@ -14,6 +19,7 @@ import { COPY, PLAYER_SETUP } from "./locales";
 import { DIFFICULTIES, wordsByDifficulty } from "./utils/difficulty";
 import { ROUND_MESSAGES } from "./locales/round";
 import { uniqueWords } from "./utils/words";
+import "./product.css";
 
 const LANGS = [
   { code: "uk", short: "UA", label: "Українська" },
@@ -278,7 +284,7 @@ function CardStackPreview({ game, games, t, lang, onGame, startRequest=0 }) {
     <section className="s pv" id="preview">
       <div className="wrap pvg">
         <div>
-          <div className="head" style={{ margin: 0 }}><h2>{t.previewTitle}</h2><p>{t.previewText}</p></div>
+          <div className="head" style={{ margin: 0 }}><h2>{games[game].n}</h2><p>{games[game].d}</p></div>
           <div className="tabs" role="group" aria-label={t.gameLabel}>
             {PLAYABLE.map((k) => <button key={k} className="chip" aria-pressed={k === game} onClick={() => onGame(k)}>{games[k].n}</button>)}
             <button className="chip" aria-pressed="false" onClick={() => onGame("random")}>{t.random}</button>
@@ -446,7 +452,7 @@ export default function NickolasGames() {
   const [startRequest,setStartRequest]=useState(0);
   const requestStart=()=>{setStartRequest(value=>value+1);document.querySelector("#preview")?.scrollIntoView({behavior:"instant",block:"start"});};
   const finishIntro = useCallback(() => setShowIntro(false), []);
-  const [lang, setLang] = useState(() => { try { const l = localStorage.getItem("nickolasgames-lang"); return COPY[l] ? l : "en"; } catch { return "en"; } });
+  const [lang, setLang] = useState(initialLanguage);
   const [game, setGame] = useState(() => { const g = readValue("nickolasgames-active-game"); return PLAYABLE.includes(g) ? g : "crocodile"; });
   useEffect(() => { writeValue("nickolasgames-active-game", game); }, [game]);
   const t = COPY[lang] || COPY.en;
@@ -459,24 +465,32 @@ export default function NickolasGames() {
   useEffect(() => {
     try { localStorage.setItem("nickolasgames-lang", lang); } catch {}
     document.documentElement.lang = lang;
+    const privacy = location.pathname.endsWith("/privacy/");
+    const nextPath = LANGUAGE_PATHS[lang] + (privacy ? "privacy/" : "");
+    if (location.pathname !== nextPath) history.replaceState(null, "", nextPath + location.search);
+    const update = () => updateSiteMetadata(lang, t.games, (PRIVACY_COPY[lang] || PRIVACY_COPY.en).title);
+    update();
+    addEventListener("popstate", update);
+    return () => removeEventListener("popstate", update);
   }, [lang]);
 
   return (
     <>
       {showIntro && <HolmesIntro lang={lang} onComplete={finishIntro} />}
       <div inert={showIntro ? true : undefined}>
-      <nav><a className="site-logo" href="#" aria-label="NickolasGames"><img src={holmesLogo} alt="NickolasGames" width="1024" height="341" /></a><LanguageSwitcher lang={lang} setLang={setLang} label={t.language} /></nav>
+      <nav><a className="site-logo" href={LANGUAGE_PATHS[lang]} aria-label="NickolasGames"><img src={holmesLogo} alt="NickolasGames" width="1024" height="341" /></a><LanguageSwitcher lang={lang} setLang={setLang} label={t.language} /></nav>
       <AppStatus lang={lang} />
-      <Hero t={t} onStart={requestStart} />
-      <GamesGrid games={t.games} t={t} onPlay={(k) => choose(k, true)} />
+      <header className="play-header">
+        <CloudShader className="cloud-backdrop" count={3} speed={0.15} skyTopColor="#edf5ff" skyBottomColor="#f5f7fb" cloudColor="#ffffff" />
+        <div className="wrap play-heading"><div><h1>NickolasGames</h1><p>{PLAYABLE.map(key => t.games[key].n).join(" · ")}</p></div><img className="brand-portrait" src={holmesPortrait} alt="" width="900" height="600" decoding="async" /></div>
+      </header>
+      <main id="main" className="play-main">
       {game === "crocodile"
         ? <CharadesGame key={`${lang}-${game}`} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={(k) => choose(k, false)} />
         : game === "whoami" ? <WhoAmIGame key={`${lang}-${game}`} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={(k) => choose(k, false)} />
         : <CardStackPreview key={`${lang}-${game}`} game={game} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={(k) => choose(k, false)} />}
-      <HowItWorks t={t} />
-      <Testimonials t={t} />
-      <FinalCta t={t} onStart={requestStart} />
-      <footer>{t.footer}<button className="btn sm" onClick={() => setShowIntro(true)}>{({uk:"Холмс · 2D-вступ",en:"Holmes · 2D intro",sv:"Holmes · 2D-intro",de:"Holmes · 2D-Intro",es:"Holmes · Intro 2D"})[lang]}</button></footer>
+      </main>
+      <footer className="wrap product-footer"><span>{t.footer}</span><PrivacyPanel lang={lang} /><button className="footer-command" onClick={() => setShowIntro(true)}>{({uk:"Холмс · 2D-вступ",en:"Holmes · 2D intro",sv:"Holmes · 2D-intro",de:"Holmes · 2D-Intro",es:"Holmes · Intro 2D"})[lang]}</button></footer>
       </div>
     </>
   );

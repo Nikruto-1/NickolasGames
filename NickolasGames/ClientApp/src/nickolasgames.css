@@ -1,8 +1,7 @@
-@import url("https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;700&display=swap");
 :root{--bg:#EEE4D1;--bg2:#F5EFE3;--fg:#292724;--mut:#B78B4F;--acc:#B78B4F;--line:rgba(41,39,36,.22);color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *,*::before,*::after{box-sizing:inherit}
 html{scroll-behavior:smooth;scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--fg);font:400 17px/1.55 "Familjen Grotesk",system-ui,sans-serif;overflow-x:hidden}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 17px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;overflow-x:hidden}
 h1,h2,h3{font-weight:700;letter-spacing:-.02em;line-height:1.02;margin:0}
 p{margin:0}
 button{font:inherit;color:inherit;cursor:pointer}

@@ -84,7 +84,7 @@ export function CharadesGame({ games, t, lang, onGame, startRequest=0 }) {
   return <section className="s pv" id="preview">
     <div className="wrap pvg">
       <div>
-        <div className="head" style={{ margin: 0 }}><h2>{copy.title}</h2><p>{state.timed ? copy.rules : copy.untimedRules}</p></div>
+        <div className="head" style={{ margin: 0 }}><h2>{copy.title}</h2><details className="game-rules"><summary>{({uk:"Правила",en:"Rules",sv:"Regler",de:"Regeln",es:"Reglas"})[lang]}</summary><p>{state.timed ? copy.rules : copy.untimedRules}</p></details></div>
         <div className="tabs" role="group" aria-label={t.gameLabel}>
           {['whoami', 'crocodile', 'alias', 'truth'].map(game => <button key={game} className="chip" aria-pressed={game === 'crocodile'} onClick={() => onGame(game)}>{games[game].n}</button>)}
           <button className="chip" onClick={() => onGame('random')}>{t.random}</button>

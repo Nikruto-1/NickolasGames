@@ -1,5 +1,5 @@
-import { CROCODILE_SV } from "../data/crocodile.sv";
-import { WHOAMI_SV } from "../data/whoami.sv";
+import { CROCODILE_SV } from "../data/crocodile.sv.js";
+import { WHOAMI_SV } from "../data/whoami.sv.js";
 
 export const UI_COPY = {
   "heroTitle": "Spel för riktiga stunder.",
