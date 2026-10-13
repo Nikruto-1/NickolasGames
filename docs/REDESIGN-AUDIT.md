@@ -4,7 +4,7 @@ Date: 2026-10-13.
 
 ## Preserved behavior
 Game engines, dictionaries, five languages, scoring bonuses and existing
-`nickolasgames-` storage keys are retained. The site opens directly on games.
+`nickolasgames-` storage keys are retained. The original Holmes hero and game selection layout were restored at the user request after the initial redesign.
 Optional Holmes animation remains available in the footer.
 
 ## Privacy inventory
@@ -52,7 +52,7 @@ preservation of old hashed assets remain in place.
 ## Verification
 99 Node tests, React production build and .NET build passed. Production output
 was tested in WebKit/iPhone viewport and Chromium/Edge: five locale URLs,
-privacy keyboard/modal/export/delete, first-viewport game controls, no overflow,
+privacy keyboard/modal/export/delete, restored home layout, no overflow,
 no CSP/runtime errors or third-party application requests, charades bonus and
 score restoration, hidden Who Am I cards, Alias and Truth. Contrast tests cover
 main text/action/success/error tokens. This is targeted accessibility testing,
@@ -66,3 +66,6 @@ desktop WebKit emulation cannot guarantee all embedded-browser behavior.
 - PTS cookies: https://www.pts.se/internet-och-telefoni/kakor-cookies/
 - GitHub Pages: https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages
 - GitHub privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
+
+## Design restoration
+The original game styles, warm Holmes palette, hero and game selection cards are restored. Privacy dialog styles are scoped and do not override the game design. SEO, CSP, local data tools, system fonts and game behavior remain unchanged.

@@ -1,8 +1,6 @@
 import { PrivacyPanel } from "./components/PrivacyPanel.jsx";
 import { initialLanguage, updateSiteMetadata, LANGUAGE_PATHS } from "./utils/siteMetadata.js";
 import { PRIVACY_COPY } from "./locales/privacy.js";
-import { CloudShader } from "./components/ui/cloud-shader.jsx";
-import holmesPortrait from "./assets/holmes-lying-hero.png";
 import { StartFeedback } from "./components/StartFeedback";
 import { validateCardStart } from "./utils/startValidation";
 import holmesLogo from './assets/holmes-logo.webp';
@@ -284,7 +282,7 @@ function CardStackPreview({ game, games, t, lang, onGame, startRequest=0 }) {
     <section className="s pv" id="preview">
       <div className="wrap pvg">
         <div>
-          <div className="head" style={{ margin: 0 }}><h2>{games[game].n}</h2><p>{games[game].d}</p></div>
+          <div className="head" style={{ margin: 0 }}><h2>{t.previewTitle}</h2><p>{t.previewText}</p></div>
           <div className="tabs" role="group" aria-label={t.gameLabel}>
             {PLAYABLE.map((k) => <button key={k} className="chip" aria-pressed={k === game} onClick={() => onGame(k)}>{games[k].n}</button>)}
             <button className="chip" aria-pressed="false" onClick={() => onGame("random")}>{t.random}</button>
@@ -480,17 +478,17 @@ export default function NickolasGames() {
       <div inert={showIntro ? true : undefined}>
       <nav><a className="site-logo" href={LANGUAGE_PATHS[lang]} aria-label="NickolasGames"><img src={holmesLogo} alt="NickolasGames" width="1024" height="341" /></a><LanguageSwitcher lang={lang} setLang={setLang} label={t.language} /></nav>
       <AppStatus lang={lang} />
-      <header className="play-header">
-        <CloudShader className="cloud-backdrop" count={3} speed={0.15} skyTopColor="#edf5ff" skyBottomColor="#f5f7fb" cloudColor="#ffffff" />
-        <div className="wrap play-heading"><div><h1>NickolasGames</h1><p>{PLAYABLE.map(key => t.games[key].n).join(" · ")}</p></div><img className="brand-portrait" src={holmesPortrait} alt="" width="900" height="600" decoding="async" /></div>
-      </header>
-      <main id="main" className="play-main">
+      <main id="main">
+      <Hero t={t} onStart={requestStart} />
+      <GamesGrid games={t.games} t={t} onPlay={(k) => choose(k, true)} />
       {game === "crocodile"
         ? <CharadesGame key={`${lang}-${game}`} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={(k) => choose(k, false)} />
         : game === "whoami" ? <WhoAmIGame key={`${lang}-${game}`} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={(k) => choose(k, false)} />
         : <CardStackPreview key={`${lang}-${game}`} game={game} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={(k) => choose(k, false)} />}
+      <HowItWorks t={t} />
+      <FinalCta t={t} onStart={requestStart} />
       </main>
-      <footer className="wrap product-footer"><span>{t.footer}</span><PrivacyPanel lang={lang} /><button className="footer-command" onClick={() => setShowIntro(true)}>{({uk:"Холмс · 2D-вступ",en:"Holmes · 2D intro",sv:"Holmes · 2D-intro",de:"Holmes · 2D-Intro",es:"Holmes · Intro 2D"})[lang]}</button></footer>
+      <footer><span>{t.footer}</span><PrivacyPanel lang={lang} /><button className="btn sm" onClick={() => setShowIntro(true)}>{({uk:"Холмс · 2D-вступ",en:"Holmes · 2D intro",sv:"Holmes · 2D-intro",de:"Holmes · 2D-Intro",es:"Holmes · Intro 2D"})[lang]}</button></footer>
       </div>
     </>
   );

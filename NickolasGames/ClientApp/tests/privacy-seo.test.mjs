@@ -33,8 +33,8 @@ function luminance(hex){
  const rgb=hex.match(/\w\w/g).map(value=>parseInt(value,16)/255).map(c=>c<=0.04045?c/12.92:((c+0.055)/1.055)**2.4);
  return rgb[0]*0.2126+rgb[1]*0.7152+rgb[2]*0.0722;
 }
-test('main text/action/success/error palette meets normal-text AA contrast',()=>{
- for(const [fg,bg]of [['172436','ffffff'],['46556a','ffffff'],['ffffff','155dcc'],['176840','eaf6ee'],['b43e35','fff0ed']]){
+test('privacy palette and restored Holmes text/action colors meet normal-text AA contrast',()=>{
+ for(const [fg,bg]of [['172436','ffffff'],['46556a','ffffff'],['ffffff','155dcc'],['176840','eaf6ee'],['b43e35','fff0ed'],['292724','eee4d1'],['292724','b78b4f']]){
   const values=[luminance(fg),luminance(bg)].sort((a,b)=>b-a);
   assert((values[0]+0.05)/(values[1]+0.05)>=4.5);
  }
