@@ -36,7 +36,8 @@ Implemented 2026-10-19. Existing site design and other games are unchanged.
   missing historical outcomes cannot be reconstructed from aggregate counts.
 - Round summaries emphasize the active team's signed net score. Timed correct/skipped counts
   exclude the final card, which is shown separately with its recipient or all-team penalty.
-  The next-team action comes before the collapsible timed-word lists. Scoring is unchanged.
+  The next-team action comes before the collapsible complete word lists. These lists include
+  the final card as well, labelled with its recipient or all-team penalty. Scoring is unchanged.
 
 State is saved under `nickolasgames-alias-teams-v1-${lang}` and validated on restore. An expired
 saved deadline restores directly to the last-word phase. The legacy
@@ -56,3 +57,5 @@ with Playwright available (or set `PLAYWRIGHT_MODULE` to its installed package).
 and WebKit must be installed. Screenshots go to the system temp directory by default; `QA_OUTPUT`
 overrides it. Checks cover all pip faces, totals, winner, scoreboard timing, five languages,
 80-character names and 320/390/1440px widths. `QA_ORIGIN` can target the deployed site.
+It also checks that the last card appears exactly once in the complete word lists, with the
+correct recipient or shared penalty, for own-team guesses, steals and unanswered words after reload.

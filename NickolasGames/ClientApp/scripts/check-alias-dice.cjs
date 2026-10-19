@@ -78,8 +78,36 @@ async function main() {
         await page.emulateMedia({ reducedMotion: 'no-preference' });
         assert.equal(await die.evaluate(el => getComputedStyle(el).animationName), 'alias-dice-throw');
         await page.locator('.alias-dice-stage').screenshot({ path: path.join(output, `dice-rolling-${engine}.png`) });
+        for (const recipient of [null, 'team-0', 'team-1']) {
+          const review = newAliasState(ALIAS_COPY.uk.teams);
+          review.teams.forEach((team, index) => { team.players = [{ id: `p-${index}-1`, name: 'Alice' }, { id: `p-${index}-2`, name: 'Bob' }]; });
+          review.phase = 'summary'; review.deck = ['Вихідні', 'Свобода', 'Метелик', 'Метафора', 'Книга']; review.index = 4;
+          review.correct = 3 + Number(recipient === 'team-0'); review.skipped = Number(recipient === null);
+          review.teams[0].turns = 1; review.teams[0].points = review.correct - review.skipped;
+          review.teams[1].points = recipient === 'team-1' ? 1 : recipient === null ? -1 : 0;
+          review.answers = review.deck.slice(0, review.index).map((word, index) => ({ index, word, outcome: index === 3 && recipient === null ? 'skip' : 'correct', teamId: index === 3 ? recipient : 'team-0', last: index === 3 }));
+          review.result = { teamId: 'team-0', correct: review.correct, skipped: review.skipped, lastTeamId: recipient, sharedPenalty: recipient === null, answers: review.answers, historyComplete: true };
+          assert(validAliasState(review));
+          await page.goto(origin + '/uk/');
+          await page.evaluate(state => localStorage.setItem('nickolasgames-alias-teams-v1-uk', JSON.stringify(state)), review);
+          await page.reload();
+          await page.locator('#preview .tabs').getByRole('button', { name: 'Alias', exact: true }).click();
+          const summary = page.locator('.alias-round-summary');
+          await summary.locator('.alias-review-details>summary').click();
+          const outcome = recipient === null ? 'skip' : 'correct';
+          const lastRow = summary.locator(`.alias-review-${outcome} li`).filter({ hasText: 'Метафора' });
+          assert.equal(await lastRow.count(), 1);
+          assert((await lastRow.locator('small').innerText()).includes(recipient === null ? ALIAS_COPY.uk.sharedPenaltyLabel : review.teams.find(team => team.id === recipient).name + ' +1'));
+          assert.equal(await summary.locator('.alias-word-review li').count(), 4);
+          assert.deepEqual(await summary.locator('.alias-result-metrics dd').allTextContents(), ['3', '0']);
+          if (recipient === null) await summary.screenshot({ path: path.join(output, `summary-last-missed-${engine}.png`) });
+          await page.reload();
+          const restoredWord = page.locator(`.alias-review-${outcome} li>span`).filter({ hasText: /^Метафора$/ });
+          await restoredWord.waitFor({ state: 'attached' });
+          assert.equal(await restoredWord.count(), 1);
+        }
         assert.deepEqual(errors, []);
-        console.log(`${engine}: PASS dice faces 1-6, totals, winner, scoreboard timing, long names, 320/390/1440px, all languages, animation and reduced motion`);
+        console.log(`${engine}: PASS dice faces 1-6, totals, winner, scoreboard timing, long names, 320/390/1440px, all languages, animation, final-card review and reload`);
       } finally { await browser.close(); }
     }
   } finally { await new Promise(resolve => server.close(resolve)); }

@@ -202,10 +202,10 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
               {(state.result.answers === undefined || state.result.historyComplete === false) && <p className="alias-history-note">{copy.historyPartial}</p>}
               {state.result.answers !== undefined && <details className="alias-review-details" key={state.teams.find(item => item.id === state.result.teamId)?.turns + ':' + state.result.teamId}>
                 <summary>{copy.reviewWords}</summary><div className="alias-word-review">{['correct', 'skip'].map(outcome => {
-                const entries = state.result.answers.filter(entry => entry.outcome === outcome && !entry.last);
+                const entries = state.result.answers.filter(entry => entry.outcome === outcome);
                 return <section className={'alias-review-' + outcome} key={outcome}>
                   <h4>{outcome === 'correct' ? copy.guessedCards : copy.missedCards}</h4>
-                  {entries.length ? <ul>{entries.map(entry => <li key={entry.index}><span>{entry.word}</span></li>)}</ul> : <p>{copy.noCards}</p>}
+                  {entries.length ? <ul>{entries.map(entry => <li key={entry.index}><span>{entry.word}</span>{entry.last && <small>{copy.last} · {entry.teamId === null ? copy.sharedPenaltyLabel : state.teams.find(item => item.id === entry.teamId)?.name + ' +1'}</small>}</li>)}</ul> : <p>{copy.noCards}</p>}
                 </section>;
               })}</div></details>}
             </>}
