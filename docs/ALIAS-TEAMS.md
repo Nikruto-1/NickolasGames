@@ -24,6 +24,10 @@ Implemented 2026-10-19. Existing site design and other games are unchanged.
 - Each team has a separate Start button before its turn. Starting reveals one word and begins
   an absolute 60-second deadline. No per-round word-count limit. Right/correct gives +1;
   left/skip gives -1. Negative team scores are allowed. Buttons supplement pointer swipes.
+- Accepted timed answers play short local Web Audio feedback: an ascending chime for correct,
+  a low descending tone for skip. Swipes and buttons share this behavior. Invalid gestures,
+  duplicate/rejected answers, restored history and last-word resolution do not replay feedback.
+  The timer announcement takes priority; overlapping feedback is stopped and audio nodes released.
 - At the deadline the current word stays visible. Select any team to award its +1, including
   a different team. If nobody guesses, every team loses 1 point, once. Ordinary timed skips still
   deduct only from the active team. Last-word credit is single-use.
@@ -69,3 +73,8 @@ correct recipient or shared penalty, for own-team guesses, steals and unanswered
 Rules checks verify translated sections, readable type size/line height, overflow and keyboard folding.
 Topic checks cover partial/all/empty selections, independent format changes, persistence and the
 actual generated deck against the selected topic union in all languages and viewport sizes.
+Audio checks observe real oscillator scheduling where Web Audio is available, for both swipe
+directions/buttons, invalid gestures, restored active games and timeout. Builds without Web Audio
+(including the Windows test WebKit) verify silent operation without game regressions instead.
+Seven focused audio unit tests cover envelopes,
+quiet gain, interruption, delayed resume, cleanup and unavailable audio APIs (150 total unit tests).

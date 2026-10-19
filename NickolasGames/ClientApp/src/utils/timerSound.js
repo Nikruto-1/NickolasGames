@@ -3,6 +3,9 @@ export function createTimerSound(getContext = () => globalThis.AudioContext || g
  const response=await fetch(url);if(!response.ok)throw new Error('Audio unavailable');return ctx.decodeAudioData(await response.arrayBuffer());
 }) {
  let context;let pending=null;let disposed=false;const recordings=new Map();const loads=new Map();let source=null;
+ const feedbackNodes=new Set();let feedbackRevision=0;
+ const clearFeedbackNode=node=>{node.oscillator.onended=null;try{node.oscillator.disconnect();node.gain.disconnect();}catch{}feedbackNodes.delete(node);};
+ const stopFeedback=()=>{feedbackRevision++;for(const node of feedbackNodes){try{node.oscillator.stop();}catch{}clearFeedbackNode(node);}};
  const recordingFor=language=>typeof recordingUrl==='string'?(language==='uk'?recordingUrl:null):recordingUrl?.[language==='uk'?'uk':'other'];
  const unlock = (language='uk') => {
   disposed=false;
@@ -16,7 +19,28 @@ export function createTimerSound(getContext = () => globalThis.AudioContext || g
    const source=context.createBufferSource();source.buffer=context.createBuffer(1,1,context.sampleRate);source.connect(context.destination);source.start();
   } catch {}
  };
+ const feedback = outcome => {
+  if(!['correct','skip'].includes(outcome)||disposed||!context||context.state==='closed')return;
+  stopFeedback();
+  const activeContext=context;const revision=feedbackRevision;
+  const schedule=()=>{
+   if(disposed||context!==activeContext||revision!==feedbackRevision||context.state!=='running')return;
+   const positive=outcome==='correct';const frequencies=positive?[523.25,659.25,783.99]:[293.66,220];
+   try {
+    frequencies.forEach((frequency,index)=>{
+     const at=context.currentTime+index*.09;const duration=positive ? .13 : .16;
+     const oscillator=context.createOscillator();const gain=context.createGain();const node={oscillator,gain};
+     feedbackNodes.add(node);oscillator.type=positive?'sine':'triangle';oscillator.frequency.value=frequency;
+     gain.gain.setValueAtTime(0,at);gain.gain.linearRampToValueAtTime(positive ? .075 : .055,at+.01);gain.gain.linearRampToValueAtTime(0,at+duration);
+     oscillator.connect(gain);gain.connect(context.destination);oscillator.onended=()=>clearFeedbackNode(node);oscillator.start(at);oscillator.stop(at+duration+.01);
+    });
+   } catch {stopFeedback();}
+  };
+  if(context.state==='running')schedule();
+  else {try{Promise.resolve(context.resume()).then(schedule).catch(()=>{});}catch{}}
+ };
  const play = () => {
+  stopFeedback();
   if(!context || context.state!=='running')return;
   try {
    for(let i=0;i<3;i++) {
@@ -27,6 +51,7 @@ export function createTimerSound(getContext = () => globalThis.AudioContext || g
   } catch {}
  };
  const announce = (text,language) => {
+  stopFeedback();
   const url=recordingFor(language);const recording=recordings.get(url);
   if(recording&&context?.state==='running') {
    try {source=context.createBufferSource();source.buffer=recording;source.connect(context.destination);source.start();return;}catch {}
@@ -45,5 +70,5 @@ export function createTimerSound(getContext = () => globalThis.AudioContext || g
    synthesis.speak(message);
   } catch {pending=null;play();}
  };
- return {unlock,play,announce,dispose(){disposed=true;if(source){try{source.stop();source.disconnect();}catch{}source=null;}recordings.clear();loads.clear();if(pending){pending.onend=null;pending.onerror=null;try{getSpeech().synthesis.cancel();}catch{}pending=null;}if(context){Promise.resolve(context.close()).catch(()=>{});context=null;}}};
+ return {unlock,play,feedback,announce,dispose(){disposed=true;stopFeedback();if(source){try{source.stop();source.disconnect();}catch{}source=null;}recordings.clear();loads.clear();if(pending){pending.onend=null;pending.onerror=null;try{getSpeech().synthesis.cancel();}catch{}pending=null;}if(context){Promise.resolve(context.close()).catch(()=>{});context=null;}}};
 }

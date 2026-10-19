@@ -29,11 +29,22 @@ async function main() {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const origin = process.env.QA_ORIGIN || `http://127.0.0.1:${server.address().port}`;
   try {
-    for (const engine of ['chromium', 'webkit']) {
+    for (const engine of (process.env.QA_ENGINE ? [process.env.QA_ENGINE] : ['chromium', 'webkit'])) {
       const browser = await (engine === 'chromium' ? chromium.launch({ channel: process.env.QA_CHROMIUM_CHANNEL || 'msedge', headless: true }) : webkit.launch({ headless: true }));
       try {
         // Keep visual fixtures independent of offline-cache updates during rapid reloads.
         const page = await browser.newPage({ reducedMotion: 'reduce', serviceWorkers: 'block' });
+        await page.addInitScript(() => {
+          const pending = sessionStorage.getItem('alias-qa-seed');
+          if (!pending) return;
+          const { lang, state } = JSON.parse(pending);
+          localStorage.setItem(`nickolasgames-alias-teams-v1-${lang}`, JSON.stringify(state));
+          sessionStorage.removeItem('alias-qa-seed');
+        });
+        const seedGame = async (lang, state) => {
+          await page.evaluate(value => sessionStorage.setItem('alias-qa-seed', JSON.stringify(value)), { lang, state });
+          await page.reload();
+        };
         const errors = [];
         page.on('pageerror', error => errors.push(error.message));
         page.on('dialog', dialog => dialog.accept());
@@ -51,8 +62,7 @@ async function main() {
           const url = origin + (lang === 'en' ? '/' : `/${lang}/`);
           if (lang === 'en') await page.locator('nav .lang-btn').filter({ hasText: /^EN$/ }).click();
           await page.goto(url);
-          await page.evaluate(({ lang, state }) => localStorage.setItem(`nickolasgames-alias-teams-v1-${lang}`, JSON.stringify(state)), { lang, state });
-          await page.reload();
+          await seedGame(lang, state);
           await page.locator('#preview .tabs').getByRole('button', { name: 'Alias', exact: true }).click();
           const game = page.locator('.alias-game');
           await game.locator('.alias-dice-result').waitFor();
@@ -124,8 +134,7 @@ async function main() {
         rolling.contenders = rolling.teams.map(team => team.id);
         rolling.pending = rolling.teams.map(team => ({ id: team.id, values: [3, 4] }));
         assert(validAliasState(rolling));
-        await page.evaluate(state => localStorage.setItem('nickolasgames-alias-teams-v1-es', JSON.stringify(state)), rolling);
-        await page.reload();
+        await seedGame('es', rolling);
         const die = page.locator('.alias-dice-team.is-rolling .alias-die').first();
         await die.waitFor();
         assert.equal(await die.evaluate(el => getComputedStyle(el).animationName), 'none');
@@ -143,8 +152,7 @@ async function main() {
           review.result = { teamId: 'team-0', correct: review.correct, skipped: review.skipped, lastTeamId: recipient, sharedPenalty: recipient === null, answers: review.answers, historyComplete: true };
           assert(validAliasState(review));
           await page.goto(origin + '/uk/');
-          await page.evaluate(state => localStorage.setItem('nickolasgames-alias-teams-v1-uk', JSON.stringify(state)), review);
-          await page.reload();
+          await seedGame('uk', review);
           await page.locator('#preview .tabs').getByRole('button', { name: 'Alias', exact: true }).click();
           const summary = page.locator('.alias-round-summary');
           await summary.locator('.alias-review-details>summary').click();
@@ -160,8 +168,58 @@ async function main() {
           await restoredWord.waitFor({ state: 'attached' });
           assert.equal(await restoredWord.count(), 1);
         }
+        await page.addInitScript(() => {
+          globalThis.__answerTones = [];
+          const Context = globalThis.AudioContext || globalThis.webkitAudioContext;
+          if (!Context) return;
+          const create = Context.prototype.createOscillator;
+          Context.prototype.createOscillator = function (...args) {
+            const node = create.apply(this, args), start = node.start;
+            node.start = function (...times) {
+              globalThis.__answerTones.push(Math.round(node.frequency.value * 100) / 100);
+              return start.apply(this, times);
+            };
+            return node;
+          };
+        });
+        const audioState = newAliasState(ALIAS_COPY.uk.teams);
+        audioState.teams.forEach((team, index) => { team.players = [{ id: `a-${index}`, name: 'Alice' }, { id: `b-${index}`, name: 'Bob' }]; });
+        audioState.phase = 'ready'; audioState.deck = ['Книга', 'Метафора', 'Вихідні', 'Свобода', 'Метелик', 'Кіт'];
+        assert(validAliasState(audioState));
+        await page.goto(origin + '/uk/');
+        await seedGame('uk', audioState);
+        const audioGame = page.locator('.alias-game');
+        const hasAudio = await page.evaluate(() => Boolean(globalThis.AudioContext || globalThis.webkitAudioContext));
+        const checkTones = async expected => {
+          if (hasAudio) await page.waitForFunction(count => globalThis.__answerTones.length === count, expected.length);
+          assert.deepEqual(await page.evaluate(() => globalThis.__answerTones), hasAudio ? expected : []);
+        };
+        const checkIndex = expected => page.waitForFunction(index => JSON.parse(localStorage.getItem('nickolasgames-alias-teams-v1-uk')).index === index, expected);
+        await audioGame.getByRole('button', { name: ALIAS_COPY.uk.startRound, exact: true }).click();
+        assert.deepEqual(await page.evaluate(() => globalThis.__answerTones), []);
+        const swipe = async distance => {
+          const card = audioGame.locator('.alias-word-card'); await card.scrollIntoViewIfNeeded();
+          const box = await card.boundingBox();
+          await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2); await page.mouse.down();
+          await page.mouse.move(box.x + box.width / 2 + distance, box.y + box.height / 2, { steps: 8 }); await page.mouse.up();
+        };
+        const positive = [523.25, 659.25, 783.99], negative = [293.66, 220];
+        await swipe(95); await checkIndex(1); await checkTones(positive);
+        await swipe(-95); await checkIndex(2); await checkTones([...positive, ...negative]);
+        await swipe(20); await checkIndex(2); await checkTones([...positive, ...negative]);
+        await audioGame.locator('.alias-correct').click(); await checkIndex(3); await checkTones([...positive, ...negative, ...positive]);
+        await audioGame.locator('.alias-swipe-actions .alias-skip').click(); await checkIndex(4); await checkTones([...positive, ...negative, ...positive, ...negative]);
+        assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('nickolasgames-alias-teams-v1-uk')).teams[0].points), 0);
+        await page.reload(); await audioGame.locator('.alias-turn-heading').waitFor();
+        assert.deepEqual(await page.evaluate(() => globalThis.__answerTones), []);
+        await audioGame.locator('.alias-correct').click(); await checkIndex(5); await checkTones(positive);
+        await page.evaluate(() => { globalThis.__answerTones = []; });
+        await page.clock.install(); await page.clock.fastForward(61_000);
+        await audioGame.locator('.alias-last-awards').waitFor();
+        await audioGame.getByRole('button', { name: ALIAS_COPY.uk.nobody, exact: true }).click();
+        assert.equal(await page.evaluate(() => globalThis.__answerTones.filter(frequency => [523.25, 659.25, 783.99, 293.66, 220].includes(frequency)).length), 0);
         assert.deepEqual(errors, []);
-        console.log(`${engine}: PASS dice, rules, multi-topic selection/decks/restore, 5 languages, 320/390/1440px, final-card review`);
+        console.log(`${engine}: PASS dice, rules, topics, languages, final-card review, ${hasAudio ? 'real swipe/button audio' : 'graceful no-audio mode (Web Audio unavailable)'}, reload and timeout`);
       } finally { await browser.close(); }
     }
   } finally { await new Promise(resolve => server.close(resolve)); }

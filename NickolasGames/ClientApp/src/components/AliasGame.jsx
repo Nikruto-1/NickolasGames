@@ -37,6 +37,7 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
   const previousPhase = useRef(state.phase);
   const sound = useRef(null);
   const armed = useRef(null);
+  const previousAnswers = useRef(state.answers?.length || 0);
   if (!sound.current) sound.current = createHolmesTimerSound();
   const setup = state.phase === 'setup';
   const drawing = ['dice', 'rolling', 'diceResult'].includes(state.phase);
@@ -60,6 +61,12 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
     previousPhase.current = state.phase;
   }, [state.phase]);
   useEffect(() => () => sound.current.dispose(), []);
+  useEffect(() => {
+    const count = state.answers?.length || 0;
+    const entry = state.answers?.[count - 1];
+    if (count > previousAnswers.current && entry && !entry.last) sound.current.feedback(entry.outcome);
+    previousAnswers.current = count;
+  }, [state.answers]);
   useEffect(() => {
     if (!['acting', 'rolling'].includes(state.phase)) return;
     const tick = () => {
@@ -102,7 +109,11 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
     const now = Date.now(); setClock(now); sound.current.unlock(lang); armed.current = now + 60_000;
     dispatch({ type: 'begin', now });
   };
-  const answer = (outcome, index = state.index) => dispatch({ type: 'answer', outcome, index, now: Date.now() });
+  const answer = (outcome, index = state.index) => {
+    const now = Date.now();
+    if (state.phase === 'acting' && index === state.index && now < state.deadline) sound.current.unlock(lang);
+    dispatch({ type: 'answer', outcome, index, now });
+  };
   const reset = () => {
     if (!window.confirm(copy.confirm)) return;
     armed.current = null; setAttempt(0); setDrafts({}); dispatch({ type: 'new' });
