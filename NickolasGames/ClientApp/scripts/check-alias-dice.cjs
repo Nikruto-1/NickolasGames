@@ -59,6 +59,17 @@ async function main() {
           assert.deepEqual(await game.locator('.alias-dice-score>strong').allTextContents(), state.dice.map(roll => String(roll.values[0] + roll.values[1])));
           assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
           assert(await game.locator('.alias-dice-team').evaluateAll(cards => cards.every(card => card.scrollWidth <= card.clientWidth)));
+          await game.locator('.alias-rules>summary').click();
+          assert.deepEqual(await game.locator('.alias-rules-sections h3').allTextContents(), ALIAS_COPY[lang].rulesSections.map(section => section.title));
+          assert.deepEqual(await game.locator('.alias-rules-sections ul li').allTextContents(), ALIAS_COPY[lang].rulesSections.flatMap(section => section.items));
+          assert(await game.locator('.alias-rules-sections ul li').evaluateAll(items => items.every(item => {
+            const style = getComputedStyle(item);
+            return parseFloat(style.fontSize) >= 16 && parseFloat(style.lineHeight) >= 25 && item.scrollWidth <= item.clientWidth;
+          })));
+          assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+          await game.locator('.head').screenshot({ path: path.join(output, `rules-${lang}-${width}-${engine}.png`) });
+          await game.locator('.alias-rules>summary').press('Space');
+          assert.equal(await game.locator('.alias-rules').getAttribute('open'), null);
           await game.locator('.alias-dice-stage').screenshot({ path: path.join(output, `dice-${lang}-${width}-${engine}.png`) });
           await game.getByRole('button', { name: ALIAS_COPY[lang].continueDice, exact: true }).click();
           await game.locator('.alias-ready').waitFor();
@@ -107,7 +118,7 @@ async function main() {
           assert.equal(await restoredWord.count(), 1);
         }
         assert.deepEqual(errors, []);
-        console.log(`${engine}: PASS dice faces 1-6, totals, winner, scoreboard timing, long names, 320/390/1440px, all languages, animation, final-card review and reload`);
+        console.log(`${engine}: PASS dice, rules typography/languages/keyboard, 320/390/1440px, animation, final-card review and reload`);
       } finally { await browser.close(); }
     }
   } finally { await new Promise(resolve => server.close(resolve)); }

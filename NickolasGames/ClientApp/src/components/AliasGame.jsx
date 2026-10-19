@@ -113,7 +113,7 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
 
   return <section className="s pv alias-game" id="preview">
     <div className="wrap">
-      <div className="head"><h2>{copy.title}</h2><details className="alias-rules"><summary>{copy.rules}</summary><p>{copy.rulesText}</p></details></div>
+      <div className="head"><h2>{copy.title}</h2><details className="alias-rules"><summary>{copy.rules}</summary><ol className="alias-rules-sections">{copy.rulesSections.map(section => <li key={section.title}><h3>{section.title}</h3><ul>{section.items.map(item => <li key={item}>{item}</li>)}</ul></li>)}</ol></details></div>
       <div className="tabs" role="group" aria-label={t.gameLabel}>
         {['whoami', 'crocodile', 'alias', 'truth'].map(game => <button key={game} className="chip" aria-pressed={game === 'alias'} onClick={() => onGame(game)}>{games[game].n}</button>)}
         <button className="chip" onClick={() => onGame('random')}>{t.random}</button>

@@ -27,6 +27,8 @@ Implemented 2026-10-19. Existing site design and other games are unchanged.
 - Default victory target is 60, configurable as a positive safe whole number before starting.
 - Exhausted word pools display an explicit message instead of silently repeating words.
 - Remaining-card counters are not displayed in setup or during a round.
+- The expandable rules use four numbered sections, short bullet lists and 16px text with
+  generous line spacing. They stack on phones and use two columns on wider screens, in all languages.
 - Team editor headings show the actual names; a labelled pencil button opens inline editing.
   Save or Enter closes the field. The setup grid uses the full width, without a duplicate zero-score
   table, and settings use two columns on larger screens.
@@ -59,3 +61,4 @@ overrides it. Checks cover all pip faces, totals, winner, scoreboard timing, fiv
 80-character names and 320/390/1440px widths. `QA_ORIGIN` can target the deployed site.
 It also checks that the last card appears exactly once in the complete word lists, with the
 correct recipient or shared penalty, for own-team guesses, steals and unanswered words after reload.
+Rules checks verify translated sections, readable type size/line height, overflow and keyboard folding.
