@@ -75,7 +75,7 @@ export const UI_COPY = {
     "alias": {
       "n": "Alias",
       "d": "Erkläre Wörter schnell und sammle Punkte für dein Team.",
-      "p": "4-12 Spieler",
+      "p": "4+ Spieler",
       "t": "20 Min",
       "c": {
         "Alltag": {

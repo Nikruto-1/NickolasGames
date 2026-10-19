@@ -1,0 +1,176 @@
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { ArrowLeft, ArrowRight, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, Plus, RotateCcw, Trash2, UserPlus } from 'lucide-react';
+import { ALIAS_COPY } from '../locales/alias.js';
+import { DIFFICULTIES } from '../utils/difficulty.js';
+import { readValue, writeValue } from '../utils/progress.js';
+import { createHolmesTimerSound, HOLMES_TIME_UP } from '../utils/holmesTimerSound.js';
+import { ALIAS_ALL, aliasActor, aliasCategories, aliasPool, aliasReducer, aliasSetupErrors, aliasWord, newAliasState, restoreAliasState, shuffleAlias, validAliasTarget } from '../utils/alias.js';
+import './AliasGame.css';
+
+const diceIcons = [Dice1, Dice2, Dice3, Dice4, Dice5, Dice6];
+
+export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
+  const copy = ALIAS_COPY[lang] || ALIAS_COPY.en;
+  const key = `nickolasgames-alias-teams-v1-${lang}`;
+  const [state, dispatch] = useReducer(aliasReducer, null, () => restoreAliasState(readValue(key)) || newAliasState(copy.teams));
+  const categories = useMemo(() => aliasCategories(games.alias.c, games.crocodile.c), [games]);
+  const pool = useMemo(() => aliasPool(categories, state.category, state.difficulty), [categories, state.category, state.difficulty]);
+  const [drafts, setDrafts] = useState({});
+  const [target, setTarget] = useState(String(state.target));
+  const [attempt, setAttempt] = useState(0);
+  const [storageOk, setStorageOk] = useState(true);
+  const [clock, setClock] = useState(Date.now());
+  const [drag, setDrag] = useState(0);
+  const gesture = useRef(null);
+  const feedback = useRef(null);
+  const sound = useRef(null);
+  const armed = useRef(null);
+  if (!sound.current) sound.current = createHolmesTimerSound();
+  const setup = state.phase === 'setup';
+  const team = state.teams[state.activeIndex];
+  const actor = aliasActor(state);
+  const word = aliasWord(state);
+  const remaining = state.deadline === null ? 60 : Math.max(0, Math.ceil((state.deadline - clock) / 1000));
+  const expired = state.phase === 'acting' && remaining === 0;
+  const last = state.phase === 'last' || expired;
+  const playing = state.phase === 'acting' || state.phase === 'last';
+  const errors = aliasSetupErrors({ ...state, target: Number(target) }, pool);
+  if (Object.values(drafts).some(value => value.trim())) errors.push('pending');
+
+  useEffect(() => { setStorageOk(writeValue(key, state)); }, [key, state]);
+  useEffect(() => () => sound.current.dispose(), []);
+  useEffect(() => {
+    if (!['acting', 'rolling'].includes(state.phase)) return;
+    const tick = () => {
+      const now = Date.now(); setClock(now);
+      dispatch({ type: state.phase === 'rolling' ? 'rolled' : 'expire', now });
+    };
+    tick();
+    const timer = setInterval(tick, 100);
+    document.addEventListener('visibilitychange', tick);
+    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', tick); };
+  }, [state.phase, state.deadline, state.rollUntil]);
+  useEffect(() => {
+    if (state.phase === 'last' && armed.current !== null) {
+      armed.current = null; sound.current.announce(HOLMES_TIME_UP, lang);
+    }
+    setDrag(0); gesture.current = null;
+  }, [state.phase, state.index, lang]);
+  useEffect(() => { if (startRequest > 0 && setup) setAttempt(value => value + 1); }, [startRequest, setup]);
+  useEffect(() => { if (setup && attempt && errors.length) feedback.current?.focus({ preventScroll: true }); }, [attempt, setup]);
+
+  const settings = value => dispatch({ type: 'settings', value });
+  const updateTeam = (id, update) => settings({ teams: state.teams.map(item => item.id === id ? { ...item, ...update } : item) });
+  const addPlayer = (event, id) => {
+    event.preventDefault();
+    const name = (drafts[id] || '').trim();
+    const selected = state.teams.find(item => item.id === id);
+    if (!name || !setup) return;
+    updateTeam(id, { players: [...selected.players, { id: crypto.randomUUID(), name }] });
+    setDrafts(value => ({ ...value, [id]: '' }));
+  };
+  const start = () => {
+    setAttempt(value => value + 1);
+    if (errors.length) return;
+    settings({ target: Number(target), teams: state.teams.map(item => ({ ...item, name: item.name.trim() })) });
+    dispatch({ type: 'start', deck: shuffleAlias(pool) });
+  };
+  const roll = () => dispatch({ type: 'roll', now: Date.now(), rolls: state.contenders.map(id => ({ id, values: [1 + Math.floor(Math.random() * 6), 1 + Math.floor(Math.random() * 6)] })) });
+  const begin = () => {
+    const now = Date.now(); setClock(now); sound.current.unlock(lang); armed.current = now + 60_000;
+    dispatch({ type: 'begin', now });
+  };
+  const answer = (outcome, index = state.index) => dispatch({ type: 'answer', outcome, index, now: Date.now() });
+  const reset = () => {
+    if (!window.confirm(copy.confirm)) return;
+    armed.current = null; setAttempt(0); setDrafts({}); dispatch({ type: 'new' });
+  };
+  const stopGesture = event => {
+    const current = gesture.current;
+    gesture.current = null; setDrag(0);
+    if (!current || event.pointerId !== current.pointerId || last) return;
+    const x = event.clientX - current.x, y = event.clientY - current.y;
+    if (Math.abs(x) >= 70 && Math.abs(x) > Math.abs(y) * 1.3) answer(x > 0 ? 'correct' : 'skip', current.index);
+  };
+
+  return <section className="s pv alias-game" id="preview">
+    <div className="wrap">
+      <div className="head"><h2>{copy.title}</h2><details className="alias-rules"><summary>{copy.rules}</summary><p>{copy.rulesText}</p></details></div>
+      <div className="tabs" role="group" aria-label={t.gameLabel}>
+        {['whoami', 'crocodile', 'alias', 'truth'].map(game => <button key={game} className="chip" aria-pressed={game === 'alias'} onClick={() => onGame(game)}>{games[game].n}</button>)}
+        <button className="chip" onClick={() => onGame('random')}>{t.random}</button>
+      </div>
+      {!storageOk && <p className="alias-warning" role="status">{copy.storage}</p>}
+      <div className="alias-layout">
+        <div>
+          {setup && <>
+            <div className="alias-team-editors">
+              {state.teams.map((item, index) => <article className="alias-team-editor" key={item.id}>
+                <div className="alias-editor-heading"><label htmlFor={'alias-team-' + item.id}>{copy.team} {index + 1}</label><button type="button" className="alias-icon" disabled={state.teams.length <= 2} title={copy.removeTeam} aria-label={copy.removeTeam + ': ' + item.name} onClick={() => { settings({ teams: state.teams.filter(team => team.id !== item.id) }); setDrafts(value => ({ ...value, [item.id]: '' })); }}><Trash2 size={18} /></button></div>
+                <input id={'alias-team-' + item.id} aria-label={copy.teamName + ' ' + (index + 1)} value={item.name} maxLength={80} onChange={event => updateTeam(item.id, { name: event.target.value })} />
+                <ul className="alias-player-list">{item.players.map(player => <li key={player.id}><span>{player.name}</span><button type="button" className="alias-icon" title={copy.removePlayer} aria-label={copy.removePlayer + ': ' + player.name} onClick={() => updateTeam(item.id, { players: item.players.filter(p => p.id !== player.id) })}><Trash2 size={16} /></button></li>)}</ul>
+                <form onSubmit={event => addPlayer(event, item.id)} className="alias-player-form">
+                  <label htmlFor={'alias-player-' + item.id}>{copy.player}</label>
+                  <div><input id={'alias-player-' + item.id} value={drafts[item.id] || ''} maxLength={80} autoComplete="off" onChange={event => setDrafts(value => ({ ...value, [item.id]: event.target.value }))} /><button className="alias-icon" disabled={!(drafts[item.id] || '').trim()} title={copy.addPlayer} aria-label={copy.addPlayer + ': ' + item.name}><UserPlus size={20} /></button></div>
+                </form>
+              </article>)}
+            </div>
+            <button className="btn alias-command" onClick={() => settings({ teams: [...state.teams, { id: crypto.randomUUID(), name: copy.team + ' ' + (state.teams.length + 1), players: [], points: 0, turns: 0 }] })}><Plus size={18} />{copy.addTeam}</button>
+            <div className="alias-settings">
+              <label htmlFor="alias-category">{t.categoryLabel}<select id="alias-category" value={state.category} onChange={event => settings({ category: event.target.value })}><option value={ALIAS_ALL}>{t.allCategories}</option>{Object.keys(categories).map(name => <option key={name}>{name}</option>)}</select></label>
+              <fieldset><legend>{t.difficultyLabel}</legend><div className="alias-levels">{['all', ...DIFFICULTIES].map(level => <button key={level} type="button" className={'chip alias-level-' + level} aria-pressed={state.difficulty === level} onClick={() => settings({ difficulty: level })}>{level === 'all' ? copy.allLevels : t.difficulty[level]}</button>)}</div></fieldset>
+              <label htmlFor="alias-target">{copy.target}<input id="alias-target" type="number" inputMode="numeric" min="1" step="1" value={target} onChange={event => { setTarget(event.target.value); if (validAliasTarget(Number(event.target.value))) settings({ target: Number(event.target.value) }); }} /></label>
+            </div>
+            {attempt > 0 && errors.length > 0 && <div ref={feedback} className="setup-validation" role="alert" tabIndex={-1}><ul>{errors.map(error => <li key={error}>{copy[error]}</li>)}</ul></div>}
+            <p className="alias-pool-count">{copy.wordsLeft}: {pool.length}</p>
+            <button className="btn pri alias-main-action" onClick={start}>{copy.start}</button>
+          </>}
+          {['dice', 'rolling'].includes(state.phase) && <div className="alias-dice-stage">
+            <h3>{copy.diceTitle}</h3><p>{copy.diceRule}</p>
+            {state.phase === 'dice' && state.dice.length > 0 && <p role="status">{copy.tie}</p>}
+            <div className="alias-dice-teams">{state.teams.map((item, index) => {
+              const previous = state.dice.find(result => result.id === item.id);
+              const rolling = state.phase === 'rolling' && state.contenders.includes(item.id);
+              const values = rolling ? [Math.floor(clock / 90 + index) % 6 + 1, Math.floor(clock / 130 + index) % 6 + 1] : previous?.values || [1, 1];
+              return <div className={'alias-dice-team' + (rolling ? ' is-rolling' : '')} key={item.id}>
+                <strong>{item.name}</strong><div className="alias-dice-pair" aria-hidden="true">{values.map((value, die) => { const Icon = diceIcons[value - 1]; return <span key={die}><Icon size={48} strokeWidth={1.5} /></span>; })}</div>
+                <output aria-live="polite">{rolling ? copy.rolling : previous ? previous.values[0] + ' + ' + previous.values[1] + ' = ' + previous.values.reduce((a, b) => a + b, 0) : '—'}</output>
+              </div>;
+            })}</div>
+            <button className="btn pri alias-main-action" disabled={state.phase === 'rolling'} onClick={roll}><Dice5 size={20} /> {state.phase === 'rolling' ? copy.rolling : copy.roll}</button>
+          </div>}
+          {state.phase === 'ready' && <div className="alias-ready" role="status">
+            <p>{state.dice.length && state.teams.every(item => item.turns === 0) ? copy.first : copy.turn}</p><h3>{team.name}</h3><p>{copy.actor}: <strong>{actor?.name}</strong></p>
+            <div className="alias-word-card alias-hidden-card"><strong>{copy.ready}</strong></div>
+            <button className="btn pri alias-main-action" onClick={begin}>{copy.startRound}</button>
+          </div>}
+          {playing && <>
+            <div className="alias-turn-heading"><div><strong>{team.name}</strong><p>{copy.actor}: {actor?.name}</p></div><div className={'alias-timer' + (remaining <= 10 ? ' is-low' : '')} role="timer" aria-label={remaining + ' ' + copy.seconds}>{remaining}<small>{copy.seconds}</small></div></div>
+            <div className={'alias-word-card' + (last ? ' is-last' : '')} style={{ transform: `translateX(${drag}px) rotate(${drag / 20}deg)` }}
+              onPointerDown={event => { if (last || event.isPrimary === false || event.button !== 0) return; event.currentTarget.setPointerCapture(event.pointerId); gesture.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, index: state.index }; }}
+              onPointerMove={event => { if (gesture.current?.pointerId === event.pointerId && !last) setDrag(Math.max(-100, Math.min(100, event.clientX - gesture.current.x))); }}
+              onPointerUp={stopGesture} onPointerCancel={() => { gesture.current = null; setDrag(0); }} onLostPointerCapture={() => { gesture.current = null; setDrag(0); }}>
+              {last && <span>{copy.last}</span>}<strong key={state.index}>{word}</strong>
+            </div>
+            {last ? <div className="alias-last-awards"><p>{copy.lastRule}</p>{state.teams.map(item => <button key={item.id} className="btn" onClick={() => dispatch({ type: 'last', teamId: item.id, index: state.index })}>{item.name} +1</button>)}<button className="btn alias-skip" onClick={() => dispatch({ type: 'last', teamId: null, index: state.index })}>{copy.nobody}</button></div>
+              : <div className="alias-swipe-actions"><button className="btn alias-skip" onClick={() => answer('skip')}><ArrowLeft size={20} />{copy.skip} −1</button><button className="btn alias-correct" onClick={() => answer('correct')}>{copy.correct} +1<ArrowRight size={20} /></button></div>}
+            <p className="alias-pool-count">{copy.roundScore}: {state.correct - state.skipped} · {copy.wordsLeft}: {state.deck.length - state.index}</p>
+          </>}
+          {['summary', 'finished', 'exhausted'].includes(state.phase) && <div className="alias-round-summary" role="status">
+            <h3>{state.phase === 'finished' ? copy.wins : state.phase === 'exhausted' ? copy.exhausted : copy.roundDone}</h3>
+            {state.winners.length > 0 && <p className="alias-winners">{state.teams.filter(item => state.winners.includes(item.id)).map(item => item.name).join(' · ')}</p>}
+            {state.result && <><p>{state.teams.find(item => item.id === state.result.teamId)?.name}: {copy.roundScore} {state.result.correct - state.result.skipped}</p><p>{copy.correct}: {state.result.correct} · {copy.skip}: {state.result.skipped}</p>
+              {state.result.lastTeamId && <p>{copy.awarded}: {state.teams.find(item => item.id === state.result.lastTeamId)?.name}</p>}</>}
+            {state.phase === 'exhausted' && <p>{copy.exhaustedRule}</p>}
+            {state.phase === 'summary' && <button className="btn pri alias-main-action" onClick={() => dispatch({ type: 'next' })}>{copy.next}<ArrowRight size={20} /></button>}
+          </div>}
+          {!setup && <button className="btn sm alias-reset" onClick={reset}><RotateCcw size={16} />{copy.newGame}</button>}
+        </div>
+        <aside className="alias-scores" aria-label={copy.points}>
+          <h3>{copy.points}</h3><p>{copy.target}: {state.target}</p>
+          <table><thead><tr><th scope="col">{copy.team}</th><th scope="col">{copy.points}</th></tr></thead><tbody>{state.teams.map((item, index) => <tr key={item.id} aria-current={!setup && index === state.activeIndex ? 'true' : undefined}><th scope="row"><span>{item.name}</span><small>{item.players.map(player => player.name).join(', ')}</small></th><td>{item.points}</td></tr>)}</tbody></table>
+        </aside>
+      </div>
+    </div>
+  </section>;
+}
