@@ -9,6 +9,11 @@ Implemented 2026-10-19. Existing site design and other games are unchanged.
   or a mixture of both. The original phrase/action banks are available again without changing
   other games' dictionaries. The extra 220 curated words per language remain available.
   Category and difficulty apply to every format. Cards are unique across a whole game.
+- Card format and topics are independent. Select any combination of topics with checkboxes, or
+  all topics. The deck is a deduplicated union of those topics at the selected difficulty/format.
+  Changing format does not reset topics. An empty selection has a clear setup validation message.
+  Legacy single-topic saves still load; new multiple-topic selections persist across reloads/new games.
+  Multiple selections use an optional `topics` array; `category` remains a string for older cached clients.
 - Each team throws two six-sided dice. Highest total starts. Tied leaders reroll; eliminated
   teams do not reroll. Animation respects reduced-motion preferences. Interrupted rolls restore.
   Final dice faces and totals stay visible until Continue to game is pressed. The first team is
@@ -50,7 +55,7 @@ Future cards are filtered by the chosen format and new matching cards are added 
 Old saves without a format default to single words; a new game retains the selected format.
 An exhausted game can continue with newly available words; a finished game stays finished.
 
-Tests: 38 focused Alias cases plus 99 existing cases. Browser checks cover mobile/desktop,
+Tests: 44 focused Alias cases plus 99 existing cases. Browser checks cover mobile/desktop,
 all five languages, long names, team addition/removal, dice ties, swipe and button scoring,
 refresh, deadline expiry, last-word stealing, rotation, victory and preservation of legacy data.
 
@@ -62,3 +67,5 @@ overrides it. Checks cover all pip faces, totals, winner, scoreboard timing, fiv
 It also checks that the last card appears exactly once in the complete word lists, with the
 correct recipient or shared penalty, for own-team guesses, steals and unanswered words after reload.
 Rules checks verify translated sections, readable type size/line height, overflow and keyboard folding.
+Topic checks cover partial/all/empty selections, independent format changes, persistence and the
+actual generated deck against the selected topic union in all languages and viewport sizes.

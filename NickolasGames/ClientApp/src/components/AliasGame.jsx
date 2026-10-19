@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, Dice5, Pencil, Plus, RotateCcw, Trophy, Trash2, UserPlus } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, ChevronDown, Dice5, Pencil, Plus, RotateCcw, Trophy, Trash2, UserPlus } from 'lucide-react';
 import { ALIAS_COPY } from '../locales/alias.js';
 import { ALIAS_WORDS } from '../data/alias.js';
 import { DIFFICULTIES } from '../utils/difficulty.js';
 import { readValue, writeValue } from '../utils/progress.js';
 import { createHolmesTimerSound, HOLMES_TIME_UP } from '../utils/holmesTimerSound.js';
-import { ALIAS_ALL, ALIAS_FORMATS, aliasActor, aliasCategories, aliasPool, aliasReducer, aliasSetupErrors, aliasWord, newAliasState, refreshAliasDeck, restoreAliasState, shuffleAlias, validAliasTarget } from '../utils/alias.js';
+import { ALIAS_ALL, ALIAS_FORMATS, aliasActor, aliasCategories, aliasCategorySelection, aliasPool, aliasReducer, aliasSetupErrors, aliasWord, newAliasState, refreshAliasDeck, restoreAliasState, shuffleAlias, validAliasTarget } from '../utils/alias.js';
 import './AliasGame.css';
 
 const dicePips = [[], [4], [0, 8], [0, 4, 8], [0, 2, 6, 8], [0, 2, 4, 6, 8], [0, 2, 3, 5, 6, 8]];
@@ -19,8 +19,11 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
   const key = `nickolasgames-alias-teams-v1-${lang}`;
   const categories = useMemo(() => aliasCategories(games.alias.c, games.crocodile.c, ALIAS_WORDS[lang] || ALIAS_WORDS.en), [games, lang]);
   const [state, dispatch] = useReducer(aliasReducer, null, () => refreshAliasDeck(restoreAliasState(readValue(key)) || newAliasState(copy.teams), categories));
-  const pool = useMemo(() => aliasPool(categories, state.category, state.difficulty, state.format), [categories, state.category, state.difficulty, state.format]);
-  const availableCategories = useMemo(() => Object.keys(categories).filter(name => aliasPool(categories, name, 'all', state.format).length), [categories, state.format]);
+  const categorySelection = aliasCategorySelection(state);
+  const pool = useMemo(() => aliasPool(categories, categorySelection, state.difficulty, state.format), [categories, categorySelection, state.difficulty, state.format]);
+  const availableCategories = useMemo(() => Object.keys(categories), [categories]);
+  const selectedCategories = categorySelection === ALIAS_ALL ? availableCategories : Array.isArray(categorySelection) ? categorySelection : [categorySelection];
+  const categorySummary = categorySelection === ALIAS_ALL ? t.allCategories : !selectedCategories.length ? copy.chooseCategories : selectedCategories.length <= 2 ? selectedCategories.join(' · ') : copy.selectedCategories + ': ' + selectedCategories.length;
   const [drafts, setDrafts] = useState({});
   const [editingTeam, setEditingTeam] = useState(null);
   const [target, setTarget] = useState(String(state.target));
@@ -78,6 +81,7 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
   useEffect(() => { if (setup && attempt && errors.length) feedback.current?.focus({ preventScroll: true }); }, [attempt, setup]);
 
   const settings = value => dispatch({ type: 'settings', value });
+  const selectCategories = names => settings({ category: names.length === availableCategories.length ? ALIAS_ALL : names });
   const updateTeam = (id, update) => settings({ teams: state.teams.map(item => item.id === id ? { ...item, ...update } : item) });
   const addPlayer = (event, id) => {
     event.preventDefault();
@@ -138,9 +142,12 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
             </div>
             <button className="btn alias-command" onClick={() => settings({ teams: [...state.teams, { id: crypto.randomUUID(), name: copy.team + ' ' + (state.teams.length + 1), players: [], points: 0, turns: 0 }] })}><Plus size={18} />{copy.addTeam}</button>
             <div className="alias-settings">
-              <fieldset><legend>{copy.formatLabel}</legend><div className="alias-levels alias-formats">{ALIAS_FORMATS.map(format => <button key={format} type="button" className={'chip alias-format-' + format} aria-pressed={state.format === format} onClick={() => settings({ format, category: ALIAS_ALL })}>{copy.formats[format]}</button>)}</div></fieldset>
-              <label htmlFor="alias-category">{t.categoryLabel}<select id="alias-category" value={state.category} onChange={event => settings({ category: event.target.value })}><option value={ALIAS_ALL}>{t.allCategories}</option>{availableCategories.map(name => <option key={name}>{name}</option>)}</select></label>
+              <fieldset><legend>{copy.formatLabel}</legend><div className="alias-levels alias-formats">{ALIAS_FORMATS.map(format => <button key={format} type="button" className={'chip alias-format-' + format} aria-pressed={state.format === format} onClick={() => settings({ format })}>{copy.formats[format]}</button>)}</div></fieldset>
               <fieldset><legend>{t.difficultyLabel}</legend><div className="alias-levels">{['all', ...DIFFICULTIES].map(level => <button key={level} type="button" className={'chip alias-level-' + level} aria-pressed={state.difficulty === level} onClick={() => settings({ difficulty: level })}>{level === 'all' ? copy.allLevels : t.difficulty[level]}</button>)}</div></fieldset>
+              <fieldset className="alias-category-field"><legend>{copy.categoriesLabel}</legend><details className="alias-category-picker"><summary><span>{categorySummary}</span><ChevronDown size={18} aria-hidden="true" /></summary><div className="alias-category-options">
+                <label className="alias-category-option is-all"><input type="checkbox" checked={categorySelection === ALIAS_ALL} ref={node => { if (node) node.indeterminate = categorySelection !== ALIAS_ALL && selectedCategories.length > 0; }} onChange={event => settings({ category: event.target.checked ? ALIAS_ALL : [] })} /><span>{t.allCategories}</span></label>
+                {availableCategories.map(name => <label className="alias-category-option" key={name}><input type="checkbox" checked={selectedCategories.includes(name)} onChange={event => selectCategories(event.target.checked ? [...selectedCategories, name] : selectedCategories.filter(category => category !== name))} /><span>{name}</span></label>)}
+              </div></details></fieldset>
               <label htmlFor="alias-target">{copy.target}<input id="alias-target" type="number" inputMode="numeric" min="1" step="1" value={target} onChange={event => { setTarget(event.target.value); if (validAliasTarget(Number(event.target.value))) settings({ target: Number(event.target.value) }); }} /></label>
             </div>
             {attempt > 0 && errors.length > 0 && <div ref={feedback} className="setup-validation" role="alert" tabIndex={-1}><ul>{errors.map(error => <li key={error}>{copy[error]}</li>)}</ul></div>}

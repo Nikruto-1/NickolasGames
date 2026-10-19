@@ -7,8 +7,10 @@ const { pathToFileURL } = require('node:url');
 const { chromium, webkit } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 
 async function main() {
-  const { newAliasState, validAliasState } = await import(pathToFileURL(path.resolve(__dirname, '../src/utils/alias.js')));
+  const { newAliasState, validAliasState, aliasCategories, aliasPool } = await import(pathToFileURL(path.resolve(__dirname, '../src/utils/alias.js')));
   const { ALIAS_COPY } = await import(pathToFileURL(path.resolve(__dirname, '../src/locales/alias.js')));
+  const { COPY } = await import(pathToFileURL(path.resolve(__dirname, '../src/locales/index.js')));
+  const { ALIAS_WORDS } = await import(pathToFileURL(path.resolve(__dirname, '../src/data/alias.js')));
   const root = path.resolve(__dirname, '../../wwwroot');
   const output = process.env.QA_OUTPUT || path.join(os.tmpdir(), 'nickolasgames-dice-qa');
   await fs.mkdir(output, { recursive: true });
@@ -34,6 +36,7 @@ async function main() {
         const page = await browser.newPage({ reducedMotion: 'reduce', serviceWorkers: 'block' });
         const errors = [];
         page.on('pageerror', error => errors.push(error.message));
+        page.on('dialog', dialog => dialog.accept());
         for (const [lang, width, count] of [['uk', 1440, 2], ['uk', 390, 2], ['uk', 320, 3], ['en', 390, 2], ['sv', 390, 2], ['de', 390, 2], ['es', 390, 2]]) {
           await page.setViewportSize({ width, height: 900 });
           const state = newAliasState(count === 2 ? ALIAS_COPY[lang].teams : ['A'.repeat(80), 'Друзі за великим ігровим столом', 'Третя команда']);
@@ -74,6 +77,46 @@ async function main() {
           await game.getByRole('button', { name: ALIAS_COPY[lang].continueDice, exact: true }).click();
           await game.locator('.alias-ready').waitFor();
           assert.equal(await game.locator('.alias-scores').count(), 1);
+          await game.getByRole('button', { name: ALIAS_COPY[lang].newGame, exact: true }).click();
+          const picker = game.locator('.alias-category-picker');
+          await picker.locator('summary').click();
+          const allTopics = picker.locator('.is-all input');
+          const topicBoxes = picker.locator('.alias-category-option:not(.is-all) input');
+          const topicNames = await picker.locator('.alias-category-option:not(.is-all)>span').allTextContents();
+          await allTopics.uncheck();
+          await game.getByRole('button', { name: ALIAS_COPY[lang].start, exact: true }).click();
+          assert((await game.getByRole('alert').innerText()).includes(ALIAS_COPY[lang].needCategories));
+          await topicBoxes.nth(0).check(); await topicBoxes.nth(1).check();
+          assert.equal(await allTopics.evaluate(el => el.indeterminate), true);
+          await game.locator('.alias-format-all').click(); await game.locator('.alias-level-hard').click();
+          const readState = () => page.evaluate(lang => JSON.parse(localStorage.getItem(`nickolasgames-alias-teams-v1-${lang}`)), lang);
+          assert.deepEqual((await readState()).topics, topicNames.slice(0, 2));
+          await page.reload();
+          await picker.locator('summary').waitFor();
+          assert((await picker.locator('summary').innerText()).includes(topicNames[0]));
+          assert.deepEqual((await readState()).topics, topicNames.slice(0, 2));
+          await picker.locator('summary').click();
+          assert.equal(await picker.locator('.alias-category-option:not(.is-all) input:checked').count(), 2);
+          assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+          await game.locator('.alias-settings').screenshot({ path: path.join(output, `topics-${lang}-${width}-${engine}.png`) });
+          await allTopics.check();
+          assert.equal((await readState()).category, '__all__');
+          assert.equal(await picker.locator('.alias-category-option:not(.is-all) input:checked').count(), topicNames.length);
+          await topicBoxes.nth(0).uncheck();
+          assert.equal((await readState()).topics.length, topicNames.length - 1);
+          await allTopics.check(); await allTopics.uncheck();
+          await topicBoxes.nth(0).check(); await topicBoxes.nth(1).check();
+          await game.locator('.alias-format-words').click();
+          assert.deepEqual((await readState()).topics, topicNames.slice(0, 2));
+          await game.locator('.alias-format-all').click();
+          await game.getByRole('button', { name: ALIAS_COPY[lang].start, exact: true }).click();
+          await game.locator('.alias-dice-stage').waitFor();
+          const started = await readState();
+          const bank = aliasCategories(COPY[lang].games.alias.c, COPY[lang].games.crocodile.c, ALIAS_WORDS[lang]);
+          assert.deepEqual([...started.deck].sort(), aliasPool(bank, topicNames.slice(0, 2), 'hard', 'all').sort());
+          assert.equal(new Set(started.deck).size, started.deck.length);
+          await page.reload(); await game.locator('.alias-dice-stage').waitFor();
+          assert.deepEqual((await readState()).deck, started.deck);
         }
         const rolling = newAliasState(ALIAS_COPY.es.teams);
         rolling.teams.forEach((team, index) => { team.players = [{ id: `p-${index}-1`, name: 'Alice' }, { id: `p-${index}-2`, name: 'Bob' }]; });
@@ -118,7 +161,7 @@ async function main() {
           assert.equal(await restoredWord.count(), 1);
         }
         assert.deepEqual(errors, []);
-        console.log(`${engine}: PASS dice, rules typography/languages/keyboard, 320/390/1440px, animation, final-card review and reload`);
+        console.log(`${engine}: PASS dice, rules, multi-topic selection/decks/restore, 5 languages, 320/390/1440px, final-card review`);
       } finally { await browser.close(); }
     }
   } finally { await new Promise(resolve => server.close(resolve)); }

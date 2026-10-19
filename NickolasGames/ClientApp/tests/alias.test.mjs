@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { COPY } from '../src/locales/index.js';
 import { ALIAS_COPY } from '../src/locales/alias.js';
 import { ALIAS_WORDS } from '../src/data/alias.js';
-import { ALIAS_FORMATS, ALIAS_ROLL_MS, aliasActor, aliasCategories, aliasPool, aliasReducer as reduce, aliasSetupErrors, aliasWord, isAliasPhrase, isAliasWord, newAliasState, refreshAliasDeck, restoreAliasState, shuffleAlias, validAliasState } from '../src/utils/alias.js';
+import { ALIAS_FORMATS, ALIAS_ROLL_MS, aliasActor, aliasCategories, aliasCategorySelection, aliasPool, aliasReducer as reduce, aliasSetupErrors, aliasWord, isAliasPhrase, isAliasWord, newAliasState, refreshAliasDeck, restoreAliasState, shuffleAlias, validAliasState } from '../src/utils/alias.js';
 
 const NOW = 100_000;
 function setup(count = 2, size = 300) {
@@ -18,6 +18,82 @@ function ready(count = 2, size = 300, winningIndex = 0) {
 }
 const acting = (size = 300) => reduce(ready(2, size), { type: 'begin', now: NOW });
 const answer = (state, outcome = 'correct', now = NOW + 1) => reduce(state, { type: 'answer', index: state.index, outcome, now });
+
+const topicBank = {
+  Animals: { easy: ['Cat', 'Shared'], medium: ['Otter'], hard: ['Red panda'] },
+  Travel: { easy: ['Train', 'Shared'], medium: ['Road trip'], hard: ['Compass'] },
+  Work: { easy: ['Desk'], medium: ['Meeting'], hard: ['Board meeting'] },
+};
+
+test('multiple topics form a unique union and still respect format and difficulty', () => {
+  assert.deepEqual(aliasPool(topicBank, ['Animals', 'Travel'], 'easy'), ['Cat', 'Shared', 'Train']);
+  assert.deepEqual(aliasPool(topicBank, ['Animals', 'Travel'], 'all', 'phrases'), ['Red panda', 'Road trip']);
+  assert.deepEqual(aliasPool(topicBank, ['Animals', 'Travel'], 'hard', 'all'), ['Red panda', 'Compass']);
+  assert.deepEqual(aliasPool(topicBank, []), []);
+  assert.deepEqual(aliasPool(topicBank, 'Animals'), aliasPool(topicBank, ['Animals']));
+});
+
+test('topic selections persist, remain independent of format, and reset with new games intact', () => {
+  let state = reduce(newAliasState(), { type: 'settings', value: { category: ['Animals', 'Travel'] } });
+  state = reduce(state, { type: 'settings', value: { format: 'phrases' } });
+  assert.deepEqual(aliasCategorySelection(state), ['Animals', 'Travel']);
+  assert.equal(typeof state.category, 'string');
+  assert.deepEqual(restoreAliasState(JSON.parse(JSON.stringify(state))), state);
+  assert.deepEqual(aliasCategorySelection(reduce(state, { type: 'new' })), aliasCategorySelection(state));
+  assert.deepEqual(aliasCategorySelection(refreshAliasDeck(state, topicBank)), aliasCategorySelection(state));
+  const emptyFormat = refreshAliasDeck({ ...state, category: 'Work', topics: undefined, format: 'phrases' }, { Work: { easy: ['Desk'], medium: [], hard: [] } });
+  assert.equal(emptyFormat.category, 'Work');
+  assert.deepEqual(aliasPool(topicBank, emptyFormat.category, 'easy', emptyFormat.format), []);
+});
+
+test('empty and malformed topic selections cannot start a game or erase a valid save', () => {
+  const state = reduce(newAliasState(), { type: 'settings', value: { category: [] } });
+  assert.equal(validAliasState(state), true);
+  assert(aliasSetupErrors(state, []).includes('needCategories'));
+  assert(!aliasSetupErrors(state, []).includes('noWords'));
+  for (const category of [['Animals', 'Animals'], ['__all__'], [''], [null], 3, {}]) {
+    assert.equal(validAliasState({ ...state, category }), false);
+    assert.equal(validAliasState({ ...state, topics: category }), false);
+    assert.equal(reduce(state, { type: 'settings', value: { category } }), state);
+  }
+  assert.equal(validAliasState({ ...acting(), topics: [] }), false);
+  const playing = { ...acting(), topics: ['Animals', 'Travel'] };
+  assert.equal(reduce(playing, { type: 'settings', value: { category: ['Work'] } }), playing);
+});
+
+test('topic refresh preserves history, current card and scores but keeps future cards in selected topics', () => {
+  const original = { ...acting(), topics: ['Animals', 'Travel'], deck: ['Used', 'Desk', 'Meeting', 'Cat', 'Train'], index: 1 };
+  original.teams[0].points = 8;
+  const refreshed = refreshAliasDeck(original, topicBank, () => 0);
+  assert.deepEqual(refreshed.deck.slice(0, 2), ['Used', 'Desk']);
+  assert.equal(refreshed.deadline, original.deadline);
+  assert.equal(refreshed.teams[0].points, 8);
+  assert(refreshed.deck.slice(2).every(word => aliasPool(topicBank, ['Animals', 'Travel']).includes(word)));
+  assert(!refreshed.deck.slice(2).includes('Desk'));
+  assert.equal(new Set(refreshed.deck).size, refreshed.deck.length);
+  assert.deepEqual(refreshAliasDeck(refreshed, topicBank, () => 0), refreshed);
+});
+
+test('legacy single topics restore; deleted topics fall back only when none of the selected topics exist', () => {
+  assert.equal(refreshAliasDeck(newAliasState(), topicBank).category, '__all__');
+  assert.equal(refreshAliasDeck({ ...newAliasState(), category: 'Animals' }, topicBank).category, 'Animals');
+  assert.deepEqual(aliasCategorySelection(refreshAliasDeck({ ...newAliasState(), topics: ['Animals', 'Gone'] }, topicBank)), ['Animals']);
+  assert.equal(aliasCategorySelection(refreshAliasDeck({ ...newAliasState(), topics: ['Gone'] }, topicBank)), '__all__');
+  assert.deepEqual(aliasCategorySelection(refreshAliasDeck({ ...newAliasState(), topics: [] }, topicBank)), []);
+});
+
+test('multiple-topic saves retain the legacy schema and all progress when optional topics are ignored', () => {
+  const state = answer({ ...acting(), topics: ['Animals', 'Travel'] });
+  const legacy = JSON.parse(JSON.stringify(state)); delete legacy.topics;
+  const restored = restoreAliasState(legacy, NOW + 2000);
+  assert.equal(typeof legacy.category, 'string');
+  assert.equal(restored.schema, 1);
+  assert.equal(restored.index, state.index);
+  assert.equal(restored.deadline, state.deadline);
+  assert.deepEqual(restored.teams, state.teams);
+  assert.deepEqual(restored.answers, state.answers);
+  assert.deepEqual(restored.deck, state.deck);
+});
 
 test('defaults are two teams, target 60; every team needs two players and pending settings validate', () => {
   const state = newAliasState(ALIAS_COPY.uk.teams);
