@@ -3,25 +3,29 @@ import { DIFFICULTIES } from './difficulty.js';
 
 export const ALIAS_ALL = '__all__';
 export const ALIAS_SECONDS = 60;
+export const ALIAS_FORMATS = ['words', 'phrases', 'all'];
 const phases = ['setup', 'dice', 'rolling', 'ready', 'acting', 'last', 'summary', 'finished', 'exhausted'];
 const strings = value => Array.isArray(value) && value.every(item => typeof item === 'string');
 export const validAliasTarget = value => Number.isSafeInteger(value) && value > 0;
 const wordKey = word => word.normalize('NFC').replace(/[’ʼ]/g, "'").toLocaleLowerCase();
 export const isAliasWord = word => typeof word === 'string' && /^\p{L}+(?:['’ʼ-]\p{L}+)*$/u.test(word.normalize('NFC'));
+export const isAliasPhrase = word => typeof word === 'string' && /\s/u.test(word.trim());
+export const aliasMatchesFormat = (word, format = 'words') => format === 'words' ? isAliasWord(word)
+  : format === 'phrases' ? isAliasPhrase(word) : format === 'all' && (isAliasWord(word) || isAliasPhrase(word));
 
 export function aliasCategories(...sources) {
   const result = {};
   for (const source of sources) for (const [category, levels] of Object.entries(source)) {
     result[category] ||= {};
     for (const level of DIFFICULTIES) result[category][level] = uniqueWords([...(result[category][level] || []), ...(levels[level] || [])]
-      .filter(word => typeof word === 'string').map(word => word.trim()).filter(isAliasWord).map(word => word.normalize('NFC').replace(/[’ʼ]/g, "'")));
+      .filter(word => typeof word === 'string').map(word => word.trim()).filter(Boolean).map(word => word.normalize('NFC').replace(/[’ʼ]/g, "'")));
   }
   return Object.fromEntries(Object.entries(result).filter(([, levels]) => DIFFICULTIES.some(level => levels[level].length)));
 }
 
-export function aliasPool(categories, category = ALIAS_ALL, difficulty = 'all') {
+export function aliasPool(categories, category = ALIAS_ALL, difficulty = 'all', format = 'words') {
   const selected = category === ALIAS_ALL ? Object.values(categories) : [categories[category] || {}];
-  return uniqueWords(selected.flatMap(levels => (difficulty === 'all' ? DIFFICULTIES : [difficulty]).flatMap(level => levels[level] || []))).filter(isAliasWord);
+  return uniqueWords(selected.flatMap(levels => (difficulty === 'all' ? DIFFICULTIES : [difficulty]).flatMap(level => levels[level] || []))).filter(word => aliasMatchesFormat(word, format));
 }
 
 export function shuffleAlias(words, random = Math.random) {
@@ -35,7 +39,7 @@ export function shuffleAlias(words, random = Math.random) {
 
 export function newAliasState(names = ['Monsters', 'Penguins']) {
   return { schema: 1, phase: 'setup', teams: names.map((name, index) => ({ id: 'team-' + index, name, players: [], points: 0, turns: 0 })),
-    category: ALIAS_ALL, difficulty: 'all', target: 60, deck: [], index: 0, activeIndex: 0,
+    category: ALIAS_ALL, difficulty: 'all', format: 'words', target: 60, deck: [], index: 0, activeIndex: 0,
     contenders: [], dice: [], pending: [], rollUntil: null, deadline: null, correct: 0, skipped: 0, result: null, winners: [] };
 }
 
@@ -54,6 +58,7 @@ export function validAliasState(s) {
   const integer = Number.isSafeInteger;
   const stamp = value => value === null || (Number.isFinite(value) && value > 0);
   if (!s || s.schema !== 1 || !phases.includes(s.phase) || !Array.isArray(s.teams) ||
+    (s.format !== undefined && !ALIAS_FORMATS.includes(s.format)) ||
     !s.teams.every(team => team && typeof team.id === 'string' && team.id && typeof team.name === 'string' &&
       integer(team.points) && integer(team.turns) && team.turns >= 0 && Array.isArray(team.players) &&
       team.players.every(player => player && typeof player.id === 'string' && player.id && typeof player.name === 'string')) ||
@@ -100,8 +105,8 @@ function finishTurn(state, lastTeamId = null, sharedPenalty = false) {
 export function aliasReducer(state, action) {
   switch (action.type) {
     case 'settings':
-      if (state.phase !== 'setup') return state;
-      return { ...state, ...Object.fromEntries(Object.entries(action.value).filter(([key]) => ['teams', 'category', 'difficulty', 'target'].includes(key))) };
+      if (state.phase !== 'setup' || (action.value.format !== undefined && !ALIAS_FORMATS.includes(action.value.format))) return state;
+      return { ...state, ...Object.fromEntries(Object.entries(action.value).filter(([key]) => ['teams', 'category', 'difficulty', 'format', 'target'].includes(key))) };
     case 'start':
       if (state.phase !== 'setup' || !strings(action.deck) || aliasSetupErrors(state, uniqueWords(action.deck)).length) return state;
       return { ...state, phase: 'dice', deck: uniqueWords(action.deck), contenders: state.teams.map(team => team.id) };
@@ -143,7 +148,7 @@ export function aliasReducer(state, action) {
     case 'next':
       return state.phase === 'summary' ? { ...state, phase: 'ready', activeIndex: (state.activeIndex + 1) % state.teams.length, correct: 0, skipped: 0, result: null } : state;
     case 'new':
-      return { ...newAliasState([]), teams: state.teams.map(team => ({ ...team, points: 0, turns: 0 })), category: state.category, difficulty: state.difficulty, target: state.target };
+      return { ...newAliasState([]), teams: state.teams.map(team => ({ ...team, points: 0, turns: 0 })), category: state.category, difficulty: state.difficulty, format: state.format || 'words', target: state.target };
     default: return state;
   }
 }
@@ -154,16 +159,17 @@ export function restoreAliasState(state, now = Date.now()) {
 }
 
 export function refreshAliasDeck(state, categories, random = Math.random) {
-  const category = state.category === ALIAS_ALL || Object.hasOwn(categories, state.category) ? state.category : ALIAS_ALL;
-  if (['setup', 'finished'].includes(state.phase)) return { ...state, category };
-  // Keep history and an already revealed card; only replace future sentence cards.
+  const format = state.format || 'words';
+  const category = state.category === ALIAS_ALL || aliasPool(categories, state.category, 'all', format).length ? state.category : ALIAS_ALL;
+  if (['setup', 'finished'].includes(state.phase)) return { ...state, category, format };
+  // Keep history and an already revealed card; apply the chosen format only to future cards.
   const keepCurrent = ['acting', 'last'].includes(state.phase);
   const prefix = state.deck.slice(0, state.index + Number(keepCurrent));
   const used = new Set(prefix.map(wordKey));
-  const tail = [...state.deck.slice(prefix.length).filter(isAliasWord), ...shuffleAlias(aliasPool(categories, category, state.difficulty), random)]
+  const tail = [...state.deck.slice(prefix.length).filter(word => aliasMatchesFormat(word, format)), ...shuffleAlias(aliasPool(categories, category, state.difficulty, format), random)]
     .filter(word => { const key = wordKey(word); if (used.has(key)) return false; used.add(key); return true; });
   const deck = [...prefix, ...tail];
   const phase = !keepCurrent && state.index >= deck.length ? 'exhausted'
     : state.phase === 'exhausted' && tail.length ? (state.result ? 'summary' : 'ready') : state.phase;
-  return { ...state, category, deck, phase };
+  return { ...state, category, format, deck, phase };
 }

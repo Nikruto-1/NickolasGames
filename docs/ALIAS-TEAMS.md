@@ -5,9 +5,10 @@ Implemented 2026-10-19. Existing site design and other games are unchanged.
 - Two default teams, localized in all five languages (Ukrainian: Monsters and Penguins).
 - At least two teams, at least two players per team; no application limit on team/player counts.
 - Teams and rosters are editable before a game. New game retains rosters and resets scores/deck.
-- Difficulty: easy, medium, hard or all. The pool combines single-word entries from the original
-  banks with 220 curated words per language. Sentences and multiword actions are excluded from
-  Alias only, without modifying other games' dictionaries. Words are unique across a whole game.
+- Difficulty: easy, medium, hard or all. Card format: single words (default), phrases and idioms,
+  or a mixture of both. The original phrase/action banks are available again without changing
+  other games' dictionaries. The extra 220 curated words per language remain available.
+  Category and difficulty apply to every format. Cards are unique across a whole game.
 - Each team throws two six-sided dice. Highest total starts. Tied leaders reroll; eliminated
   teams do not reroll. Animation respects reduced-motion preferences. Interrupted rolls restore.
 - Each team has a separate Start button before its turn. Starting reveals one word and begins
@@ -26,9 +27,10 @@ saved deadline restores directly to the last-word phase. The legacy
 `nickolasgames-progress-v1-${lang}-alias` key is not modified or deleted. Existing privacy
 export/deletion includes the new key automatically. Local browser storage capacity still applies.
 On upgrade, saved scores, used-card history, deadline and the current revealed word are retained.
-Future sentence cards are removed and new single words are added without repeating used words.
+Future cards are filtered by the chosen format and new matching cards are added without repeats.
+Old saves without a format default to single words; a new game retains the selected format.
 An exhausted game can continue with newly available words; a finished game stays finished.
 
-Tests: 25 focused Alias cases plus 99 existing cases. Browser checks cover mobile/desktop,
+Tests: 32 focused Alias cases plus 99 existing cases. Browser checks cover mobile/desktop,
 all five languages, long names, team addition/removal, dice ties, swipe and button scoring,
 refresh, deadline expiry, last-word stealing, rotation, victory and preservation of legacy data.

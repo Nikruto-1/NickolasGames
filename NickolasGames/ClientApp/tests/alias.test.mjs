@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { COPY } from '../src/locales/index.js';
 import { ALIAS_COPY } from '../src/locales/alias.js';
 import { ALIAS_WORDS } from '../src/data/alias.js';
-import { aliasActor, aliasCategories, aliasPool, aliasReducer as reduce, aliasSetupErrors, aliasWord, isAliasWord, newAliasState, refreshAliasDeck, restoreAliasState, shuffleAlias, validAliasState } from '../src/utils/alias.js';
+import { ALIAS_FORMATS, aliasActor, aliasCategories, aliasPool, aliasReducer as reduce, aliasSetupErrors, aliasWord, isAliasPhrase, isAliasWord, newAliasState, refreshAliasDeck, restoreAliasState, shuffleAlias, validAliasState } from '../src/utils/alias.js';
 
 const NOW = 100_000;
 function setup(count = 2, size = 300) {
@@ -207,14 +207,16 @@ for (const [lang, copy] of Object.entries(COPY)) test(`${lang}: single-word pool
   assert.equal(new Set(curated).size, curated.length);
   for (const category of Object.values(copy.games.alias.c)) for (const words of Object.values(category)) for (const word of words.filter(isAliasWord)) assert(aliasPool(categories).includes(word));
   assert.deepEqual(Object.keys(ALIAS_COPY[lang]).sort(), Object.keys(ALIAS_COPY.en).sort());
-  assert(Object.values(ALIAS_COPY[lang]).every(value => value.length > 0));
+  assert(Object.values(ALIAS_COPY[lang]).every(value => typeof value === 'object' ? Object.keys(value).length > 0 : value.length > 0));
+  assert.deepEqual(Object.keys(ALIAS_COPY[lang].formats), ALIAS_FORMATS);
 });
 
 test('single-word filtering accepts real apostrophes, accents and compounds but rejects sentences', () => {
   for (const word of ['Об’єктивність', "Об'єктивність", 'Äpple', 'Piña', 'Північно-східний']) assert.equal(isAliasWord(word), true);
   for (const word of ['Складати намет після походу', 'Traffic jam', '11', '', 'Парасолька!']) assert.equal(isAliasWord(word), false);
   const categories = aliasCategories({ Sentences: { easy: ['A long sentence'], medium: [], hard: [] } });
-  assert.deepEqual(categories, {});
+  assert.deepEqual(aliasPool(categories), []);
+  assert.deepEqual(aliasPool(categories, undefined, undefined, 'phrases'), ['A long sentence']);
 });
 
 test('updating an existing deck preserves scores, history, current word and deadline; future phrases are removed', () => {
@@ -251,4 +253,51 @@ test('exhausted saved games can use the new words without losing scores or repla
   assert.equal(exhausted.index, 1);
   assert.equal(aliasWord(exhausted), 'Apple');
   assert.equal(validAliasState(exhausted), true);
+});
+
+for (const [lang, copy] of Object.entries(COPY)) test(`${lang}: phrases and mixed mode restore every original card and respect difficulty/category`, () => {
+  const categories = aliasCategories(copy.games.alias.c, copy.games.crocodile.c, ALIAS_WORDS[lang]);
+  const words = aliasPool(categories);
+  const phrases = aliasPool(categories, undefined, undefined, 'phrases');
+  const all = aliasPool(categories, undefined, undefined, 'all');
+  assert(words.length > 300);
+  assert(phrases.length > 200);
+  assert(phrases.every(isAliasPhrase));
+  assert.equal(all.length, new Set([...words, ...phrases]).size);
+  const originals = Object.values(aliasCategories(copy.games.alias.c, copy.games.crocodile.c)).flatMap(levels => Object.values(levels).flat());
+  for (const word of originals) assert(all.includes(word));
+  for (const level of ['easy', 'medium', 'hard']) {
+    const filtered = aliasPool(categories, undefined, level, 'phrases');
+    assert(filtered.length > 0);
+    assert(filtered.every(word => Object.values(categories).some(levels => levels[level].includes(word))));
+  }
+  const name = Object.keys(categories).find(key => aliasPool(categories, key, 'all', 'phrases').length);
+  assert(aliasPool(categories, name, 'all', 'phrases').every(word => Object.values(categories[name]).flat().includes(word)));
+});
+
+test('format defaults to words for old saves; selected format persists and is locked during play', () => {
+  const legacy = newAliasState(); delete legacy.format;
+  assert.equal(validAliasState(legacy), true);
+  assert.equal(refreshAliasDeck(legacy, {}).format, 'words');
+  assert.equal(restoreAliasState({ ...legacy, format: 'invalid' }), null);
+  const configured = reduce(newAliasState(), { type: 'settings', value: { format: 'all' } });
+  assert.equal(configured.format, 'all');
+  assert.equal(restoreAliasState(JSON.parse(JSON.stringify(configured))).format, 'all');
+  assert.equal(reduce(configured, { type: 'new' }).format, 'all');
+  const playing = { ...acting(), format: 'phrases' };
+  assert.equal(reduce(playing, { type: 'settings', value: { format: 'words' } }), playing);
+});
+
+test('mixed and phrase decks retain matching cards, used history and current word on reload', () => {
+  const categories = { Words: { easy: ['Apple', 'A long phrase', 'An idiom'], medium: [], hard: [] } };
+  const original = { ...acting(), deck: ['Apple', 'Current word', 'A long phrase'], index: 1, format: 'all' };
+  const mixed = refreshAliasDeck(original, categories, () => 0);
+  assert.equal(aliasWord(mixed), 'Current word');
+  assert(mixed.deck.includes('A long phrase'));
+  assert.equal(mixed.deck.filter(word => word === 'Apple').length, 1);
+  assert.equal(mixed.deadline, original.deadline);
+  const phrases = refreshAliasDeck({ ...original, format: 'phrases' }, categories, () => 0);
+  assert(phrases.deck.slice(2).every(isAliasPhrase));
+  assert.equal(validAliasState(phrases), true);
+  assert.deepEqual(refreshAliasDeck(phrases, categories, () => 0), phrases);
 });

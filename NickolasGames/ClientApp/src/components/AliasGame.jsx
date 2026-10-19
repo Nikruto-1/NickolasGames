@@ -5,7 +5,7 @@ import { ALIAS_WORDS } from '../data/alias.js';
 import { DIFFICULTIES } from '../utils/difficulty.js';
 import { readValue, writeValue } from '../utils/progress.js';
 import { createHolmesTimerSound, HOLMES_TIME_UP } from '../utils/holmesTimerSound.js';
-import { ALIAS_ALL, aliasActor, aliasCategories, aliasPool, aliasReducer, aliasSetupErrors, aliasWord, newAliasState, refreshAliasDeck, restoreAliasState, shuffleAlias, validAliasTarget } from '../utils/alias.js';
+import { ALIAS_ALL, ALIAS_FORMATS, aliasActor, aliasCategories, aliasPool, aliasReducer, aliasSetupErrors, aliasWord, newAliasState, refreshAliasDeck, restoreAliasState, shuffleAlias, validAliasTarget } from '../utils/alias.js';
 import './AliasGame.css';
 
 const diceIcons = [Dice1, Dice2, Dice3, Dice4, Dice5, Dice6];
@@ -15,7 +15,8 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
   const key = `nickolasgames-alias-teams-v1-${lang}`;
   const categories = useMemo(() => aliasCategories(games.alias.c, games.crocodile.c, ALIAS_WORDS[lang] || ALIAS_WORDS.en), [games, lang]);
   const [state, dispatch] = useReducer(aliasReducer, null, () => refreshAliasDeck(restoreAliasState(readValue(key)) || newAliasState(copy.teams), categories));
-  const pool = useMemo(() => aliasPool(categories, state.category, state.difficulty), [categories, state.category, state.difficulty]);
+  const pool = useMemo(() => aliasPool(categories, state.category, state.difficulty, state.format), [categories, state.category, state.difficulty, state.format]);
+  const availableCategories = useMemo(() => Object.keys(categories).filter(name => aliasPool(categories, name, 'all', state.format).length), [categories, state.format]);
   const [drafts, setDrafts] = useState({});
   const [target, setTarget] = useState(String(state.target));
   const [attempt, setAttempt] = useState(0);
@@ -118,7 +119,8 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
             </div>
             <button className="btn alias-command" onClick={() => settings({ teams: [...state.teams, { id: crypto.randomUUID(), name: copy.team + ' ' + (state.teams.length + 1), players: [], points: 0, turns: 0 }] })}><Plus size={18} />{copy.addTeam}</button>
             <div className="alias-settings">
-              <label htmlFor="alias-category">{t.categoryLabel}<select id="alias-category" value={state.category} onChange={event => settings({ category: event.target.value })}><option value={ALIAS_ALL}>{t.allCategories}</option>{Object.keys(categories).map(name => <option key={name}>{name}</option>)}</select></label>
+              <fieldset><legend>{copy.formatLabel}</legend><div className="alias-levels alias-formats">{ALIAS_FORMATS.map(format => <button key={format} type="button" className={'chip alias-format-' + format} aria-pressed={state.format === format} onClick={() => settings({ format, category: ALIAS_ALL })}>{copy.formats[format]}</button>)}</div></fieldset>
+              <label htmlFor="alias-category">{t.categoryLabel}<select id="alias-category" value={state.category} onChange={event => settings({ category: event.target.value })}><option value={ALIAS_ALL}>{t.allCategories}</option>{availableCategories.map(name => <option key={name}>{name}</option>)}</select></label>
               <fieldset><legend>{t.difficultyLabel}</legend><div className="alias-levels">{['all', ...DIFFICULTIES].map(level => <button key={level} type="button" className={'chip alias-level-' + level} aria-pressed={state.difficulty === level} onClick={() => settings({ difficulty: level })}>{level === 'all' ? copy.allLevels : t.difficulty[level]}</button>)}</div></fieldset>
               <label htmlFor="alias-target">{copy.target}<input id="alias-target" type="number" inputMode="numeric" min="1" step="1" value={target} onChange={event => { setTarget(event.target.value); if (validAliasTarget(Number(event.target.value))) settings({ target: Number(event.target.value) }); }} /></label>
             </div>

@@ -1,5 +1,6 @@
 export const ALIAS_COPY = {
   uk: {
+    formatLabel: 'Тип карток', formats: { words: 'Окремі слова', phrases: 'Фрази та фразеологізми', all: 'Усе разом' },
     title: 'Еліас: командна гра', teams: ['Монстрики', 'Пінгвіни'], team: 'Команда', teamName: 'Назва команди',
     addTeam: 'Додати команду', removeTeam: 'Видалити команду', player: 'Ім’я гравця', addPlayer: 'Додати гравця', removePlayer: 'Видалити гравця',
     target: 'Балів для перемоги', allLevels: 'Усі рівні', start: 'Почати гру', roll: 'Кинути кубики', rolling: 'Кубики летять…',
@@ -13,9 +14,10 @@ export const ALIAS_COPY = {
     needTeams: 'Потрібні щонайменше дві команди.', needNames: 'Укажіть назви всіх команд.', duplicateTeams: 'Назви команд мають відрізнятися.',
     needPlayers: 'Додайте щонайменше двох гравців у кожну команду.', invalidTarget: 'Укажіть додатну цілу кількість балів.', noWords: 'Для цього вибору немає слів.',
     pending: 'Додайте введені імена або очистьте поля.', storage: 'Не вдалося зберегти гру на цьому пристрої.',
-    wordsLeft: 'Залишилося слів', roundScore: 'За раунд', awarded: 'Останнє слово вгадали', noAward: 'Останнє слово не вгадали: усім командам −1 бал.', seconds: 'с', resetSetup: 'Налаштування',
+    wordsLeft: 'Залишилося карток', roundScore: 'За раунд', awarded: 'Останнє слово вгадали', noAward: 'Останнє слово не вгадали: усім командам −1 бал.', seconds: 'с', resetSetup: 'Налаштування',
   },
   en: {
+    formatLabel: 'Card type', formats: { words: 'Single words', phrases: 'Phrases and idioms', all: 'Everything' },
     title: 'Alias: team game', teams: ['Monsters', 'Penguins'], team: 'Team', teamName: 'Team name',
     addTeam: 'Add team', removeTeam: 'Remove team', player: 'Player name', addPlayer: 'Add player', removePlayer: 'Remove player',
     target: 'Points to win', allLevels: 'All levels', start: 'Start game', roll: 'Roll dice', rolling: 'Rolling…',
@@ -29,9 +31,10 @@ export const ALIAS_COPY = {
     needTeams: 'At least two teams are required.', needNames: 'Name every team.', duplicateTeams: 'Team names must be different.',
     needPlayers: 'Add at least two players to every team.', invalidTarget: 'Enter a positive whole-number points target.', noWords: 'There are no words for these settings.',
     pending: 'Add the entered player names or clear the fields.', storage: 'The game could not be saved on this device.',
-    wordsLeft: 'Words left', roundScore: 'This round', awarded: 'Last word guessed by', noAward: 'Nobody guessed the last word: every team loses 1 point.', seconds: 's', resetSetup: 'Settings',
+    wordsLeft: 'Cards left', roundScore: 'This round', awarded: 'Last word guessed by', noAward: 'Nobody guessed the last word: every team loses 1 point.', seconds: 's', resetSetup: 'Settings',
   },
   sv: {
+    formatLabel: 'Korttyp', formats: { words: 'Enstaka ord', phrases: 'Fraser och idiom', all: 'Allt tillsammans' },
     title: 'Alias: lagspel', teams: ['Monstren', 'Pingvinerna'], team: 'Lag', teamName: 'Lagnamn',
     addTeam: 'Lägg till lag', removeTeam: 'Ta bort lag', player: 'Spelarens namn', addPlayer: 'Lägg till spelare', removePlayer: 'Ta bort spelare',
     target: 'Poäng för att vinna', allLevels: 'Alla nivåer', start: 'Starta spelet', roll: 'Kasta tärningarna', rolling: 'Tärningarna rullar…',
@@ -45,9 +48,10 @@ export const ALIAS_COPY = {
     needTeams: 'Minst två lag krävs.', needNames: 'Ge alla lag ett namn.', duplicateTeams: 'Lagen måste ha olika namn.',
     needPlayers: 'Lägg till minst två spelare i varje lag.', invalidTarget: 'Ange ett positivt heltal som poängmål.', noWords: 'Inga ord för dessa inställningar.',
     pending: 'Lägg till de inskrivna namnen eller töm fälten.', storage: 'Spelet kunde inte sparas på enheten.',
-    wordsLeft: 'Ord kvar', roundScore: 'Denna omgång', awarded: 'Sista ordet gissades av', noAward: 'Ingen gissade sista ordet: alla lag förlorar 1 poäng.', seconds: 's', resetSetup: 'Inställningar',
+    wordsLeft: 'Kort kvar', roundScore: 'Denna omgång', awarded: 'Sista ordet gissades av', noAward: 'Ingen gissade sista ordet: alla lag förlorar 1 poäng.', seconds: 's', resetSetup: 'Inställningar',
   },
   de: {
+    formatLabel: 'Kartentyp', formats: { words: 'Einzelne Wörter', phrases: 'Phrasen und Redewendungen', all: 'Alles zusammen' },
     title: 'Alias: Teamspiel', teams: ['Monster', 'Pinguine'], team: 'Team', teamName: 'Teamname',
     addTeam: 'Team hinzufügen', removeTeam: 'Team entfernen', player: 'Spielername', addPlayer: 'Spieler hinzufügen', removePlayer: 'Spieler entfernen',
     target: 'Punkte zum Sieg', allLevels: 'Alle Stufen', start: 'Spiel starten', roll: 'Würfeln', rolling: 'Die Würfel rollen…',
@@ -61,9 +65,10 @@ export const ALIAS_COPY = {
     needTeams: 'Mindestens zwei Teams sind nötig.', needNames: 'Alle Teams brauchen einen Namen.', duplicateTeams: 'Teamnamen müssen verschieden sein.',
     needPlayers: 'Mindestens zwei Spieler pro Team hinzufügen.', invalidTarget: 'Eine positive ganze Zahl als Punktziel eingeben.', noWords: 'Keine Wörter für diese Auswahl.',
     pending: 'Eingegebene Namen hinzufügen oder die Felder leeren.', storage: 'Das Spiel konnte auf diesem Gerät nicht gespeichert werden.',
-    wordsLeft: 'Verbleibende Wörter', roundScore: 'Diese Runde', awarded: 'Letztes Wort erraten von', noAward: 'Niemand hat das letzte Wort erraten: alle Teams verlieren 1 Punkt.', seconds: 's', resetSetup: 'Einstellungen',
+    wordsLeft: 'Verbleibende Karten', roundScore: 'Diese Runde', awarded: 'Letztes Wort erraten von', noAward: 'Niemand hat das letzte Wort erraten: alle Teams verlieren 1 Punkt.', seconds: 's', resetSetup: 'Einstellungen',
   },
   es: {
+    formatLabel: 'Tipo de tarjeta', formats: { words: 'Palabras sueltas', phrases: 'Frases y modismos', all: 'Todo junto' },
     title: 'Alias: juego por equipos', teams: ['Monstruitos', 'Pingüinos'], team: 'Equipo', teamName: 'Nombre del equipo',
     addTeam: 'Añadir equipo', removeTeam: 'Eliminar equipo', player: 'Nombre del jugador', addPlayer: 'Añadir jugador', removePlayer: 'Eliminar jugador',
     target: 'Puntos para ganar', allLevels: 'Todos los niveles', start: 'Empezar partida', roll: 'Tirar los dados', rolling: 'Lanzando los dados…',
@@ -77,6 +82,6 @@ export const ALIAS_COPY = {
     needTeams: 'Se necesitan al menos dos equipos.', needNames: 'Pon nombre a todos los equipos.', duplicateTeams: 'Los nombres de los equipos deben ser distintos.',
     needPlayers: 'Añade al menos dos jugadores a cada equipo.', invalidTarget: 'Introduce un número entero positivo como meta.', noWords: 'No hay palabras para esta selección.',
     pending: 'Añade los nombres escritos o vacía los campos.', storage: 'No se pudo guardar la partida en este dispositivo.',
-    wordsLeft: 'Palabras restantes', roundScore: 'Esta ronda', awarded: 'Última palabra acertada por', noAward: 'Nadie acertó la última palabra: todos los equipos pierden 1 punto.', seconds: 's', resetSetup: 'Ajustes',
+    wordsLeft: 'Tarjetas restantes', roundScore: 'Esta ronda', awarded: 'Última palabra acertada por', noAward: 'Nadie acertó la última palabra: todos los equipos pierden 1 punto.', seconds: 's', resetSetup: 'Ajustes',
   },
 };
