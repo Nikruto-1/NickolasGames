@@ -2,7 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { COPY } from '../src/locales/index.js';
 import { ALIAS_COPY } from '../src/locales/alias.js';
-import { aliasActor, aliasCategories, aliasPool, aliasReducer as reduce, aliasSetupErrors, aliasWord, newAliasState, restoreAliasState, shuffleAlias, validAliasState } from '../src/utils/alias.js';
+import { ALIAS_WORDS } from '../src/data/alias.js';
+import { aliasActor, aliasCategories, aliasPool, aliasReducer as reduce, aliasSetupErrors, aliasWord, isAliasWord, newAliasState, refreshAliasDeck, restoreAliasState, shuffleAlias, validAliasState } from '../src/utils/alias.js';
 
 const NOW = 100_000;
 function setup(count = 2, size = 300) {
@@ -120,12 +121,26 @@ test('any team may steal the last word exactly once, including a third team', ()
   assert.equal(next.index, 1);
 });
 
-test('unanswered last word costs the active team one point; invalid recipients are ignored', () => {
+test('unanswered last word costs every team one point exactly once; invalid recipients are ignored', () => {
   const last = reduce(acting(), { type: 'expire', now: NOW + 60_000 });
   assert.equal(reduce(last, { type: 'last', index: 0, teamId: 'unknown' }), last);
-  const result = reduce(last, { type: 'last', index: 0, teamId: null });
-  assert.equal(result.teams[0].points, -1);
+  const action = { type: 'last', index: 0, teamId: null };
+  const result = reduce(last, action);
+  assert.deepEqual(result.teams.map(team => team.points), [-1, -1]);
   assert.equal(result.skipped, 1);
+  assert.equal(result.result.sharedPenalty, true);
+  assert.equal(reduce(result, action), result);
+  assert.deepEqual(restoreAliasState(JSON.parse(JSON.stringify(result))).teams.map(team => team.points), [-1, -1]);
+});
+
+test('shared last-word penalty applies to three teams, negative balances and victory calculation', () => {
+  let state = reduce(ready(3), { type: 'begin', now: NOW });
+  state = { ...state, target: 1, teams: state.teams.map((team, i) => ({ ...team, points: [1, -4, 0][i] })) };
+  state = reduce(state, { type: 'expire', now: NOW + 60_000 });
+  state = reduce(state, { type: 'last', index: 0, teamId: null });
+  assert.deepEqual(state.teams.map(team => team.points), [0, -5, -1]);
+  assert.equal(state.phase, 'summary');
+  assert.deepEqual(state.winners, []);
 });
 
 test('teams rotate from dice winner and a different teammate explains on the next circuit', () => {
@@ -176,14 +191,64 @@ test('saved active game round-trips and corrupt saves are rejected without touch
     { ...state, result: { teamId: 'unknown', correct: 0, skipped: 0, lastTeamId: null } }]) assert.equal(restoreAliasState(broken), null);
 });
 
-for (const [lang, copy] of Object.entries(COPY)) test(`${lang}: all difficulty pools are substantial, unique and legacy Alias words remain`, () => {
-  const categories = aliasCategories(copy.games.alias.c, copy.games.crocodile.c);
+for (const [lang, copy] of Object.entries(COPY)) test(`${lang}: single-word pools grow, all levels are substantial and original single words remain`, () => {
+  const categories = aliasCategories(copy.games.alias.c, copy.games.crocodile.c, ALIAS_WORDS[lang]);
   for (const level of ['all', 'easy', 'medium', 'hard']) {
     const pool = aliasPool(categories, undefined, level);
     assert(pool.length >= 60, level + ' needs a useful word pool');
     assert.equal(new Set(pool.map(word => word.toLocaleLowerCase())).size, pool.length);
+    assert(pool.every(isAliasWord));
   }
-  for (const category of Object.values(copy.games.alias.c)) for (const words of Object.values(category)) for (const word of words) assert(aliasPool(categories).includes(word));
+  const oldSingleWords = aliasPool(aliasCategories(copy.games.alias.c, copy.games.crocodile.c));
+  assert(aliasPool(categories).length >= oldSingleWords.length + 100);
+  const curated = Object.values(ALIAS_WORDS[lang]).flatMap(levels => Object.values(levels).flat());
+  assert.equal(curated.length, 220);
+  assert(curated.every(isAliasWord));
+  assert.equal(new Set(curated).size, curated.length);
+  for (const category of Object.values(copy.games.alias.c)) for (const words of Object.values(category)) for (const word of words.filter(isAliasWord)) assert(aliasPool(categories).includes(word));
   assert.deepEqual(Object.keys(ALIAS_COPY[lang]).sort(), Object.keys(ALIAS_COPY.en).sort());
   assert(Object.values(ALIAS_COPY[lang]).every(value => value.length > 0));
+});
+
+test('single-word filtering accepts real apostrophes, accents and compounds but rejects sentences', () => {
+  for (const word of ['Об’єктивність', "Об'єктивність", 'Äpple', 'Piña', 'Північно-східний']) assert.equal(isAliasWord(word), true);
+  for (const word of ['Складати намет після походу', 'Traffic jam', '11', '', 'Парасолька!']) assert.equal(isAliasWord(word), false);
+  const categories = aliasCategories({ Sentences: { easy: ['A long sentence'], medium: [], hard: [] } });
+  assert.deepEqual(categories, {});
+});
+
+test('updating an existing deck preserves scores, history, current word and deadline; future phrases are removed', () => {
+  const original = { ...acting(), deck: ['Already used', 'Still explaining this phrase', 'Future long phrase', 'Compass'], index: 1 };
+  original.teams[0].points = 7;
+  const categories = { Words: { easy: ['Apple', 'Compass', 'Already used'], medium: [], hard: [] } };
+  const updated = refreshAliasDeck(original, categories, () => 0);
+  assert.equal(aliasWord(updated), 'Still explaining this phrase');
+  assert.equal(updated.deadline, original.deadline);
+  assert.equal(updated.teams[0].points, 7);
+  assert.equal(updated.index, 1);
+  assert.equal(updated.deck[0], 'Already used');
+  assert.deepEqual(updated.deck.slice(2).sort(), ['Apple', 'Compass']);
+  assert.equal(validAliasState(updated), true);
+  assert.deepEqual(refreshAliasDeck(updated, categories, () => 0), updated);
+});
+
+test('deck update never repeats a used word with a different apostrophe; finished games stay finished', () => {
+  const original = { ...ready(), deck: ['Об’єктивність', 'Future phrase'], index: 1 };
+  const categories = { Words: { easy: ["Об'єктивність", 'Apple'], medium: [], hard: [] } };
+  const updated = refreshAliasDeck(original, categories, () => 0);
+  assert.deepEqual(updated.deck, ['Об’єктивність', 'Apple']);
+  assert.equal(validAliasState(updated), true);
+  const finished = { ...original, phase: 'finished', winners: ['team-0'] };
+  assert.deepEqual(refreshAliasDeck(finished, categories).deck, finished.deck);
+});
+
+test('exhausted saved games can use the new words without losing scores or replaying old words', () => {
+  let exhausted = answer(acting(1));
+  const categories = { Words: { easy: ['Apple'], medium: [], hard: [] } };
+  exhausted = refreshAliasDeck(exhausted, categories, () => 0);
+  assert.equal(exhausted.phase, 'summary');
+  assert.equal(exhausted.teams[0].points, 1);
+  assert.equal(exhausted.index, 1);
+  assert.equal(aliasWord(exhausted), 'Apple');
+  assert.equal(validAliasState(exhausted), true);
 });

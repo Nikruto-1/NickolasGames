@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, Plus, RotateCcw, Trash2, UserPlus } from 'lucide-react';
 import { ALIAS_COPY } from '../locales/alias.js';
+import { ALIAS_WORDS } from '../data/alias.js';
 import { DIFFICULTIES } from '../utils/difficulty.js';
 import { readValue, writeValue } from '../utils/progress.js';
 import { createHolmesTimerSound, HOLMES_TIME_UP } from '../utils/holmesTimerSound.js';
-import { ALIAS_ALL, aliasActor, aliasCategories, aliasPool, aliasReducer, aliasSetupErrors, aliasWord, newAliasState, restoreAliasState, shuffleAlias, validAliasTarget } from '../utils/alias.js';
+import { ALIAS_ALL, aliasActor, aliasCategories, aliasPool, aliasReducer, aliasSetupErrors, aliasWord, newAliasState, refreshAliasDeck, restoreAliasState, shuffleAlias, validAliasTarget } from '../utils/alias.js';
 import './AliasGame.css';
 
 const diceIcons = [Dice1, Dice2, Dice3, Dice4, Dice5, Dice6];
@@ -12,8 +13,8 @@ const diceIcons = [Dice1, Dice2, Dice3, Dice4, Dice5, Dice6];
 export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
   const copy = ALIAS_COPY[lang] || ALIAS_COPY.en;
   const key = `nickolasgames-alias-teams-v1-${lang}`;
-  const [state, dispatch] = useReducer(aliasReducer, null, () => restoreAliasState(readValue(key)) || newAliasState(copy.teams));
-  const categories = useMemo(() => aliasCategories(games.alias.c, games.crocodile.c), [games]);
+  const categories = useMemo(() => aliasCategories(games.alias.c, games.crocodile.c, ALIAS_WORDS[lang] || ALIAS_WORDS.en), [games, lang]);
+  const [state, dispatch] = useReducer(aliasReducer, null, () => refreshAliasDeck(restoreAliasState(readValue(key)) || newAliasState(copy.teams), categories));
   const pool = useMemo(() => aliasPool(categories, state.category, state.difficulty), [categories, state.category, state.difficulty]);
   const [drafts, setDrafts] = useState({});
   const [target, setTarget] = useState(String(state.target));
@@ -160,7 +161,8 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
             <h3>{state.phase === 'finished' ? copy.wins : state.phase === 'exhausted' ? copy.exhausted : copy.roundDone}</h3>
             {state.winners.length > 0 && <p className="alias-winners">{state.teams.filter(item => state.winners.includes(item.id)).map(item => item.name).join(' · ')}</p>}
             {state.result && <><p>{state.teams.find(item => item.id === state.result.teamId)?.name}: {copy.roundScore} {state.result.correct - state.result.skipped}</p><p>{copy.correct}: {state.result.correct} · {copy.skip}: {state.result.skipped}</p>
-              {state.result.lastTeamId && <p>{copy.awarded}: {state.teams.find(item => item.id === state.result.lastTeamId)?.name}</p>}</>}
+              {state.result.lastTeamId && <p>{copy.awarded}: {state.teams.find(item => item.id === state.result.lastTeamId)?.name}</p>}
+              {state.result.sharedPenalty && <p>{copy.noAward}</p>}</>}
             {state.phase === 'exhausted' && <p>{copy.exhaustedRule}</p>}
             {state.phase === 'summary' && <button className="btn pri alias-main-action" onClick={() => dispatch({ type: 'next' })}>{copy.next}<ArrowRight size={20} /></button>}
           </div>}
