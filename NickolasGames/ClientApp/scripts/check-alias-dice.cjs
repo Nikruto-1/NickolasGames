@@ -30,7 +30,8 @@ async function main() {
     for (const engine of ['chromium', 'webkit']) {
       const browser = await (engine === 'chromium' ? chromium.launch({ channel: process.env.QA_CHROMIUM_CHANNEL || 'msedge', headless: true }) : webkit.launch({ headless: true }));
       try {
-        const page = await browser.newPage({ reducedMotion: 'reduce' });
+        // Keep visual fixtures independent of offline-cache updates during rapid reloads.
+        const page = await browser.newPage({ reducedMotion: 'reduce', serviceWorkers: 'block' });
         const errors = [];
         page.on('pageerror', error => errors.push(error.message));
         for (const [lang, width, count] of [['uk', 1440, 2], ['uk', 390, 2], ['uk', 320, 3], ['en', 390, 2], ['sv', 390, 2], ['de', 390, 2], ['es', 390, 2]]) {
