@@ -3,7 +3,8 @@ import { validateCharadesStart } from "../utils/startValidation";
 import { createHolmesTimerSound, HOLMES_TIME_UP } from '../utils/holmesTimerSound.js';
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { ROUND_MESSAGES } from '../locales/round.js';
-import { CHARADES_COPY, CHARADES_TIME_COPY } from '../locales/charades.js';
+import { CHARADES_COPY, CHARADES_TIME_COPY, CHARADES_RULES } from '../locales/charades.js';
+import './CharadesGame.css';
 import { DIFFICULTIES } from '../utils/difficulty.js';
 import { POINTS_BY_DIFFICULTY, validTargetScore } from '../utils/playerScores.js';
 import { readValue, writeValue } from '../utils/progress.js';
@@ -11,6 +12,7 @@ import { ALL_CHARADES_CATEGORIES, charadesReducer, createCharadesDeck, currentCh
 
 export function CharadesGame({ games, t, lang, onGame, startRequest=0 }) {
   const copy = { ...(CHARADES_COPY[lang] || CHARADES_COPY.en), ...(CHARADES_TIME_COPY[lang] || CHARADES_TIME_COPY.en) };
+  const rules = CHARADES_RULES[lang] || CHARADES_RULES.en;
   const key = `nickolasgames-charades-v2-${lang}`;
   const [state, dispatch] = useReducer(charadesReducer, null, () => {
     const saved = readValue(key);
@@ -81,10 +83,19 @@ export function CharadesGame({ games, t, lang, onGame, startRequest=0 }) {
     dispatch({ type: 'guess', now });
   };
 
-  return <section className="s pv" id="preview">
+  return <section className="s pv charades-game" id="preview">
     <div className="wrap pvg">
       <div>
-        <div className="head" style={{ margin: 0 }}><h2>{copy.title}</h2><p>{state.timed ? copy.rules : copy.untimedRules}</p></div>
+        <div className="head" style={{ margin: 0 }}><h2>{copy.title}</h2><p className="charades-description">{rules.description}</p></div>
+        <details className="charades-rules">
+          <summary>{rules.label}</summary>
+          <ol className="charades-rule-sections">
+            {rules.sections.map(section => <li key={section.title}>
+              <h3>{section.title}</h3>
+              <ul>{section.items.map(item => <li key={item}>{item}</li>)}</ul>
+            </li>)}
+          </ol>
+        </details>
         <div className="tabs" role="group" aria-label={t.gameLabel}>
           {['whoami', 'crocodile', 'alias', 'truth'].map(game => <button key={game} className="chip" aria-pressed={game === 'crocodile'} onClick={() => onGame(game)}>{games[game].n}</button>)}
           <button className="chip" onClick={() => onGame('random')}>{t.random}</button>

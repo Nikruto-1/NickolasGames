@@ -1,0 +1,30 @@
+.charades-game .head .charades-description {
+  max-width: 62ch;
+  margin-top: 12px;
+  color: var(--fg);
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+.charades-rules { margin: 12px 0 24px; }
+.charades-rules > summary {
+  cursor: pointer;
+  min-height: 48px;
+  padding-block: 12px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.charades-rules[open] > summary { border-bottom: 1px solid var(--line); }
+.charades-rule-sections {
+  display: grid;
+  gap: 24px;
+  margin: 24px 0 12px;
+  padding-left: 24px;
+}
+.charades-rule-sections > li { min-width: 0; padding-left: 4px; }
+.charades-rule-sections > li::marker { font-size: 18px; font-weight: 700; }
+.charades-rule-sections h3 { margin: 0 0 8px; font-size: 18px; line-height: 1.4; letter-spacing: 0; }
+.charades-rule-sections ul { list-style: disc; padding-left: 18px; margin: 0; }
+.charades-rule-sections ul li { padding-left: 2px; font-size: 16px; line-height: 1.7; overflow-wrap: anywhere; }
+.charades-rule-sections ul li + li { margin-top: 8px; }
+.charades-rule-sections ul li::marker { color: #826225; }
