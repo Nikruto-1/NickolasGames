@@ -2,13 +2,15 @@ import { StartFeedback } from "./StartFeedback";
 import { validateWhoamiStart } from "../utils/startValidation";
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { createHolmesTimerSound } from '../utils/holmesTimerSound.js';
-import { WHOAMI_UI } from '../locales/whoami-ui.js';
+import { WHOAMI_UI, WHOAMI_RULES } from '../locales/whoami-ui.js';
 import { PLAYER_SETUP } from '../locales/index.js';
 import { readValue, readProgress, writeValue } from '../utils/progress.js';
 import { initialWhoami, restoreWhoamiCategory, validWhoami, WHOAMI_ALL, WHOAMI_DIFFICULTIES, whoamiPool, whoamiReducer } from '../utils/whoami.js';
+import './WhoAmIGame.css';
 
 export function WhoAmIGame({games,t,lang,onGame,startRequest=0}) {
  const copy=WHOAMI_UI[lang]||WHOAMI_UI.en;
+ const rules=WHOAMI_RULES[lang]||WHOAMI_RULES.en;
  const pc=PLAYER_SETUP[lang]||PLAYER_SETUP.en;
  const key=`nickolasgames-whoami-v2-${lang}`;
  const [state,dispatch]=useReducer(whoamiReducer,null,()=>{
@@ -73,9 +75,10 @@ export function WhoAmIGame({games,t,lang,onGame,startRequest=0}) {
  };
  return <section className="s pv whoami-game" id="preview">
    <div className="wrap" inert={active?true:undefined}>
-     <div className="whoami-heading"><div><h2>{copy.title}</h2><p>{state.phase==='setup'?copy.setup:state.phase==='summary'?copy.summary:copy.savedGame}</p></div>
+     <div className="whoami-heading"><div><h2>{copy.title}</h2><p className={state.phase==='setup'?'whoami-description':undefined}>{state.phase==='setup'?rules.description:state.phase==='summary'?copy.summary:copy.savedGame}</p></div>
        {state.phase==='game'&&<button className="btn sm" onClick={()=>{setRunning(false);dispatch({type:'finish'});}}>{copy.finish}</button>}
      </div>
+     <details className="whoami-rules"><summary>{rules.label}</summary><ol className="whoami-rule-sections">{rules.sections.map(section=><li key={section.title}><h3>{section.title}</h3><ul>{section.items.map(item=><li key={item}>{item}</li>)}</ul></li>)}</ol></details>
      <div className="tabs" role="group" aria-label={t.gameLabel}>{['whoami','crocodile','alias','truth'].map(game=><button className="chip" key={game} aria-pressed={game==='whoami'} onClick={()=>onGame(game)}>{games[game].n}</button>)}</div>
      {state.phase==='setup'&&<div className="whoami-setup">
        <div className="players-panel">
