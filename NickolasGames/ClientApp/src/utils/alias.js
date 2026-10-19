@@ -41,7 +41,7 @@ export function shuffleAlias(words, random = Math.random) {
 export function newAliasState(names = ['Monsters', 'Penguins']) {
   return { schema: 1, phase: 'setup', teams: names.map((name, index) => ({ id: 'team-' + index, name, players: [], points: 0, turns: 0 })),
     category: ALIAS_ALL, difficulty: 'all', format: 'words', target: 60, deck: [], index: 0, activeIndex: 0,
-    contenders: [], dice: [], lastRollTeamIds: [], pending: [], rollUntil: null, deadline: null, correct: 0, skipped: 0, result: null, winners: [] };
+    contenders: [], dice: [], lastRollTeamIds: [], pending: [], rollUntil: null, deadline: null, correct: 0, skipped: 0, answers: [], historyComplete: true, result: null, winners: [] };
 }
 
 export function aliasSetupErrors(state, pool) {
@@ -73,6 +73,12 @@ export function validAliasState(s) {
   const validIds = list => strings(list) && new Set(list).size === list.length && list.every(id => ids.has(id));
   const validDice = list => Array.isArray(list) && new Set(list.map(roll => roll?.id)).size === list.length && list.every(roll =>
     roll && ids.has(roll.id) && Array.isArray(roll.values) && roll.values.length === 2 && roll.values.every(value => integer(value) && value >= 1 && value <= 6));
+  const validAnswers = list => Array.isArray(list) && new Set(list.map(entry => entry?.index)).size === list.length && list.every(entry =>
+    entry && integer(entry.index) && entry.index >= 0 && entry.index < s.index && s.deck[entry.index] === entry.word &&
+    ['correct', 'skip'].includes(entry.outcome) && typeof entry.last === 'boolean' &&
+    (entry.outcome === 'correct' ? ids.has(entry.teamId) : entry.teamId === null));
+  if (s.answers !== undefined && !validAnswers(s.answers)) return false;
+  if (s.historyComplete !== undefined && typeof s.historyComplete !== 'boolean') return false;
   if (!validIds(s.contenders) || !validIds(s.winners) || !validDice(s.dice) || !validDice(s.pending)) return false;
   if (s.lastRollTeamIds !== undefined && !validIds(s.lastRollTeamIds)) return false;
   if (s.phase !== 'setup' && (s.teams.length < 2 || s.activeIndex >= s.teams.length || s.teams.some(team => !team.name.trim() || team.players.length < 2 || team.players.some(player => !player.name.trim())))) return false;
@@ -85,7 +91,9 @@ export function validAliasState(s) {
   if (['dice', 'rolling'].includes(s.phase) && !s.contenders.length) return false;
   if (s.result !== null && (!s.result || !ids.has(s.result.teamId) || !integer(s.result.correct) || !integer(s.result.skipped) ||
     s.result.correct < 0 || s.result.skipped < 0 || (s.result.lastTeamId !== null && !ids.has(s.result.lastTeamId)) ||
-    (s.result.sharedPenalty !== undefined && typeof s.result.sharedPenalty !== 'boolean'))) return false;
+    (s.result.sharedPenalty !== undefined && typeof s.result.sharedPenalty !== 'boolean') ||
+    (s.result.answers !== undefined && !validAnswers(s.result.answers)) ||
+    (s.result.historyComplete !== undefined && typeof s.result.historyComplete !== 'boolean'))) return false;
   return true;
 }
 
@@ -102,7 +110,7 @@ function finishTurn(state, lastTeamId = null, sharedPenalty = false) {
   const winners = maximum >= state.target ? teams.filter(team => team.points === maximum).map(team => team.id) : [];
   return { ...state, teams, deadline: null, winners,
     phase: winners.length ? 'finished' : state.index >= state.deck.length ? 'exhausted' : 'summary',
-    result: { teamId, correct: state.correct, skipped: state.skipped, lastTeamId, sharedPenalty } };
+    result: { teamId, correct: state.correct, skipped: state.skipped, lastTeamId, sharedPenalty, answers: state.answers || [], historyComplete: state.historyComplete ?? false } };
 }
 
 export function aliasReducer(state, action) {
@@ -132,7 +140,7 @@ export function aliasReducer(state, action) {
       return state.phase === 'diceResult' ? { ...state, phase: 'ready' } : state;
     case 'begin':
       if (state.phase !== 'ready' || !aliasWord(state) || !Number.isFinite(action.now)) return state;
-      return { ...state, phase: 'acting', deadline: action.now + ALIAS_SECONDS * 1000, correct: 0, skipped: 0, result: null };
+      return { ...state, phase: 'acting', deadline: action.now + ALIAS_SECONDS * 1000, correct: 0, skipped: 0, answers: [], historyComplete: true, result: null };
     case 'expire':
       return state.phase === 'acting' && action.now >= state.deadline ? { ...state, phase: 'last' } : state;
     case 'answer': {
@@ -140,6 +148,8 @@ export function aliasReducer(state, action) {
       if (action.now >= state.deadline) return { ...state, phase: 'last' };
       const correct = action.outcome === 'correct';
       const next = { ...state, index: state.index + 1, correct: state.correct + Number(correct), skipped: state.skipped + Number(!correct),
+        answers: [...(state.answers || []), { index: state.index, word: aliasWord(state), outcome: action.outcome, teamId: correct ? state.teams[state.activeIndex].id : null, last: false }],
+        historyComplete: state.historyComplete ?? (state.correct + state.skipped === 0),
         teams: state.teams.map((team, index) => index === state.activeIndex ? { ...team, points: team.points + (correct ? 1 : -1) } : team) };
       return next.index >= next.deck.length ? finishTurn(next) : next;
     }
@@ -147,11 +157,13 @@ export function aliasReducer(state, action) {
       if (state.phase !== 'last' || action.index !== state.index || (action.teamId !== null && !state.teams.some(team => team.id === action.teamId))) return state;
       const activeId = state.teams[state.activeIndex].id;
       const next = { ...state, index: state.index + 1, correct: state.correct + Number(action.teamId === activeId), skipped: state.skipped + Number(action.teamId === null),
+        answers: [...(state.answers || []), { index: state.index, word: aliasWord(state), outcome: action.teamId === null ? 'skip' : 'correct', teamId: action.teamId, last: true }],
+        historyComplete: state.historyComplete ?? (state.correct + state.skipped === 0),
         teams: state.teams.map(team => ({ ...team, points: team.points + (action.teamId === null ? -1 : (team.id === action.teamId ? 1 : 0)) })) };
       return finishTurn(next, action.teamId, action.teamId === null);
     }
     case 'next':
-      return state.phase === 'summary' ? { ...state, phase: 'ready', activeIndex: (state.activeIndex + 1) % state.teams.length, correct: 0, skipped: 0, result: null } : state;
+      return state.phase === 'summary' ? { ...state, phase: 'ready', activeIndex: (state.activeIndex + 1) % state.teams.length, correct: 0, skipped: 0, answers: [], historyComplete: true, result: null } : state;
     case 'new':
       return { ...newAliasState([]), teams: state.teams.map(team => ({ ...team, points: 0, turns: 0 })), category: state.category, difficulty: state.difficulty, format: state.format || 'words', target: state.target };
     default: return state;
@@ -160,7 +172,10 @@ export function aliasReducer(state, action) {
 
 export function restoreAliasState(state, now = Date.now()) {
   if (!validAliasState(state)) return null;
-  return aliasReducer(aliasReducer(state, { type: 'rolled', now }), { type: 'expire', now });
+  const restored = aliasReducer(aliasReducer(state, { type: 'rolled', now }), { type: 'expire', now });
+  if (restored.answers !== undefined) return restored;
+  // Old saves contain counts, not individual outcomes. Never invent the missing history.
+  return { ...restored, answers: [], historyComplete: !['acting', 'last'].includes(restored.phase) || restored.correct + restored.skipped === 0 };
 }
 
 export function refreshAliasDeck(state, categories, random = Math.random) {

@@ -320,3 +320,71 @@ test('mixed and phrase decks retain matching cards, used history and current wor
   assert.equal(validAliasState(phrases), true);
   assert.deepEqual(refreshAliasDeck(phrases, categories, () => 0), phrases);
 });
+
+test('round review records exact guessed, skipped and stolen final cards, once each', () => {
+  let state = answer(acting(), 'correct');
+  state = answer(state, 'skip');
+  state = reduce(state, { type: 'expire', now: NOW + 60_000 });
+  state = reduce(state, { type: 'last', index: state.index, teamId: 'team-1' });
+  assert.deepEqual(state.result.answers, [
+    { index: 0, word: 'Word 0', outcome: 'correct', teamId: 'team-0', last: false },
+    { index: 1, word: 'Word 1', outcome: 'skip', teamId: null, last: false },
+    { index: 2, word: 'Word 2', outcome: 'correct', teamId: 'team-1', last: true },
+  ]);
+  assert.equal(state.result.historyComplete, true);
+  assert.equal(validAliasState(state), true);
+  const restored = restoreAliasState(JSON.parse(JSON.stringify(state)));
+  assert.deepEqual(restored.result.answers, state.result.answers);
+  assert.equal(reduce(restored, { type: 'last', index: 2, teamId: null }), restored);
+  const next = reduce(restored, { type: 'next' });
+  assert.deepEqual(next.answers, []);
+  const begun = reduce(next, { type: 'begin', now: NOW + 70_000 });
+  assert.deepEqual(begun.answers, []);
+  assert.equal(begun.historyComplete, true);
+});
+
+test('unanswered final card is included with the shared penalty and survives deck refresh', () => {
+  let state = answer(acting(), 'skip');
+  state = reduce(state, { type: 'expire', now: NOW + 60_000 });
+  state = reduce(state, { type: 'last', index: 1, teamId: null });
+  assert.deepEqual(state.result.answers[1], { index: 1, word: 'Word 1', outcome: 'skip', teamId: null, last: true });
+  assert.equal(state.result.sharedPenalty, true);
+  const refreshed = refreshAliasDeck(state, { Words: { easy: ['Apple'], medium: [], hard: [] } });
+  assert.deepEqual(refreshed.result.answers, state.result.answers);
+  assert.equal(validAliasState(refreshed), true);
+});
+
+test('review is also available when the deck ends or the team wins', () => {
+  const exhausted = answer(acting(1));
+  assert.equal(exhausted.result.answers[0].word, 'Word 0');
+  assert.equal(exhausted.result.answers[0].outcome, 'correct');
+  const won = answer({ ...acting(1), target: 1 });
+  assert.equal(won.phase, 'finished');
+  assert.equal(won.result.answers.length, 1);
+});
+
+test('legacy running saves retain scores and clearly mark incomplete review without invented words', () => {
+  const original = answer(acting()); delete original.answers; delete original.historyComplete;
+  const restored = restoreAliasState(original, NOW + 2000);
+  assert.equal(restored.teams[0].points, 1);
+  assert.equal(restored.historyComplete, false);
+  assert.deepEqual(restored.answers, []);
+  let end = reduce(restored, { type: 'expire', now: NOW + 60_000 });
+  end = reduce(end, { type: 'last', index: end.index, teamId: null });
+  assert.equal(end.result.answers.length, 1);
+  assert.equal(end.result.answers[0].word, 'Word 1');
+  assert.equal(end.result.historyComplete, false);
+  const next = reduce(reduce(end, { type: 'next' }), { type: 'begin', now: NOW + 70_000 });
+  assert.equal(next.historyComplete, true);
+});
+
+test('malformed answer history is rejected but older completed summaries are retained', () => {
+  const state = answer(acting());
+  for (const answers of [[{ ...state.answers[0], word: 'Invented' }], [{ ...state.answers[0], teamId: 'unknown' }],
+    [{ ...state.answers[0], outcome: 'bad' }], [state.answers[0], state.answers[0]], 'bad']) assert.equal(restoreAliasState({ ...state, answers }), null);
+  let old = reduce(state, { type: 'expire', now: NOW + 60_000 });
+  old = reduce(old, { type: 'last', index: old.index, teamId: null });
+  delete old.answers; delete old.historyComplete; delete old.result.answers; delete old.result.historyComplete;
+  assert.equal(restoreAliasState(old).phase, 'summary');
+  assert.deepEqual(restoreAliasState(old).teams, old.teams);
+});

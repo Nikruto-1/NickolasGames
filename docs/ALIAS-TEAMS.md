@@ -24,6 +24,11 @@ Implemented 2026-10-19. Existing site design and other games are unchanged.
 - Default victory target is 60, configurable as a positive safe whole number before starting.
 - Exhausted word pools display an explicit message instead of silently repeating words.
 - Remaining-card counters are not displayed in setup or during a round.
+- Team editor headings show the actual names and update while editing them.
+- Round summaries show exact guessed and missed/skipped cards, including the final card and its
+  recipient or shared penalty. These lists persist across reloads and reset on the next round.
+  Older saves without per-card outcomes retain scores and show an incomplete-history notice;
+  missing historical outcomes cannot be reconstructed from aggregate counts.
 
 State is saved under `nickolasgames-alias-teams-v1-${lang}` and validated on restore. An expired
 saved deadline restores directly to the last-word phase. The legacy
@@ -34,6 +39,6 @@ Future cards are filtered by the chosen format and new matching cards are added 
 Old saves without a format default to single words; a new game retains the selected format.
 An exhausted game can continue with newly available words; a finished game stays finished.
 
-Tests: 33 focused Alias cases plus 99 existing cases. Browser checks cover mobile/desktop,
+Tests: 38 focused Alias cases plus 99 existing cases. Browser checks cover mobile/desktop,
 all five languages, long names, team addition/removal, dice ties, swipe and button scoring,
 refresh, deadline expiry, last-word stealing, rotation, victory and preservation of legacy data.
