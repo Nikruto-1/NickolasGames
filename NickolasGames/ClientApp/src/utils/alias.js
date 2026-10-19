@@ -3,8 +3,9 @@ import { DIFFICULTIES } from './difficulty.js';
 
 export const ALIAS_ALL = '__all__';
 export const ALIAS_SECONDS = 60;
+export const ALIAS_ROLL_MS = 2400;
 export const ALIAS_FORMATS = ['words', 'phrases', 'all'];
-const phases = ['setup', 'dice', 'rolling', 'ready', 'acting', 'last', 'summary', 'finished', 'exhausted'];
+const phases = ['setup', 'dice', 'rolling', 'diceResult', 'ready', 'acting', 'last', 'summary', 'finished', 'exhausted'];
 const strings = value => Array.isArray(value) && value.every(item => typeof item === 'string');
 export const validAliasTarget = value => Number.isSafeInteger(value) && value > 0;
 const wordKey = word => word.normalize('NFC').replace(/[’ʼ]/g, "'").toLocaleLowerCase();
@@ -40,7 +41,7 @@ export function shuffleAlias(words, random = Math.random) {
 export function newAliasState(names = ['Monsters', 'Penguins']) {
   return { schema: 1, phase: 'setup', teams: names.map((name, index) => ({ id: 'team-' + index, name, players: [], points: 0, turns: 0 })),
     category: ALIAS_ALL, difficulty: 'all', format: 'words', target: 60, deck: [], index: 0, activeIndex: 0,
-    contenders: [], dice: [], pending: [], rollUntil: null, deadline: null, correct: 0, skipped: 0, result: null, winners: [] };
+    contenders: [], dice: [], lastRollTeamIds: [], pending: [], rollUntil: null, deadline: null, correct: 0, skipped: 0, result: null, winners: [] };
 }
 
 export function aliasSetupErrors(state, pool) {
@@ -73,10 +74,12 @@ export function validAliasState(s) {
   const validDice = list => Array.isArray(list) && new Set(list.map(roll => roll?.id)).size === list.length && list.every(roll =>
     roll && ids.has(roll.id) && Array.isArray(roll.values) && roll.values.length === 2 && roll.values.every(value => integer(value) && value >= 1 && value <= 6));
   if (!validIds(s.contenders) || !validIds(s.winners) || !validDice(s.dice) || !validDice(s.pending)) return false;
+  if (s.lastRollTeamIds !== undefined && !validIds(s.lastRollTeamIds)) return false;
   if (s.phase !== 'setup' && (s.teams.length < 2 || s.activeIndex >= s.teams.length || s.teams.some(team => !team.name.trim() || team.players.length < 2 || team.players.some(player => !player.name.trim())))) return false;
   if (s.phase === 'rolling' && (s.rollUntil === null || s.pending.length !== s.contenders.length || !s.contenders.every(id => s.pending.some(roll => roll.id === id)))) return false;
   if (['acting', 'last'].includes(s.phase) && (s.index >= s.deck.length || s.deadline === null)) return false;
-  if (['dice', 'rolling', 'ready', 'summary'].includes(s.phase) && s.index >= s.deck.length) return false;
+  if (['dice', 'rolling', 'diceResult', 'ready', 'summary'].includes(s.phase) && s.index >= s.deck.length) return false;
+  if (s.phase === 'diceResult' && (s.contenders.length !== 1 || s.teams[s.activeIndex]?.id !== s.contenders[0] || s.dice.length !== s.teams.length)) return false;
   if (s.phase === 'finished' && !s.winners.length) return false;
   if (s.phase === 'exhausted' && s.index < s.deck.length) return false;
   if (['dice', 'rolling'].includes(s.phase) && !s.contenders.length) return false;
@@ -114,7 +117,7 @@ export function aliasReducer(state, action) {
       if (state.phase !== 'dice' || !Number.isFinite(action.now) || !Array.isArray(action.rolls) ||
         action.rolls.length !== state.contenders.length || !state.contenders.every(id => action.rolls.filter(roll => roll.id === id &&
           Array.isArray(roll.values) && roll.values.length === 2 && roll.values.every(value => Number.isInteger(value) && value >= 1 && value <= 6)).length === 1)) return state;
-      return { ...state, phase: 'rolling', pending: action.rolls, rollUntil: action.now + 1400 };
+      return { ...state, phase: 'rolling', pending: action.rolls, rollUntil: action.now + ALIAS_ROLL_MS };
     }
     case 'rolled': {
       if (state.phase !== 'rolling' || !Number.isFinite(action.now) || action.now < state.rollUntil) return state;
@@ -122,9 +125,11 @@ export function aliasReducer(state, action) {
       const max = Math.max(...state.pending.map(total));
       const contenders = state.pending.filter(roll => total(roll) === max).map(roll => roll.id);
       const dice = [...state.dice.filter(roll => !state.contenders.includes(roll.id)), ...state.pending];
-      return { ...state, dice, pending: [], rollUntil: null, contenders, phase: contenders.length === 1 ? 'ready' : 'dice',
+      return { ...state, dice, lastRollTeamIds: state.pending.map(roll => roll.id), pending: [], rollUntil: null, contenders, phase: contenders.length === 1 ? 'diceResult' : 'dice',
         activeIndex: contenders.length === 1 ? state.teams.findIndex(team => team.id === contenders[0]) : state.activeIndex };
     }
+    case 'confirmDice':
+      return state.phase === 'diceResult' ? { ...state, phase: 'ready' } : state;
     case 'begin':
       if (state.phase !== 'ready' || !aliasWord(state) || !Number.isFinite(action.now)) return state;
       return { ...state, phase: 'acting', deadline: action.now + ALIAS_SECONDS * 1000, correct: 0, skipped: 0, result: null };

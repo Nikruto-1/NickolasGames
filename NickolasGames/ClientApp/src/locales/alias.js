@@ -1,5 +1,6 @@
 export const ALIAS_COPY = {
   uk: {
+    diceResults: 'Результати кидка', continueDice: 'До гри', previousRoll: 'Попередній кидок — команда не перекидала', diceWinnerReason: 'Ця команда набрала найбільшу суму в останньому кидку та починає першою.',
     formatLabel: 'Тип карток', formats: { words: 'Окремі слова', phrases: 'Фрази та фразеологізми', all: 'Усе разом' },
     title: 'Еліас: командна гра', teams: ['Монстрики', 'Пінгвіни'], team: 'Команда', teamName: 'Назва команди',
     addTeam: 'Додати команду', removeTeam: 'Видалити команду', player: 'Ім’я гравця', addPlayer: 'Додати гравця', removePlayer: 'Видалити гравця',
@@ -17,6 +18,7 @@ export const ALIAS_COPY = {
     wordsLeft: 'Залишилося карток', roundScore: 'За раунд', awarded: 'Останнє слово вгадали', noAward: 'Останнє слово не вгадали: усім командам −1 бал.', seconds: 'с', resetSetup: 'Налаштування',
   },
   en: {
+    diceResults: 'Dice results', continueDice: 'Continue to game', previousRoll: 'Previous roll — this team did not reroll', diceWinnerReason: 'This team has the highest total in the final roll and takes the first turn.',
     formatLabel: 'Card type', formats: { words: 'Single words', phrases: 'Phrases and idioms', all: 'Everything' },
     title: 'Alias: team game', teams: ['Monsters', 'Penguins'], team: 'Team', teamName: 'Team name',
     addTeam: 'Add team', removeTeam: 'Remove team', player: 'Player name', addPlayer: 'Add player', removePlayer: 'Remove player',
@@ -34,6 +36,7 @@ export const ALIAS_COPY = {
     wordsLeft: 'Cards left', roundScore: 'This round', awarded: 'Last word guessed by', noAward: 'Nobody guessed the last word: every team loses 1 point.', seconds: 's', resetSetup: 'Settings',
   },
   sv: {
+    diceResults: 'Tärningsresultat', continueDice: 'Fortsätt till spelet', previousRoll: 'Tidigare kast — laget kastade inte igen', diceWinnerReason: 'Det här laget fick högst summa i det sista kastet och börjar.',
     formatLabel: 'Korttyp', formats: { words: 'Enstaka ord', phrases: 'Fraser och idiom', all: 'Allt tillsammans' },
     title: 'Alias: lagspel', teams: ['Monstren', 'Pingvinerna'], team: 'Lag', teamName: 'Lagnamn',
     addTeam: 'Lägg till lag', removeTeam: 'Ta bort lag', player: 'Spelarens namn', addPlayer: 'Lägg till spelare', removePlayer: 'Ta bort spelare',
@@ -51,6 +54,7 @@ export const ALIAS_COPY = {
     wordsLeft: 'Kort kvar', roundScore: 'Denna omgång', awarded: 'Sista ordet gissades av', noAward: 'Ingen gissade sista ordet: alla lag förlorar 1 poäng.', seconds: 's', resetSetup: 'Inställningar',
   },
   de: {
+    diceResults: 'Würfelergebnisse', continueDice: 'Weiter zum Spiel', previousRoll: 'Vorheriger Wurf — dieses Team hat nicht erneut gewürfelt', diceWinnerReason: 'Dieses Team hat im letzten Wurf die höchste Summe und beginnt.',
     formatLabel: 'Kartentyp', formats: { words: 'Einzelne Wörter', phrases: 'Phrasen und Redewendungen', all: 'Alles zusammen' },
     title: 'Alias: Teamspiel', teams: ['Monster', 'Pinguine'], team: 'Team', teamName: 'Teamname',
     addTeam: 'Team hinzufügen', removeTeam: 'Team entfernen', player: 'Spielername', addPlayer: 'Spieler hinzufügen', removePlayer: 'Spieler entfernen',
@@ -68,6 +72,7 @@ export const ALIAS_COPY = {
     wordsLeft: 'Verbleibende Karten', roundScore: 'Diese Runde', awarded: 'Letztes Wort erraten von', noAward: 'Niemand hat das letzte Wort erraten: alle Teams verlieren 1 Punkt.', seconds: 's', resetSetup: 'Einstellungen',
   },
   es: {
+    diceResults: 'Resultados de los dados', continueDice: 'Continuar al juego', previousRoll: 'Tirada anterior — este equipo no volvió a tirar', diceWinnerReason: 'Este equipo obtuvo la suma más alta en la última tirada y empieza.',
     formatLabel: 'Tipo de tarjeta', formats: { words: 'Palabras sueltas', phrases: 'Frases y modismos', all: 'Todo junto' },
     title: 'Alias: juego por equipos', teams: ['Monstruitos', 'Pingüinos'], team: 'Equipo', teamName: 'Nombre del equipo',
     addTeam: 'Añadir equipo', removeTeam: 'Eliminar equipo', player: 'Nombre del jugador', addPlayer: 'Añadir jugador', removePlayer: 'Eliminar jugador',

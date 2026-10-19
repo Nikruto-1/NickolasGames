@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { COPY } from '../src/locales/index.js';
 import { ALIAS_COPY } from '../src/locales/alias.js';
 import { ALIAS_WORDS } from '../src/data/alias.js';
-import { ALIAS_FORMATS, aliasActor, aliasCategories, aliasPool, aliasReducer as reduce, aliasSetupErrors, aliasWord, isAliasPhrase, isAliasWord, newAliasState, refreshAliasDeck, restoreAliasState, shuffleAlias, validAliasState } from '../src/utils/alias.js';
+import { ALIAS_FORMATS, ALIAS_ROLL_MS, aliasActor, aliasCategories, aliasPool, aliasReducer as reduce, aliasSetupErrors, aliasWord, isAliasPhrase, isAliasWord, newAliasState, refreshAliasDeck, restoreAliasState, shuffleAlias, validAliasState } from '../src/utils/alias.js';
 
 const NOW = 100_000;
 function setup(count = 2, size = 300) {
@@ -14,7 +14,7 @@ function setup(count = 2, size = 300) {
 function ready(count = 2, size = 300, winningIndex = 0) {
   let state = setup(count, size);
   state = reduce(state, { type: 'roll', now: NOW, rolls: state.teams.map((team, index) => ({ id: team.id, values: index === winningIndex ? [6, 6] : [1, 2] })) });
-  return reduce(state, { type: 'rolled', now: NOW + 1400 });
+  return reduce(reduce(state, { type: 'rolled', now: NOW + ALIAS_ROLL_MS }), { type: 'confirmDice' });
 }
 const acting = (size = 300) => reduce(ready(2, size), { type: 'begin', now: NOW });
 const answer = (state, outcome = 'correct', now = NOW + 1) => reduce(state, { type: 'answer', index: state.index, outcome, now });
@@ -42,17 +42,36 @@ test('dice animate before showing results; a tied high score rerolls only the le
   const values = [[6, 6], [5, 6], [6, 6]];
   state = reduce(state, { type: 'roll', now: NOW, rolls: state.teams.map((team, index) => ({ id: team.id, values: values[index] })) });
   assert.equal(state.phase, 'rolling');
-  assert.equal(reduce(state, { type: 'rolled', now: NOW + 1399 }), state);
-  state = reduce(state, { type: 'rolled', now: NOW + 1400 });
+  assert.equal(reduce(state, { type: 'rolled', now: NOW + ALIAS_ROLL_MS - 1 }), state);
+  state = reduce(state, { type: 'rolled', now: NOW + ALIAS_ROLL_MS });
   assert.equal(state.phase, 'dice');
   assert.deepEqual(state.contenders, ['team-0', 'team-2']);
-  state = reduce(state, { type: 'roll', now: NOW + 2000, rolls: [{ id: 'team-0', values: [1, 1] }, { id: 'team-2', values: [2, 1] }] });
-  state = restoreAliasState(state, NOW + 4000);
-  assert.equal(state.phase, 'ready');
+  state = reduce(state, { type: 'roll', now: NOW + ALIAS_ROLL_MS + 1000, rolls: [{ id: 'team-0', values: [1, 1] }, { id: 'team-2', values: [2, 1] }] });
+  state = restoreAliasState(state, NOW + ALIAS_ROLL_MS * 2 + 1000);
+  assert.equal(state.phase, 'diceResult');
   assert.equal(state.activeIndex, 2);
   assert.equal(state.dice.length, 3);
   assert.equal(aliasActor(state).name, 'Alice 2');
   assert.equal(state.deadline, null);
+  assert.deepEqual(state.lastRollTeamIds, ['team-0', 'team-2']);
+});
+
+test('dice results remain until confirmation, survive reload and cannot start the timer automatically', () => {
+  let state = setup(3);
+  state = reduce(state, { type: 'roll', now: NOW, rolls: state.teams.map((team, i) => ({ id: team.id, values: i === 1 ? [6, 5] : [2, 3] })) });
+  state = reduce(state, { type: 'rolled', now: NOW + ALIAS_ROLL_MS });
+  assert.equal(state.phase, 'diceResult');
+  assert.equal(state.activeIndex, 1);
+  assert.deepEqual(state.dice.map(roll => roll.values), [[2, 3], [6, 5], [2, 3]]);
+  assert.equal(validAliasState(state), true);
+  assert.deepEqual(restoreAliasState(JSON.parse(JSON.stringify(state)), NOW + 999_999), state);
+  assert.equal(reduce(state, { type: 'begin', now: NOW + 2000 }), state);
+  assert.equal(state.deadline, null);
+  const confirmed = reduce(state, { type: 'confirmDice' });
+  assert.equal(confirmed.phase, 'ready');
+  assert.equal(confirmed.activeIndex, 1);
+  assert.equal(confirmed.deadline, null);
+  assert.equal(reduce(confirmed, { type: 'confirmDice' }), confirmed);
 });
 
 test('invalid dice and repeated roll/reveal cannot change the starting team', () => {

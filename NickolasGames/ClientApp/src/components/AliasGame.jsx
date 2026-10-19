@@ -125,22 +125,29 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
               <label htmlFor="alias-target">{copy.target}<input id="alias-target" type="number" inputMode="numeric" min="1" step="1" value={target} onChange={event => { setTarget(event.target.value); if (validAliasTarget(Number(event.target.value))) settings({ target: Number(event.target.value) }); }} /></label>
             </div>
             {attempt > 0 && errors.length > 0 && <div ref={feedback} className="setup-validation" role="alert" tabIndex={-1}><ul>{errors.map(error => <li key={error}>{copy[error]}</li>)}</ul></div>}
-            <p className="alias-pool-count">{copy.wordsLeft}: {pool.length}</p>
             <button className="btn pri alias-main-action" onClick={start}>{copy.start}</button>
           </>}
-          {['dice', 'rolling'].includes(state.phase) && <div className="alias-dice-stage">
-            <h3>{copy.diceTitle}</h3><p>{copy.diceRule}</p>
+          {['dice', 'rolling', 'diceResult'].includes(state.phase) && <div className="alias-dice-stage">
+            <h3>{state.phase === 'diceResult' ? copy.diceResults : copy.diceTitle}</h3><p>{copy.diceRule}</p>
             {state.phase === 'dice' && state.dice.length > 0 && <p role="status">{copy.tie}</p>}
             <div className="alias-dice-teams">{state.teams.map((item, index) => {
               const previous = state.dice.find(result => result.id === item.id);
-              const rolling = state.phase === 'rolling' && state.contenders.includes(item.id);
-              const values = rolling ? [Math.floor(clock / 90 + index) % 6 + 1, Math.floor(clock / 130 + index) % 6 + 1] : previous?.values || [1, 1];
-              return <div className={'alias-dice-team' + (rolling ? ' is-rolling' : '')} key={item.id}>
+              const participating = state.phase === 'rolling' ? state.contenders.includes(item.id) : (state.lastRollTeamIds || state.dice.map(roll => roll.id)).includes(item.id);
+              const rolling = state.phase === 'rolling' && participating && clock < state.rollUntil - 300;
+              const settled = state.phase === 'rolling' && participating ? state.pending.find(roll => roll.id === item.id) : previous;
+              const values = rolling ? [Math.floor(clock / 90 + index) % 6 + 1, Math.floor(clock / 130 + index) % 6 + 1] : settled?.values || [1, 1];
+              const winner = state.phase === 'diceResult' && index === state.activeIndex;
+              return <div className={'alias-dice-team' + (rolling ? ' is-rolling' : '') + (winner ? ' is-winner' : '')} key={item.id}>
                 <strong>{item.name}</strong><div className="alias-dice-pair" aria-hidden="true">{values.map((value, die) => { const Icon = diceIcons[value - 1]; return <span key={die}><Icon size={48} strokeWidth={1.5} /></span>; })}</div>
-                <output aria-live="polite">{rolling ? copy.rolling : previous ? previous.values[0] + ' + ' + previous.values[1] + ' = ' + previous.values.reduce((a, b) => a + b, 0) : '—'}</output>
+                <output aria-live="polite">{rolling ? copy.rolling : settled ? values[0] + ' + ' + values[1] + ' = ' + values.reduce((a, b) => a + b, 0) : '—'}</output>
+                {previous && !participating && <small className="alias-previous-roll">{copy.previousRoll}</small>}
+                {winner && <small className="alias-dice-winner-label">{copy.first}</small>}
               </div>;
             })}</div>
-            <button className="btn pri alias-main-action" disabled={state.phase === 'rolling'} onClick={roll}><Dice5 size={20} /> {state.phase === 'rolling' ? copy.rolling : copy.roll}</button>
+            {state.phase === 'diceResult' ? <>
+              <div className="alias-dice-result" role="status"><strong>{copy.first}: {team.name}</strong><p>{copy.diceWinnerReason}</p></div>
+              <button className="btn pri alias-main-action" onClick={() => dispatch({ type: 'confirmDice' })}>{copy.continueDice}<ArrowRight size={20} /></button>
+            </> : <button className="btn pri alias-main-action" disabled={state.phase === 'rolling'} onClick={roll}><Dice5 size={20} /> {state.phase === 'rolling' ? copy.rolling : copy.roll}</button>}
           </div>}
           {state.phase === 'ready' && <div className="alias-ready" role="status">
             <p>{state.dice.length && state.teams.every(item => item.turns === 0) ? copy.first : copy.turn}</p><h3>{team.name}</h3><p>{copy.actor}: <strong>{actor?.name}</strong></p>
@@ -157,7 +164,7 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
             </div>
             {last ? <div className="alias-last-awards"><p>{copy.lastRule}</p>{state.teams.map(item => <button key={item.id} className="btn" onClick={() => dispatch({ type: 'last', teamId: item.id, index: state.index })}>{item.name} +1</button>)}<button className="btn alias-skip" onClick={() => dispatch({ type: 'last', teamId: null, index: state.index })}>{copy.nobody}</button></div>
               : <div className="alias-swipe-actions"><button className="btn alias-skip" onClick={() => answer('skip')}><ArrowLeft size={20} />{copy.skip} −1</button><button className="btn alias-correct" onClick={() => answer('correct')}>{copy.correct} +1<ArrowRight size={20} /></button></div>}
-            <p className="alias-pool-count">{copy.roundScore}: {state.correct - state.skipped} · {copy.wordsLeft}: {state.deck.length - state.index}</p>
+            <p className="alias-round-score">{copy.roundScore}: {state.correct - state.skipped}</p>
           </>}
           {['summary', 'finished', 'exhausted'].includes(state.phase) && <div className="alias-round-summary" role="status">
             <h3>{state.phase === 'finished' ? copy.wins : state.phase === 'exhausted' ? copy.exhausted : copy.roundDone}</h3>

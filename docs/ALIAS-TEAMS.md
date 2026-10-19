@@ -11,6 +11,8 @@ Implemented 2026-10-19. Existing site design and other games are unchanged.
   Category and difficulty apply to every format. Cards are unique across a whole game.
 - Each team throws two six-sided dice. Highest total starts. Tied leaders reroll; eliminated
   teams do not reroll. Animation respects reduced-motion preferences. Interrupted rolls restore.
+  Final dice faces and totals stay visible until Continue to game is pressed. The first team is
+  explicitly announced. Older results of eliminated teams are labelled as previous rolls.
 - Each team has a separate Start button before its turn. Starting reveals one word and begins
   an absolute 60-second deadline. No per-round word-count limit. Right/correct gives +1;
   left/skip gives -1. Negative team scores are allowed. Buttons supplement pointer swipes.
@@ -21,6 +23,7 @@ Implemented 2026-10-19. Existing site design and other games are unchanged.
   team wins (joint winners if tied); otherwise the next team plays. Explainers rotate within teams.
 - Default victory target is 60, configurable as a positive safe whole number before starting.
 - Exhausted word pools display an explicit message instead of silently repeating words.
+- Remaining-card counters are not displayed in setup or during a round.
 
 State is saved under `nickolasgames-alias-teams-v1-${lang}` and validated on restore. An expired
 saved deadline restores directly to the last-word phase. The legacy
@@ -31,6 +34,6 @@ Future cards are filtered by the chosen format and new matching cards are added 
 Old saves without a format default to single words; a new game retains the selected format.
 An exhausted game can continue with newly available words; a finished game stays finished.
 
-Tests: 32 focused Alias cases plus 99 existing cases. Browser checks cover mobile/desktop,
+Tests: 33 focused Alias cases plus 99 existing cases. Browser checks cover mobile/desktop,
 all five languages, long names, team addition/removal, dice ties, swipe and button scoring,
 refresh, deadline expiry, last-word stealing, rotation, victory and preservation of legacy data.
