@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, Plus, RotateCcw, Trash2, UserPlus } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, Pencil, Plus, RotateCcw, Trash2, UserPlus } from 'lucide-react';
 import { ALIAS_COPY } from '../locales/alias.js';
 import { ALIAS_WORDS } from '../data/alias.js';
 import { DIFFICULTIES } from '../utils/difficulty.js';
@@ -18,6 +18,7 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
   const pool = useMemo(() => aliasPool(categories, state.category, state.difficulty, state.format), [categories, state.category, state.difficulty, state.format]);
   const availableCategories = useMemo(() => Object.keys(categories).filter(name => aliasPool(categories, name, 'all', state.format).length), [categories, state.format]);
   const [drafts, setDrafts] = useState({});
+  const [editingTeam, setEditingTeam] = useState(null);
   const [target, setTarget] = useState(String(state.target));
   const [attempt, setAttempt] = useState(0);
   const [storageOk, setStorageOk] = useState(true);
@@ -39,6 +40,10 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
   const last = state.phase === 'last' || expired;
   const playing = state.phase === 'acting' || state.phase === 'last';
   const errors = aliasSetupErrors({ ...state, target: Number(target) }, pool);
+  const result = state.result;
+  const lastAnswer = result?.answers?.find(entry => entry.last);
+  const roundCorrect = result ? result.correct - Number(Boolean(result.lastTeamId && result.lastTeamId === result.teamId)) : 0;
+  const roundSkipped = result ? result.skipped - Number(Boolean(result.sharedPenalty)) : 0;
   if (Object.values(drafts).some(value => value.trim())) errors.push('pending');
 
   useEffect(() => { setStorageOk(writeValue(key, state)); }, [key, state]);
@@ -109,13 +114,16 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
         <button className="chip" onClick={() => onGame('random')}>{t.random}</button>
       </div>
       {!storageOk && <p className="alias-warning" role="status">{copy.storage}</p>}
-      <div className="alias-layout">
+      <div className={'alias-layout' + (setup ? ' is-setup' : '')}>
         <div>
           {setup && <>
             <div className="alias-team-editors">
               {state.teams.map((item, index) => <article className="alias-team-editor" key={item.id}>
-                <div className="alias-editor-heading"><label htmlFor={'alias-team-' + item.id}>{item.name.trim() || copy.teamName}</label><button type="button" className="alias-icon" disabled={state.teams.length <= 2} title={copy.removeTeam} aria-label={copy.removeTeam + ': ' + item.name} onClick={() => { settings({ teams: state.teams.filter(team => team.id !== item.id) }); setDrafts(value => ({ ...value, [item.id]: '' })); }}><Trash2 size={18} /></button></div>
-                <input id={'alias-team-' + item.id} aria-label={copy.teamName + ' ' + (index + 1)} value={item.name} maxLength={80} onChange={event => updateTeam(item.id, { name: event.target.value })} />
+                <div className="alias-editor-heading">
+                  {editingTeam === item.id ? <input autoFocus id={'alias-team-' + item.id} aria-label={copy.teamName + ' ' + (index + 1)} value={item.name} maxLength={80} onChange={event => updateTeam(item.id, { name: event.target.value })} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); setEditingTeam(null); event.currentTarget.nextElementSibling?.focus(); } }} /> : <h3>{item.name.trim() || copy.teamName}</h3>}
+                  <button type="button" className="alias-icon" title={editingTeam === item.id ? copy.saveTeam : copy.editTeam} aria-label={(editingTeam === item.id ? copy.saveTeam : copy.editTeam) + ': ' + item.name} onClick={() => setEditingTeam(current => current === item.id ? null : item.id)}>{editingTeam === item.id ? <Check size={18} /> : <Pencil size={18} />}</button>
+                  <button type="button" className="alias-icon" disabled={state.teams.length <= 2} title={copy.removeTeam} aria-label={copy.removeTeam + ': ' + item.name} onClick={() => { settings({ teams: state.teams.filter(team => team.id !== item.id) }); setDrafts(value => ({ ...value, [item.id]: '' })); }}><Trash2 size={18} /></button>
+                </div>
                 <ul className="alias-player-list">{item.players.map(player => <li key={player.id}><span>{player.name}</span><button type="button" className="alias-icon" title={copy.removePlayer} aria-label={copy.removePlayer + ': ' + player.name} onClick={() => updateTeam(item.id, { players: item.players.filter(p => p.id !== player.id) })}><Trash2 size={16} /></button></li>)}</ul>
                 <form onSubmit={event => addPlayer(event, item.id)} className="alias-player-form">
                   <label htmlFor={'alias-player-' + item.id}>{copy.player}</label>
@@ -175,28 +183,34 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
           {['summary', 'finished', 'exhausted'].includes(state.phase) && <div className="alias-round-summary">
             <h3 role="status">{state.phase === 'finished' ? copy.wins : state.phase === 'exhausted' ? copy.exhausted : copy.roundDone}</h3>
             {state.winners.length > 0 && <p className="alias-winners">{state.teams.filter(item => state.winners.includes(item.id)).map(item => item.name).join(' · ')}</p>}
-            {state.result && <><p>{state.teams.find(item => item.id === state.result.teamId)?.name}: {copy.roundScore} {state.result.correct - state.result.skipped}</p><p>{copy.correct}: {state.result.correct} · {copy.skip}: {state.result.skipped}</p>
-              {state.result.lastTeamId && <p>{copy.awarded}: {state.teams.find(item => item.id === state.result.lastTeamId)?.name}</p>}
-              {state.result.sharedPenalty && <p>{copy.noAward}</p>}</>}
-            {state.result && <>
-              {(state.result.answers === undefined || state.result.historyComplete === false) && <p className="alias-history-note">{copy.historyPartial}</p>}
-              {state.result.answers !== undefined && <div className="alias-word-review">{['correct', 'skip'].map(outcome => {
-                const entries = state.result.answers.filter(entry => entry.outcome === outcome);
-                return <section className={'alias-review-' + outcome} key={outcome}>
-                  <h4>{outcome === 'correct' ? copy.guessedCards : copy.missedCards}</h4>
-                  {entries.length ? <ul>{entries.map(entry => <li key={entry.index}><span>{entry.word}</span>{entry.last && <small>{copy.last} · {entry.teamId === null ? copy.sharedPenaltyLabel : state.teams.find(item => item.id === entry.teamId)?.name + ' +1'}</small>}</li>)}</ul> : <p>{copy.noCards}</p>}
-                </section>;
-              })}</div>}
+            {result && <>
+              <div className="alias-result-headline"><div><p className="alias-result-team">{state.teams.find(item => item.id === result.teamId)?.name}</p><span>{copy.roundScore}</span></div><strong className={'alias-result-points' + (result.correct - result.skipped < 0 ? ' is-negative' : '')}>{result.correct - result.skipped > 0 ? '+' : ''}{result.correct - result.skipped}</strong></div>
+              <dl className="alias-result-metrics"><div><dt>{copy.timedCorrect}</dt><dd>{roundCorrect}</dd></div><div><dt>{copy.timedSkipped}</dt><dd>{roundSkipped}</dd></div></dl>
+              {(lastAnswer || result.lastTeamId || result.sharedPenalty) && <section className={'alias-last-result' + (result.sharedPenalty ? ' is-missed' : '')} aria-label={copy.last}>
+                <h4>{copy.last}</h4>{lastAnswer && <strong>{lastAnswer.word}</strong>}
+                <p>{result.sharedPenalty ? copy.noAward : <>{copy.awarded}: <b>{state.teams.find(item => item.id === result.lastTeamId)?.name}</b> +1</>}</p>
+              </section>}
             </>}
             {state.phase === 'exhausted' && <p>{copy.exhaustedRule}</p>}
             {state.phase === 'summary' && <button className="btn pri alias-main-action" onClick={() => dispatch({ type: 'next' })}>{copy.next}<ArrowRight size={20} /></button>}
+            {state.result && <>
+              {(state.result.answers === undefined || state.result.historyComplete === false) && <p className="alias-history-note">{copy.historyPartial}</p>}
+              {state.result.answers !== undefined && <details className="alias-review-details" key={state.teams.find(item => item.id === state.result.teamId)?.turns + ':' + state.result.teamId}>
+                <summary>{copy.reviewWords}</summary><div className="alias-word-review">{['correct', 'skip'].map(outcome => {
+                const entries = state.result.answers.filter(entry => entry.outcome === outcome && !entry.last);
+                return <section className={'alias-review-' + outcome} key={outcome}>
+                  <h4>{outcome === 'correct' ? copy.guessedCards : copy.missedCards}</h4>
+                  {entries.length ? <ul>{entries.map(entry => <li key={entry.index}><span>{entry.word}</span></li>)}</ul> : <p>{copy.noCards}</p>}
+                </section>;
+              })}</div></details>}
+            </>}
           </div>}
           {!setup && <button className="btn sm alias-reset" onClick={reset}><RotateCcw size={16} />{copy.newGame}</button>}
         </div>
-        <aside className="alias-scores" aria-label={copy.points}>
+        {!setup && <aside className="alias-scores" aria-label={copy.points}>
           <h3>{copy.points}</h3><p>{copy.target}: {state.target}</p>
           <table><thead><tr><th scope="col">{copy.team}</th><th scope="col">{copy.points}</th></tr></thead><tbody>{state.teams.map((item, index) => <tr key={item.id} aria-current={!setup && index === state.activeIndex ? 'true' : undefined}><th scope="row"><span>{item.name}</span><small>{item.players.map(player => player.name).join(', ')}</small></th><td>{item.points}</td></tr>)}</tbody></table>
-        </aside>
+        </aside>}
       </div>
     </div>
   </section>;

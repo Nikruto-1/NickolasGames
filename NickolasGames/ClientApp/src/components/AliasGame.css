@@ -1,10 +1,11 @@
 .alias-game .head{margin-bottom:20px}.alias-game .head h2{font-size:36px;letter-spacing:0;line-height:1.15}
 .alias-rules{margin-top:12px;max-width:70ch}.alias-rules summary{cursor:pointer;min-height:44px;padding-block:10px}.alias-rules p{font-size:15px;line-height:1.55}
 .alias-layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:36px;margin-top:28px;align-items:start}
-.alias-team-editors{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:16px}
+.alias-layout.is-setup{grid-template-columns:minmax(0,1fr)}
+.alias-team-editors{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:16px;align-items:start}
 .alias-team-editor{border:1px solid var(--line);border-radius:8px;padding:16px;min-width:0;background:var(--bg2)}
 .alias-editor-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:700}
-.alias-editor-heading label{min-width:0;overflow-wrap:anywhere}
+.alias-editor-heading h3{flex:1;min-width:0;overflow-wrap:anywhere;font-size:20px;line-height:1.35;margin:0;letter-spacing:0}.alias-editor-heading input{flex:1}.alias-editor-heading .alias-icon{border:0}
 .alias-game input,.alias-game select{display:block;width:100%;min-width:0;min-height:46px;padding:10px 12px;font:inherit;color:var(--fg);background:var(--bg2);border:1px solid #8f8371;border-radius:6px}
 .alias-game input[type=number]{max-width:220px}.alias-game label{display:block;font-size:15px;font-weight:600;line-height:1.4}.alias-game label input,.alias-game label select{margin-top:8px}
 .alias-icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:44px;height:44px;border:1px solid var(--line);background:transparent;border-radius:6px}
@@ -12,7 +13,7 @@
 .alias-player-list{list-style:none;padding:0;margin:12px 0}.alias-player-list li{display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);min-height:44px}.alias-player-list li span{overflow-wrap:anywhere;min-width:0}
 .alias-player-list .alias-icon{border:0}.alias-player-form>div{display:flex;gap:8px;margin-top:8px}.alias-command{margin-top:16px}
 .alias-game .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;white-space:normal;overflow-wrap:anywhere;line-height:1.4}
-.alias-settings{display:grid;gap:20px;margin-top:28px}.alias-settings fieldset{margin:0;border:0;padding:0;min-width:0}.alias-settings legend{font-weight:600;font-size:15px;margin-bottom:8px}
+.alias-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 24px;margin-top:24px;padding-top:24px;border-top:1px solid var(--line)}.alias-settings fieldset{margin:0;border:0;padding:0;min-width:0}.alias-settings legend{font-weight:600;font-size:15px;margin-bottom:8px}
 .alias-levels{display:flex;flex-wrap:wrap;gap:8px}.alias-levels .chip{min-height:44px;border-radius:8px;border-bottom-width:3px}.alias-level-easy{border-bottom-color:#31704b}.alias-level-medium{border-bottom-color:#826225}.alias-level-hard{border-bottom-color:#a8433a}
 .alias-formats .chip{max-width:100%;white-space:normal;overflow-wrap:anywhere}
 .alias-main-action{margin-top:20px;min-height:52px!important}.alias-scores{min-width:0;border-top:2px solid var(--acc);padding-top:16px}.alias-scores h3{font-size:24px;letter-spacing:0;line-height:1.2}.alias-scores>p{font-size:14px;margin-top:8px}
@@ -32,7 +33,11 @@
 .alias-word-review{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin-top:24px}.alias-word-review section{min-width:0;padding:0}
 .alias-word-review h4{font-size:17px;line-height:1.4;margin:0;padding-bottom:10px;border-bottom:2px solid #31704b}.alias-word-review .alias-review-skip h4{border-bottom-color:#ab5549}
 .alias-word-review ul{list-style:none;padding:0;margin:0}.alias-word-review li{padding:12px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere;line-height:1.5}.alias-word-review li span{display:block}.alias-word-review li small{display:block;font-size:13px;margin-top:4px}.alias-history-note{font-size:14px;border-left:3px solid var(--acc);padding-left:12px}
-@media(max-width:560px){.alias-word-review{grid-template-columns:1fr;gap:24px}}
+.alias-result-headline{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:20px;padding-block:16px;border-bottom:1px solid var(--line)}.alias-result-headline>div{min-width:0}.alias-result-headline .alias-result-team{font-size:22px;font-weight:700;margin:0 0 6px}.alias-result-headline span{font-size:14px}.alias-result-points{font-size:56px;line-height:1.1;flex-shrink:0;font-variant-numeric:tabular-nums;color:#215736}.alias-result-points.is-negative{color:#90392f}
+.alias-result-metrics{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}.alias-result-metrics>div{display:flex;flex-direction:column;justify-content:space-between}.alias-result-metrics dt{font-size:14px;line-height:1.4;overflow-wrap:anywhere}.alias-result-metrics dd{margin:4px 0 0;font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.alias-last-result{border-left:3px solid #31704b;padding:8px 0 8px 16px;margin-top:20px;overflow-wrap:anywhere}.alias-last-result.is-missed{border-left-color:#ab5549}.alias-last-result h4{font-size:14px;font-weight:600;margin:0 0 6px}.alias-last-result>strong{display:block;font-size:20px;line-height:1.4}.alias-last-result p{font-size:14px;margin-bottom:0}
+.alias-review-details{margin-top:24px;border-top:1px solid var(--line);padding-top:8px}.alias-review-details>summary{cursor:pointer;min-height:44px;padding-block:12px;font-weight:600;overflow-wrap:anywhere}.alias-review-details .alias-word-review{margin-top:12px}
+@media(max-width:560px){.alias-word-review{grid-template-columns:1fr;gap:24px}.alias-settings{grid-template-columns:1fr}}
 .alias-game :focus-visible{outline:3px solid #6e5026;outline-offset:3px}
 @media(max-width:860px){.alias-layout{grid-template-columns:1fr}.alias-scores{order:2}.alias-scores table{max-width:100%}}
 @media(max-width:560px){.alias-game .head h2{font-size:28px}.alias-layout{gap:28px;margin-top:20px}.alias-word-card{min-height:240px;padding:18px}.alias-word-card>strong{font-size:30px}.alias-game .tabs{gap:6px}.alias-main-action{width:100%}.alias-team-editors{grid-template-columns:1fr}.alias-swipe-actions{gap:8px}.alias-swipe-actions .btn{font-size:15px;padding-inline:8px}}

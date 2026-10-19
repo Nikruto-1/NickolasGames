@@ -24,11 +24,16 @@ Implemented 2026-10-19. Existing site design and other games are unchanged.
 - Default victory target is 60, configurable as a positive safe whole number before starting.
 - Exhausted word pools display an explicit message instead of silently repeating words.
 - Remaining-card counters are not displayed in setup or during a round.
-- Team editor headings show the actual names and update while editing them.
+- Team editor headings show the actual names; a labelled pencil button opens inline editing.
+  Save or Enter closes the field. The setup grid uses the full width, without a duplicate zero-score
+  table, and settings use two columns on larger screens.
 - Round summaries show exact guessed and missed/skipped cards, including the final card and its
   recipient or shared penalty. These lists persist across reloads and reset on the next round.
   Older saves without per-card outcomes retain scores and show an incomplete-history notice;
   missing historical outcomes cannot be reconstructed from aggregate counts.
+- Round summaries emphasize the active team's signed net score. Timed correct/skipped counts
+  exclude the final card, which is shown separately with its recipient or all-team penalty.
+  The next-team action comes before the collapsible timed-word lists. Scoring is unchanged.
 
 State is saved under `nickolasgames-alias-teams-v1-${lang}` and validated on restore. An expired
 saved deadline restores directly to the last-word phase. The legacy
