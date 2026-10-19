@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, Pencil, Plus, RotateCcw, Trash2, UserPlus } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Dice5, Pencil, Plus, RotateCcw, Trophy, Trash2, UserPlus } from 'lucide-react';
 import { ALIAS_COPY } from '../locales/alias.js';
 import { ALIAS_WORDS } from '../data/alias.js';
 import { DIFFICULTIES } from '../utils/difficulty.js';
@@ -8,7 +8,11 @@ import { createHolmesTimerSound, HOLMES_TIME_UP } from '../utils/holmesTimerSoun
 import { ALIAS_ALL, ALIAS_FORMATS, aliasActor, aliasCategories, aliasPool, aliasReducer, aliasSetupErrors, aliasWord, newAliasState, refreshAliasDeck, restoreAliasState, shuffleAlias, validAliasTarget } from '../utils/alias.js';
 import './AliasGame.css';
 
-const diceIcons = [Dice1, Dice2, Dice3, Dice4, Dice5, Dice6];
+const dicePips = [[], [4], [0, 8], [0, 4, 8], [0, 2, 6, 8], [0, 2, 4, 6, 8], [0, 2, 3, 5, 6, 8]];
+
+function AliasDie({ value }) {
+  return <span className="alias-die" data-value={value}>{dicePips[value].map(position => <i className="alias-die-pip" key={position} style={{ gridRow: Math.floor(position / 3) + 1, gridColumn: position % 3 + 1 }} />)}</span>;
+}
 
 export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
   const copy = ALIAS_COPY[lang] || ALIAS_COPY.en;
@@ -32,6 +36,7 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
   const armed = useRef(null);
   if (!sound.current) sound.current = createHolmesTimerSound();
   const setup = state.phase === 'setup';
+  const drawing = ['dice', 'rolling', 'diceResult'].includes(state.phase);
   const team = state.teams[state.activeIndex];
   const actor = aliasActor(state);
   const word = aliasWord(state);
@@ -114,7 +119,7 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
         <button className="chip" onClick={() => onGame('random')}>{t.random}</button>
       </div>
       {!storageOk && <p className="alias-warning" role="status">{copy.storage}</p>}
-      <div className={'alias-layout' + (setup ? ' is-setup' : '')}>
+      <div className={'alias-layout' + (setup || drawing ? ' is-setup' : '')}>
         <div>
           {setup && <>
             <div className="alias-team-editors">
@@ -141,9 +146,9 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
             {attempt > 0 && errors.length > 0 && <div ref={feedback} className="setup-validation" role="alert" tabIndex={-1}><ul>{errors.map(error => <li key={error}>{copy[error]}</li>)}</ul></div>}
             <button className="btn pri alias-main-action" onClick={start}>{copy.start}</button>
           </>}
-          {['dice', 'rolling', 'diceResult'].includes(state.phase) && <div className="alias-dice-stage">
-            <h3>{state.phase === 'diceResult' ? copy.diceResults : copy.diceTitle}</h3><p>{copy.diceRule}</p>
-            {state.phase === 'dice' && state.dice.length > 0 && <p role="status">{copy.tie}</p>}
+          {drawing && <div className="alias-dice-stage">
+            <header className="alias-dice-heading"><h3>{state.phase === 'diceResult' ? copy.diceResults : copy.diceTitle}</h3><p>{copy.diceRule}</p></header>
+            {state.phase === 'dice' && state.dice.length > 0 && <p className="alias-dice-tie" role="status">{copy.tie}</p>}
             <div className="alias-dice-teams">{state.teams.map((item, index) => {
               const previous = state.dice.find(result => result.id === item.id);
               const participating = state.phase === 'rolling' ? state.contenders.includes(item.id) : (state.lastRollTeamIds || state.dice.map(roll => roll.id)).includes(item.id);
@@ -151,17 +156,17 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
               const settled = state.phase === 'rolling' && participating ? state.pending.find(roll => roll.id === item.id) : previous;
               const values = rolling ? [Math.floor(clock / 90 + index) % 6 + 1, Math.floor(clock / 130 + index) % 6 + 1] : settled?.values || [1, 1];
               const winner = state.phase === 'diceResult' && index === state.activeIndex;
-              return <div className={'alias-dice-team' + (rolling ? ' is-rolling' : '') + (winner ? ' is-winner' : '')} key={item.id}>
-                <strong>{item.name}</strong><div className="alias-dice-pair" aria-hidden="true">{values.map((value, die) => { const Icon = diceIcons[value - 1]; return <span key={die}><Icon size={48} strokeWidth={1.5} /></span>; })}</div>
-                <output aria-live="polite">{rolling ? copy.rolling : settled ? values[0] + ' + ' + values[1] + ' = ' + values.reduce((a, b) => a + b, 0) : '—'}</output>
+              return <div className={'alias-dice-team' + (rolling ? ' is-rolling' : '') + (winner ? ' is-winner' : '')} key={item.id} role="group" aria-label={item.name}>
+                <div className="alias-dice-team-heading"><h4>{item.name}</h4>{winner && <Check size={22} aria-hidden="true" />}</div>
+                <div className="alias-dice-pair" aria-hidden="true">{values.map((value, die) => <AliasDie key={die} value={rolling || settled ? value : 0} />)}</div>
+                <div className="alias-dice-score"><strong aria-hidden="true">{rolling ? '…' : settled ? values[0] + values[1] : '—'}</strong><output>{rolling ? copy.rolling : settled ? values[0] + ' + ' + values[1] + ' = ' + values.reduce((a, b) => a + b, 0) : '—'}</output></div>
                 {previous && !participating && <small className="alias-previous-roll">{copy.previousRoll}</small>}
-                {winner && <small className="alias-dice-winner-label">{copy.first}</small>}
               </div>;
             })}</div>
-            {state.phase === 'diceResult' ? <>
-              <div className="alias-dice-result" role="status"><strong>{copy.first}: {team.name}</strong><p>{copy.diceWinnerReason}</p></div>
+            {state.phase === 'diceResult' ? <div className="alias-dice-footer">
+              <div className="alias-dice-result" role="status"><Trophy size={26} aria-hidden="true" /><div><span>{copy.first}</span><strong>{team.name}</strong></div></div>
               <button className="btn pri alias-main-action" onClick={() => dispatch({ type: 'confirmDice' })}>{copy.continueDice}<ArrowRight size={20} /></button>
-            </> : <button className="btn pri alias-main-action" disabled={state.phase === 'rolling'} onClick={roll}><Dice5 size={20} /> {state.phase === 'rolling' ? copy.rolling : copy.roll}</button>}
+            </div> : <div className="alias-dice-footer alias-dice-roll-action"><button className="btn pri alias-main-action" disabled={state.phase === 'rolling'} onClick={roll}><Dice5 size={20} /> {state.phase === 'rolling' ? copy.rolling : copy.roll}</button></div>}
           </div>}
           {state.phase === 'ready' && <div ref={readyPanel} className="alias-ready" role="status">
             <p>{state.dice.length && state.teams.every(item => item.turns === 0) ? copy.first : copy.turn}</p><h3>{team.name}</h3><p>{copy.actor}: <strong>{actor?.name}</strong></p>
@@ -207,7 +212,7 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
           </div>}
           {!setup && <button className="btn sm alias-reset" onClick={reset}><RotateCcw size={16} />{copy.newGame}</button>}
         </div>
-        {!setup && <aside className="alias-scores" aria-label={copy.points}>
+        {!setup && !drawing && <aside className="alias-scores" aria-label={copy.points}>
           <h3>{copy.points}</h3><p>{copy.target}: {state.target}</p>
           <table><thead><tr><th scope="col">{copy.team}</th><th scope="col">{copy.points}</th></tr></thead><tbody>{state.teams.map((item, index) => <tr key={item.id} aria-current={!setup && index === state.activeIndex ? 'true' : undefined}><th scope="row"><span>{item.name}</span><small>{item.players.map(player => player.name).join(', ')}</small></th><td>{item.points}</td></tr>)}</tbody></table>
         </aside>}

@@ -13,6 +13,9 @@ Implemented 2026-10-19. Existing site design and other games are unchanged.
   teams do not reroll. Animation respects reduced-motion preferences. Interrupted rolls restore.
   Final dice faces and totals stay visible until Continue to game is pressed. The first team is
   explicitly announced. Older results of eliminated teams are labelled as previous rolls.
+- Dice use large pip faces, depth shadows and a reduced-motion-aware throw. The total is visually
+  primary; the equation remains available as text. Only one winner announcement is shown. The
+  zero-score table stays hidden throughout the draw and returns when entering the first turn.
 - Each team has a separate Start button before its turn. Starting reveals one word and begins
   an absolute 60-second deadline. No per-round word-count limit. Right/correct gives +1;
   left/skip gives -1. Negative team scores are allowed. Buttons supplement pointer swipes.
@@ -47,3 +50,9 @@ An exhausted game can continue with newly available words; a finished game stays
 Tests: 38 focused Alias cases plus 99 existing cases. Browser checks cover mobile/desktop,
 all five languages, long names, team addition/removal, dice ties, swipe and button scoring,
 refresh, deadline expiry, last-word stealing, rotation, victory and preservation of legacy data.
+
+Focused visual regression check: build the client, then run `node scripts/check-alias-dice.cjs`
+with Playwright available (or set `PLAYWRIGHT_MODULE` to its installed package). Chromium/Edge
+and WebKit must be installed. Screenshots go to the system temp directory by default; `QA_OUTPUT`
+overrides it. Checks cover all pip faces, totals, winner, scoreboard timing, five languages,
+80-character names and 320/390/1440px widths. `QA_ORIGIN` can target the deployed site.
