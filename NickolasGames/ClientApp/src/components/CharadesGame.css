@@ -28,3 +28,31 @@
 .charades-rule-sections ul li { padding-left: 2px; font-size: 16px; line-height: 1.7; overflow-wrap: anywhere; }
 .charades-rule-sections ul li + li { margin-top: 8px; }
 .charades-rule-sections ul li::marker { color: #826225; }
+
+.charades-mode { border: 0; padding: 0; margin: 16px 0; min-width: 0; }
+.charades-mode legend { font-size: 16px; margin-bottom: 10px; }
+.charades-mode > div { display: flex; flex-wrap: wrap; gap: 8px; }
+.charades-mode .chip { min-height: 44px; white-space: normal; overflow-wrap: anywhere; }
+.charades-draw h3 { font-size: 26px; line-height: 1.3; margin: 0; }
+.charades-draw header p { font-size: 16px; line-height: 1.65; margin: 12px 0 20px; }
+.charades-draw-players { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 12px; }
+.charades-draw-player { min-width: 0; padding: 18px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg2); text-align: center; }
+.charades-draw-player h4 { font-size: 18px; line-height: 1.4; margin: 0; overflow-wrap: anywhere; }
+.charades-dice { display: flex; justify-content: center; align-items: center; gap: 22px; height: 112px; }
+.charades-die { display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); place-items: center; width: 64px; height: 64px; flex: 0 0 64px; padding: 10px; border: 1px solid #c2b9aa; border-radius: 12px; background: #fffefa; box-shadow: inset 0 -4px #ebe6dc, 0 4px #b7ad9d, 0 8px 12px #2927241f; transform: rotate(-7deg); }
+.charades-die:nth-child(2) { transform: rotate(8deg); }
+.charades-die i { width: 9px; height: 9px; border-radius: 50%; background: #34312c; }
+.charades-die[data-value="0"] { opacity: .55; }
+.charades-draw-score { display: block; min-height: 30px; font-size: 20px; line-height: 1.5; font-weight: 600; font-variant-numeric: tabular-nums; }
+.charades-draw-player small { display: block; margin-top: 8px; font-size: 14px; }
+.charades-draw-player.is-winner { background: #eaf2e9; border-color: #31704b; box-shadow: inset 0 0 0 1px #31704b; }
+.charades-draw footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; border-top: 1px solid var(--line); padding-top: 20px; margin-top: 20px; }
+.charades-draw footer .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; white-space: normal; }
+.charades-draw-winner { display: flex; gap: 12px; align-items: center; color: #215736; min-width: 0; }
+.charades-draw-winner svg { flex-shrink: 0; }
+.charades-draw-winner strong { display: block; font-size: 22px; line-height: 1.4; overflow-wrap: anywhere; }
+.charades-draw-tie { padding: 12px; border-left: 3px solid var(--acc); line-height: 1.65; }
+.charades-draw-player.is-rolling .charades-die { animation: charades-throw .3s ease-in-out infinite; }
+.charades-draw-player.is-rolling .charades-die:nth-child(2) { animation-direction: reverse; }
+@keyframes charades-throw { 0%,100% { transform: translateY(0) rotate(-7deg); } 40% { transform: translateY(-12px) rotate(24deg); } 75% { transform: translateY(-3px) rotate(-20deg); } }
+@media (prefers-reduced-motion: reduce) { .charades-draw-player.is-rolling .charades-die { animation: none; } }

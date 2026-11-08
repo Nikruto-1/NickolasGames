@@ -4,15 +4,18 @@ import { createHolmesTimerSound, HOLMES_TIME_UP } from '../utils/holmesTimerSoun
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { ROUND_MESSAGES } from '../locales/round.js';
 import { CHARADES_COPY, CHARADES_TIME_COPY, CHARADES_RULES } from '../locales/charades.js';
+import { CHARADES_MODES } from '../locales/charades-modes.js';
+import { CharadesDraw } from './CharadesDraw.jsx';
 import './CharadesGame.css';
 import { DIFFICULTIES } from '../utils/difficulty.js';
 import { POINTS_BY_DIFFICULTY, validTargetScore } from '../utils/playerScores.js';
 import { readValue, writeValue } from '../utils/progress.js';
-import { ALL_CHARADES_CATEGORIES, charadesReducer, createCharadesDeck, currentCharadesCard, hasCharadesCard, deckReady, newCharadesState, validCharadesState, restoreCharadesState, charadesPoints, canCompleteRound } from '../utils/charades.js';
+import { ALL_CHARADES_CATEGORIES, charadesGuesserMode, charadesReducer, createCharadesDeck, currentCharadesCard, hasCharadesCard, deckReady, newCharadesState, validCharadesState, restoreCharadesState, charadesPoints, canCompleteRound } from '../utils/charades.js';
 
 export function CharadesGame({ games, t, lang, onGame, startRequest=0 }) {
   const copy = { ...(CHARADES_COPY[lang] || CHARADES_COPY.en), ...(CHARADES_TIME_COPY[lang] || CHARADES_TIME_COPY.en) };
   const rules = CHARADES_RULES[lang] || CHARADES_RULES.en;
+  const modeCopy = CHARADES_MODES[lang] || CHARADES_MODES.en;
   const key = `nickolasgames-charades-v2-${lang}`;
   const [state, dispatch] = useReducer(charadesReducer, null, () => {
     const saved = readValue(key);
@@ -27,6 +30,8 @@ export function CharadesGame({ games, t, lang, onGame, startRequest=0 }) {
   const [clock, setClock] = useState(Date.now());
   const sound=useRef(null);if(!sound.current)sound.current=createHolmesTimerSound();
   const armedDeadline=useRef(null);
+  const roundPanel = useRef(null);
+  const previousPhase = useRef(state.phase);
   useEffect(()=>()=>sound.current.dispose(),[]);
   useEffect(()=>{
     if(state.phase==='acting'&&state.timed&&state.deadline===armedDeadline.current&&clock>=state.deadline){
@@ -34,15 +39,24 @@ export function CharadesGame({ games, t, lang, onGame, startRequest=0 }) {
     }
   },[state.phase,state.timed,state.deadline,clock,lang]);
   const setup = state.phase === 'setup';
+  const guesserMode = charadesGuesserMode(state);
+  const drawing = ['dice', 'rolling', 'diceResult'].includes(state.phase);
+  const ruleSections = guesserMode ? [...modeCopy.sections.slice(0, 2), ...rules.sections.slice(2, 4), modeCopy.sections[2]] : rules.sections;
+  const order = guesserMode ? modeCopy.order : copy.order;
   const actor = state.players.find(p => p.id === state.activeId);
   const card = currentCharadesCard(state);
   const exhausted = !setup && state.phase !== 'finished' && (state.phase === 'exhausted' || !hasCharadesCard(state));
   const readingTime = state.phase === 'confirming' ? state.answeredAt : clock;
   const remaining = state.deadline === null ? 60 : Math.max(0, Math.ceil((state.deadline - readingTime) / 1000));
   const award = charadesPoints(state, readingTime);
-  const roundPending = !setup && !exhausted && state.phase !== 'finished' && state.players.some(player => player.points >= state.targetScore);
+  const roundPending = !guesserMode && !setup && !exhausted && state.phase !== 'finished' && state.players.some(player => player.points >= state.targetScore);
   const expired = state.deadline !== null && readingTime >= state.deadline;
   useEffect(() => { setStorageOk(writeValue(key, state)); }, [key, state]);
+  useEffect(() => {
+    if ((state.phase === 'dice' && previousPhase.current === 'setup') ||
+      (state.phase === 'handoff' && previousPhase.current === 'diceResult')) roundPanel.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+    previousPhase.current = state.phase;
+  }, [state.phase]);
   useEffect(() => {
     if (state.phase !== 'acting' || !state.timed) return;
     const refresh = () => setClock(Date.now());
@@ -52,6 +66,14 @@ export function CharadesGame({ games, t, lang, onGame, startRequest=0 }) {
     return () => { clearInterval(timer); document.removeEventListener('visibilitychange', refresh); };
   }, [state.phase, state.deadline, state.timed]);
   useEffect(() => { setTargetDraft(String(state.targetScore)); setWarning(''); }, [state.targetScore, setup]);
+  useEffect(() => {
+    if (state.phase !== 'rolling') return;
+    const tick = () => { const now = Date.now(); setClock(now); dispatch({ type: 'rolled', now }); };
+    tick();
+    const timer = setInterval(tick, 90);
+    document.addEventListener('visibilitychange', tick);
+    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', tick); };
+  }, [state.phase, state.draw?.until]);
 
   const startErrors=setup&&startAttempt?validateCharadesStart({state,targetDraft,pendingName:name}):[];
   const startGame=()=>{
@@ -86,11 +108,11 @@ export function CharadesGame({ games, t, lang, onGame, startRequest=0 }) {
   return <section className="s pv charades-game" id="preview">
     <div className="wrap pvg">
       <div>
-        <div className="head" style={{ margin: 0 }}><h2>{copy.title}</h2><p className="charades-description">{rules.description}</p></div>
+        <div className="head" style={{ margin: 0 }}><h2>{guesserMode ? modeCopy.title : copy.title}</h2><p className="charades-description">{guesserMode ? modeCopy.description : rules.description}</p></div>
         <details className="charades-rules">
           <summary>{rules.label}</summary>
           <ol className="charades-rule-sections">
-            {rules.sections.map(section => <li key={section.title}>
+            {ruleSections.map(section => <li key={section.title}>
               <h3>{section.title}</h3>
               <ul>{section.items.map(item => <li key={item}>{item}</li>)}</ul>
             </li>)}
@@ -102,7 +124,10 @@ export function CharadesGame({ games, t, lang, onGame, startRequest=0 }) {
         </div>
         <div className="players-panel">
           <h3>{copy.players}</h3>
-          <p>{copy.order}</p>
+          <fieldset className="charades-mode"><legend>{modeCopy.label}</legend>
+            <div>{['ordered', 'guesser'].map(mode => <button type="button" key={mode} className="chip" disabled={!setup} aria-pressed={(state.turnMode || 'ordered') === mode} onClick={() => dispatch({ type: 'turnMode', value: mode })}>{modeCopy[mode]}</button>)}</div>
+          </fieldset>
+          <p>{order}</p>
           <div className="difficulty" role="group" aria-label={copy.timeMode}>
             <span>{copy.timeMode}</span>
             <button className="chip" disabled={!setup} aria-pressed={state.timed} onClick={() => dispatch({ type: 'timing', timed: true })}>{copy.minute}</button>
@@ -151,13 +176,14 @@ export function CharadesGame({ games, t, lang, onGame, startRequest=0 }) {
           <p className="players-note" role="status">{storageOk ? (state.timed ? copy.saved : copy.savedUntimed) : copy.failed}</p>
         </div>
       </div>
-      <div className="charades-round">
-        {actor && <h3 className="current-player">{copy.active}: <b>{actor.name}</b></h3>}
+      <div className="charades-round" ref={roundPanel}>
+        {drawing && <CharadesDraw state={state} copy={modeCopy} clock={clock} dispatch={dispatch} />}
+        {actor && !drawing && <h3 className="current-player">{copy.active}: <b>{actor.name}</b></h3>}
         {roundPending && <p className="charades-result" role="status">{copy.roundPending}</p>}
         {state.lastResult && <div className="charades-result" role="status">
           {state.lastResult.presenter}: +{state.lastResult.presenterPoints}{state.lastResult.bonus > 0 && <span> ({copy.bonus}: +{state.lastResult.bonus})</span>} · {state.lastResult.guesser}: +{state.lastResult.guesserPoints}
         </div>}
-        {state.phase === 'setup' && <div className="charades-card"><p>{copy.order}</p><p>{state.timed ? copy.choose : copy.chooseUntimed}</p></div>}
+        {state.phase === 'setup' && <div className="charades-card"><p>{order}</p><p>{state.timed ? copy.choose : copy.chooseUntimed}</p></div>}
         {!exhausted && state.phase === 'handoff' && <div className="charades-card">
           <p>{copy.handoff}</p>
           <button className="btn pri" onClick={() => dispatch({ type: 'reveal' })}>{copy.reveal}</button>
@@ -186,7 +212,7 @@ export function CharadesGame({ games, t, lang, onGame, startRequest=0 }) {
             {state.phase === 'confirming' && <div className="charades-guesser">
               <h3>{copy.whoGuessed}</h3>
               <p>{expired ? copy.late : (state.timed ? copy.timed : copy.equalPoints).replace('{points}', award.guesserPoints).replace('{actorPoints}', award.presenterPoints).replace('{bonus}', award.bonus)}</p>
-              <p>{copy.awardHint}</p>
+              <p>{guesserMode ? modeCopy.awardHint : copy.awardHint}</p>
               <div className="players-actions">
                 {state.players.filter(p => p.id !== state.activeId).map(player => <button className="btn pri" key={player.id} onClick={() => dispatch({ type: 'award', id: player.id })}>{player.name} +{POINTS_BY_DIFFICULTY[state.selected]}</button>)}
               </div>

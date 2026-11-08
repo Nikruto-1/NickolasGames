@@ -9,6 +9,7 @@ const { chromium, webkit } = require(process.env.PLAYWRIGHT_MODULE || 'playwrigh
 (async () => {
   const { CHARADES_RULES, CHARADES_COPY, CHARADES_TIME_COPY } = await import(pathToFileURL(path.resolve(__dirname, '../src/locales/charades.js')));
   const { COPY } = await import(pathToFileURL(path.resolve(__dirname, '../src/locales/index.js')));
+  const { CHARADES_MODES } = await import(pathToFileURL(path.resolve(__dirname, '../src/locales/charades-modes.js')));
   const root = path.resolve(__dirname, '../../wwwroot');
   const output = process.env.QA_OUTPUT || path.join(os.tmpdir(), 'nickolasgames-charades-qa');
   await fs.mkdir(output, { recursive: true });
@@ -79,10 +80,79 @@ const { chromium, webkit } = require(process.env.PLAYWRIGHT_MODULE || 'playwrigh
                 assert.equal(after.lastResult.presenterPoints, timed ? 3 : 1);
               }
             }
+            const mode = CHARADES_MODES[lang], copy = CHARADES_COPY[lang];
+            if (lang === 'uk' && width === 390) {
+              page.once('dialog', dialog => dialog.accept());
+              await game.getByRole('button', { name: copy.newGame, exact: true }).first().click();
+            } else {
+              for (const name of ['Микола', 'Оля']) {
+                await game.locator('#score-player-name').fill(name);
+                await game.getByRole('button', { name: copy.add, exact: true }).click();
+              }
+            }
+            const longName = 'Анастасія-Марія з дуже довгим іменем';
+            await game.locator('#score-player-name').fill(longName);
+            await game.getByRole('button', { name: copy.add, exact: true }).click();
+            await game.locator('#target-score').fill('6');
+            await game.getByRole('button', { name: CHARADES_TIME_COPY[lang].noTime, exact: true }).click();
+            await game.getByRole('button', { name: mode.guesser, exact: true }).click();
+            assert.equal(await game.locator('.head h2').innerText(), mode.title);
+            await rules.locator('summary').click();
+            assert.deepEqual(await rules.locator('h3').allTextContents(), [...mode.sections.slice(0, 2), ...CHARADES_RULES[lang].sections.slice(2, 4), mode.sections[2]].map(section => section.title));
+            await rules.locator('summary').click();
+            await game.getByRole('button', { name: copy.start, exact: true }).click();
+            const snapshot = () => page.evaluate(() => JSON.parse(localStorage.getItem('nickolasgames-charades-v2-' + document.documentElement.lang)));
+            const draw = game.locator('.charades-draw');
+            assert.equal((await snapshot()).phase, 'dice');
+            assert.equal(await game.locator('.charades-word').count(), 0);
+            await page.evaluate(() => { Math.random = () => .99; });
+            await page.emulateMedia({ reducedMotion: 'no-preference' });
+            await draw.getByRole('button', { name: mode.roll, exact: true }).click();
+            await draw.locator('.is-rolling').first().waitFor();
+            assert.notEqual(await draw.locator('.is-rolling .charades-die').first().evaluate(node => getComputedStyle(node).animationName), 'none');
+            assert.equal(await draw.getByRole('button').isDisabled(), true);
+            await draw.getByText(mode.tie, { exact: true }).waitFor();
+            assert.equal((await snapshot()).draw.contenders.length, 3);
+            await page.evaluate(() => { const values = [0, 0, .2, .2, .99, .99]; Math.random = () => values.shift() ?? .99; });
+            await draw.getByRole('button', { name: mode.roll, exact: true }).click();
+            await page.reload();
+            await draw.getByRole('button', { name: mode.continue, exact: true }).waitFor();
+            await page.waitForFunction(() => JSON.parse(localStorage.getItem('nickolasgames-charades-v2-' + document.documentElement.lang))?.phase === 'diceResult');
+            const result = await snapshot();
+            assert.equal(result.phase, 'diceResult'); assert.equal(result.activeId, result.players[2].id);
+            assert.deepEqual(await draw.locator('.charades-draw-score').allTextContents(), ['1 + 1 = 2', '2 + 2 = 4', '6 + 6 = 12']);
+            await page.waitForTimeout(400); assert.equal((await snapshot()).phase, 'diceResult');
+            assert.equal(await game.locator('.charades-word').count(), 0);
+            assert.equal(await game.locator('[role="timer"]').count(), 0);
+            assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+            assert(await draw.locator('.charades-die').evaluateAll(dice => dice.every(die => die.getBoundingClientRect().width > 40 && die.childElementCount > 0)));
+            await draw.screenshot({ path: path.join(output, `charades-dice-${lang}-${width}-${engine}.png`) });
+            await draw.getByRole('button', { name: mode.continue, exact: true }).click();
+            await game.getByRole('button', { name: copy.reveal, exact: true }).click();
+            await game.locator('.charades-option.hard').click();
+            const firstWord = await game.locator('.charades-word').innerText();
+            await game.getByRole('button', { name: copy.skip, exact: true }).click();
+            assert.equal((await snapshot()).activeId, result.activeId);
+            await game.getByRole('button', { name: copy.reveal, exact: true }).click();
+            await game.locator('.charades-option.hard').click();
+            assert.notEqual(await game.locator('.charades-word').innerText(), firstWord);
+            await game.getByRole('button', { name: copy.guessed, exact: true }).click();
+            await game.locator('.charades-guesser').getByRole('button', { name: 'Оля +3', exact: true }).click();
+            const after = await snapshot(); assert.equal(after.activeId, after.players[1].id); assert.equal(after.phase, 'handoff');
+            assert.deepEqual(after.players.map(player => player.points), [0, 3, 3]);
+            await page.reload(); await game.getByRole('button', { name: copy.reveal, exact: true }).waitFor();
+            assert.deepEqual(await snapshot(), after);
+            assert.equal(await game.locator('.charades-word').count(), 0);
+            await game.getByRole('button', { name: copy.reveal, exact: true }).click();
+            await game.locator('.charades-option.hard').click();
+            await game.getByRole('button', { name: copy.guessed, exact: true }).click();
+            await game.locator('.charades-guesser').getByRole('button', { name: 'Микола +3', exact: true }).click();
+            assert.equal((await snapshot()).phase, 'finished');
+            assert.deepEqual((await snapshot()).winners, [after.players[1].id]);
             assert.deepEqual(errors, []);
           } finally { await page.close(); }
         }
-        console.log(`${engine}: PASS Charades rules, five languages, 320/390/1440px, keyboard, timed/untimed scoring and save restoration`);
+        console.log(`${engine}: PASS both Charades modes, five languages, 320/390/1440px, animated dice, tie reroll, saved draw, guesser handoff, skip, target and legacy saves`);
       } finally { await browser.close(); }
     }
   } finally { await new Promise(resolve => server.close(resolve)); }
