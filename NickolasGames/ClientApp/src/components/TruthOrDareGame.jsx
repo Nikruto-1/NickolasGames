@@ -33,7 +33,7 @@ export function TruthOrDareGame({ games, t, lang, onGame }) {
   const [index, setIndex] = useState(() => Math.min(Math.max(0, Number(saved?.index) || 0), saved?.queue?.length || 800));
   const [revealed, setRevealed] = useState(false);
   const [skipped, setSkipped] = useState(() => Number(saved?.skipped) || 0);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(() => !saved);
   const [startFlash, setStartFlash] = useState(false);
   const cardsById = useMemo(() => new Map(TRUTH_DARE_CARDS.map((card) => [card.id, card])), []);
   const current = cardsById.get(queue[index]);
@@ -56,7 +56,7 @@ export function TruthOrDareGame({ games, t, lang, onGame }) {
   const selectMode = (value) => reset(categories, value);
   const advance = (skip = false) => {
     if (!current) return;
-    if (!revealed) { setRevealed(true); return; }
+    if (!revealed && !skip) { setRevealed(true); return; }
     if (skip) setSkipped((v) => v + 1);
     setRevealed(false);
     setIndex((v) => v + 1);
@@ -125,7 +125,7 @@ export function TruthOrDareGame({ games, t, lang, onGame }) {
           <div className="td-actions">
             {completed ? <button type="button" className="btn pri td-primary" onClick={() => reset()}>Перемішати та грати знову</button>
             : <><button type="button" className="btn pri td-primary" onClick={() => revealed ? advance(false) : setRevealed(true)}>{revealed ? "Наступна картка →" : "Відкрити картку →"}</button>
-            <button type="button" className="btn td-secondary" onClick={() => { setRevealed(true); advance(true); }} aria-label="Пропустити поточну картку">Пропустити</button></>}
+            <button type="button" className="btn td-secondary" onClick={() => advance(true)} aria-label="Пропустити поточну картку">Пропустити</button></>}
           </div>
           <div className="td-footnote"><span>Без повторів до завершення колоди</span><span>Пропущено: {skipped}</span></div>
           {lang !== "uk" && <p className="td-language-note">Цей набір із 800 карток наразі доступний українською.</p>}
