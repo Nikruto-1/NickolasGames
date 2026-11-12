@@ -76,11 +76,6 @@ export function TruthOrDareGame({ games, t, lang, onGame }) {
   useEffect(() => {
     try { localStorage.setItem(STORAGE, JSON.stringify({ categories, queue, index, skipped })); } catch {}
   }, [categories, queue, index, skipped]);
-  useEffect(() => {
-    const show = () => setRevealed(false);
-    document.addEventListener("visibilitychange", show);
-    return () => document.removeEventListener("visibilitychange", show);
-  }, []);
   const start = () => { setSettingsOpen(false); setStartFlash(true); setTimeout(() => setStartFlash(false), 400); };
   const all = categories.length === TRUTH_DARE_CATEGORIES.length;
   const completed = index >= queue.length;
@@ -138,7 +133,7 @@ export function TruthOrDareGame({ games, t, lang, onGame }) {
               : chosen && revealed ? <><div className="td-card-category">{activeCategory?.name}</div><h3>{current.text}</h3>{current.challenge && <div className="td-card-challenge"><strong>Додатковий виклик</strong><p>{current.challenge}</p></div>}</>
               : <><div className="td-watermark">?</div><h3>Правда чи дія?</h3><p>Обери один із двох варіантів вище — і отримаєш картку.</p></>}
             </div>
-            <div className="td-card-bottom"><span>{activeCategory?.name || "NickolasGames"}</span><span>HOLMES EDITION</span></div>
+            <div className="td-card-bottom"><span>{chosen ? activeCategory?.name : "NickolasGames"}</span><span>HOLMES EDITION</span></div>
           </div>
           <div className="td-actions">
             {completed ? <button type="button" className="btn pri td-primary" onClick={() => reset()}>Перемішати та грати знову</button>
