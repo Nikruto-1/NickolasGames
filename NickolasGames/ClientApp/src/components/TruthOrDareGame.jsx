@@ -65,7 +65,6 @@ export function TruthOrDareGame({ games, t, lang, onGame }) {
     if (!current) return;
     if (!chosen) return;
     if (skip) setSkipped((v) => v + 1);
-    setRevealed(false);
     setChosen(false);
     setIndex((v) => v + 1);
   };
