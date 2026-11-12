@@ -117,7 +117,7 @@ export function TruthOrDareGame({ games, t, lang, onGame }) {
             <div className="td-card-top"><span className="td-kind">{completed ? "Кінець колоди" : current?.type === "truth" ? "ПРАВДА" : "ДІЯ"}</span><span className="td-card-no">№ {String(index + 1).padStart(3, "0")}</span></div>
             <div className="td-card-center">
               {completed ? <><div className="td-watermark">✓</div><h3>Ти пройшов усі картки!</h3><p>Можна зіграти ще раз — у новому порядку.</p></>
-              : revealed ? <><div className="td-card-category">{activeCategory?.name}</div><h3>{current.text}</h3></>
+              : revealed ? <><div className="td-card-category">{activeCategory?.name}</div><h3>{current.text}</h3>{current.challenge && <div className="td-card-challenge"><strong>Додатковий виклик</strong><p>{current.challenge}</p></div>}</>
               : <><div className="td-watermark">?</div><h3>Готовий до несподіванки?</h3><p>Відкрий картку та передай хід наступному гравцеві.</p></>}
             </div>
             <div className="td-card-bottom"><span>{activeCategory?.name || "NickolasGames"}</span><span>HOLMES EDITION</span></div>
