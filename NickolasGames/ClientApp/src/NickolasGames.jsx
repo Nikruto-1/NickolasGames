@@ -1,5 +1,6 @@
 import { PrivacyPanel } from "./components/PrivacyPanel.jsx";
 import { AliasGame } from "./components/AliasGame.jsx";
+import { TruthOrDareGame } from "./components/TruthOrDareGame.jsx";
 import { initialLanguage, updateSiteMetadata, LANGUAGE_PATHS } from "./utils/siteMetadata.js";
 import { PRIVACY_COPY } from "./locales/privacy.js";
 import { StartFeedback } from "./components/StartFeedback";
@@ -486,6 +487,7 @@ export default function NickolasGames() {
         ? <CharadesGame key={`${lang}-${game}`} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={(k) => choose(k, false)} />
         : game === "whoami" ? <WhoAmIGame key={`${lang}-${game}`} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={(k) => choose(k, false)} />
         : game === "alias" ? <AliasGame key={`${lang}-${game}`} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={(k) => choose(k, false)} />
+        : game === "truth" ? <TruthOrDareGame key={`${lang}-${game}`} games={t.games} t={t} lang={lang} onGame={(k) => choose(k, false)} />
         : <CardStackPreview key={`${lang}-${game}`} game={game} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={(k) => choose(k, false)} />}
       <HowItWorks t={t} />
       <FinalCta t={t} onStart={requestStart} />
