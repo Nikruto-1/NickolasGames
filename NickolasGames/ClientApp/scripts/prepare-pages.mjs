@@ -46,4 +46,43 @@ for (const [lang,path] of Object.entries(LANGUAGE_PATHS)) {
 }
 writeFileSync(resolve(root,'robots.txt'),'User-agent: *\nAllow: /\nSitemap: '+SITE_ORIGIN+'/sitemap.xml\n');
 writeFileSync(resolve(root,'sitemap.xml'),'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+urls.map(url=>'<url><loc>'+url+'</loc></url>').join('')+'</urlset>\n');
-console.log('Prepared '+urls.length+' localized game/privacy pages with CSP and sitemap.');
+
+const notFound = `<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex,follow" />
+  <meta name="theme-color" content="#f5efe3" />
+  <link rel="icon" href="/icons/holmes-192.png" />
+  <title>404 — Сторінку не знайдено | NickolasGames</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:#f5efe3;color:#292724;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+    main{min-height:100svh;display:grid;place-items:center;padding:24px}
+    article{width:min(100%,640px);padding:clamp(26px,6vw,54px);border:1px solid #d9cdbb;background:#fcf9f3;border-radius:16px}
+    .brand{font-weight:800;letter-spacing:-.025em}
+    .code{margin:42px 0 12px;color:#805d31;font-size:13px;font-weight:800;letter-spacing:.1em}
+    h1{margin:0;font-size:clamp(34px,7vw,54px);line-height:1.12;letter-spacing:-.045em}
+    p{font-size:17px;line-height:1.6;max-width:49ch;color:#685f53}
+    .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:29px}
+    a{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border:1px solid #c6ae8a;border-radius:10px;min-height:48px;padding:12px 18px;color:#292724;font-weight:700}
+    a:first-child{background:#b78b4f;border-color:#b78b4f}
+    a:hover{border-color:#6f4f2c}
+    a:focus-visible{outline:3px solid #805d31;outline-offset:3px}
+    @media(max-width:420px){.actions a{flex:1 1 100%}}
+  </style>
+</head>
+<body>
+  <main><article>
+    <span class="brand">NickolasGames</span>
+    <p class="code">ПОМИЛКА 404</p>
+    <h1>Холмс не знайшов цю сторінку</h1>
+    <p>Схоже, посилання неправильне або сторінку перемістили. Повернися до ігор — там на тебе вже чекає наступний раунд.</p>
+    <div class="actions"><a href="/uk/">До ігор</a><a href="/">English</a></div>
+  </article></main>
+</body>
+</html>`;
+writeFileSync(resolve(root,'404.html'), notFound);
+
+console.log('Prepared '+urls.length+' localized game/privacy pages, 404 page, CSP and sitemap.');
