@@ -149,6 +149,65 @@ try {
     assert.deepEqual(errors,[],`${width}px runtime errors`);
     await page.close();
   }
+  // Complete real winning move: result dialog, ranking, undo, replay and safe restart.
+  {
+    const page=await browser.newPage({viewport:{width:1024,height:850},serviceWorkers:"block"});
+    await page.goto(base+"/uk/?game=checkers",{waitUntil:"domcontentloaded"});
+    await page.locator(".ck-board").waitFor();
+    await page.evaluate(()=>{
+      const key="nickolasgames-session-checkers-shared";
+      const stored=JSON.parse(localStorage.getItem(key));
+      stored.state={...stored.state,board:Array(64).fill(null),turn:"white",moveNumber:1,forcedFrom:null,
+        captured:[],winner:null,draw:false,drawReason:null,matchId:"smoke-undo-win",positionCounts:{}};
+      stored.state.board[17]={side:"white",king:false};
+      stored.state.board[10]={side:"black",king:false};
+      localStorage.setItem(key,JSON.stringify(stored));
+    });
+    await page.reload();
+    await page.locator('.ck-cell[data-cell="17"]').click();
+    await page.locator('.ck-cell[data-cell="3"]').click();
+    await page.getByRole("dialog").waitFor();
+    const wins=async()=>page.evaluate(()=>{
+      const raw=localStorage.getItem("nickolasgames-session-checkers-standings-shared");
+      return raw?JSON.parse(raw).state.white:0;
+    });
+    assert.equal(await wins(),1);
+    await page.getByRole("button",{name:"Переглянути дошку"}).click();
+    await page.getByRole("button",{name:"Скасувати хід"}).click();
+    await page.waitForFunction(()=>JSON.parse(localStorage.getItem("nickolasgames-session-checkers-standings-shared")).state.white===0);
+    assert.equal(await wins(),0,"Undo must reverse win");
+    await page.locator('.ck-cell[data-cell="17"]').click();
+    await page.locator('.ck-cell[data-cell="3"]').click();
+    await page.getByRole("dialog").waitFor();
+    await page.waitForFunction(()=>JSON.parse(localStorage.getItem("nickolasgames-session-checkers-standings-shared")).state.white===1);
+    assert.equal(await wins(),1,"Winning again counts exactly once");
+    await page.getByRole("button",{name:"Зіграти ще раз"}).click();
+    assert.equal(await page.getByRole("dialog").count(),0);
+    assert.equal(await page.locator(".ck-board .ck-piece").count(),24,"Restart restores standard setup");
+    checks+=8;
+    await page.close();
+  }
+  // Restored draws display a draw-specific dialog rather than falsely announcing a winner.
+  {
+    const page=await browser.newPage({viewport:{width:1024,height:850},serviceWorkers:"block"});
+    await page.goto(base+"/uk/?game=checkers",{waitUntil:"domcontentloaded"});
+    await page.locator(".ck-board").waitFor();
+    await page.evaluate(()=>{
+      const key="nickolasgames-session-checkers-shared",snapshot=JSON.parse(localStorage.getItem(key));
+      snapshot.state.draw=true;
+      snapshot.state.drawReason="repetition";
+      snapshot.state.winner=null;
+      localStorage.setItem(key,JSON.stringify(snapshot));
+    });
+    await page.reload();
+    await page.getByRole("dialog").waitFor();
+    assert.equal(await page.getByRole("heading",{name:"Нічия!"}).count(),1);
+    assert.equal(await page.getByText("Позиція повторилася тричі.").count(),1);
+    await page.getByRole("button",{name:"Зіграти ще раз"}).click();
+    assert.equal(await page.getByRole("dialog").count(),0);
+    checks+=3;
+    await page.close();
+  }
   // Human vs. computer: browser-only opponent, two difficulties, and durable mode.
   for (const level of ["easy", "medium"]) {
     const page=await browser.newPage({viewport:{width:1024,height:850},serviceWorkers:"block"});
