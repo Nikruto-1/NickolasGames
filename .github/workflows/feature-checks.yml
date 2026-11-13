@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - 'refactor/**'
+      - 'architecture/**'
 
 permissions:
   contents: read
