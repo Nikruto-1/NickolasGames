@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { playCheckersVictory } from "./victorySound.js";
-import { chooseCheckersBotMove } from "../../../../../../packages/game-core/checkers/bot.js";
+import { chooseCheckersBotMove } from "../../../../../packages/game-core/checkers/bot.js";
 import { emptyCheckersStandings, validateCheckersStandings, recordCheckersWin, rankedCheckersSides } from "./standings.js";
 import { useVersionedState } from "../../utils/gameSession.js";
 import { initialCheckers, legalCheckersMoves, applyCheckersMove, validateCheckersState, squareIsDark } from "./gameLogic.js";
