@@ -90,8 +90,9 @@ const notFound = `<!doctype html>
         de:{code:"FEHLER 404",title:"Holmes konnte diese Seite nicht finden",text:"Der Link ist möglicherweise falsch oder die Seite wurde verschoben. Zurück zu den Spielen!",home:"Zu den Spielen"},
         es:{code:"ERROR 404",title:"Holmes no encuentra esta página",text:"Puede que el enlace no funcione o que la página se haya movido. Vuelve a los juegos para otra ronda.",home:"Volver a los juegos"}
       };
-      var match = location.pathname.match(/^\/(uk|en|sv|de|es)(?:\/|$)/);
-      var lang = match ? match[1] : "en";
+      var prefix = location.pathname.split("/")[1];
+      var match = Object.prototype.hasOwnProperty.call(messages, prefix);
+      var lang = match ? prefix : "en";
       if (!match) {try {var saved=localStorage.getItem("nickolasgames-lang");if(messages[saved])lang=saved;}catch(e){}}
       var t = messages[lang] || messages.en;
       document.documentElement.lang = lang;
