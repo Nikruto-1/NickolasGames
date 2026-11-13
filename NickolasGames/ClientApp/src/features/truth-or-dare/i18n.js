@@ -39,15 +39,19 @@ export const localizedCategory = (category, lang) => {
   return { ...category, name: translation?.[0] || category.name, description: translation?.[1] || category.description };
 };
 
-// IDs remain language-independent, so the saved queue and played-card count
-// survive language switches. Only strings change.
+// Existing 800 queue IDs are immutable and stored in saved sessions.
+// Translation keys point to the canonical base card, not to array positions.
+export const baseTruthDareCardId = (cardId) => typeof cardId === "string"
+  ? cardId.replace(/-[1-5]$/, "")
+  : null;
+
 export const localizeTruthDareCard = (card, lang) => {
   if (!card || lang === "uk") return card;
   const pack = getTruthDareLocale(lang);
-  const match = card.id.match(/^(.+)-(truth|dare)-(\d+)-(\d+)$/);
+  const base = pack.cardTextById?.[baseTruthDareCardId(card.id)];
+  const match = card.id.match(/-(truth|dare)-(\d+)-(\d+)$/);
   if (!match) return card;
-  const [, category, type, n, variant] = match;
-  const base = pack.prompts[category]?.[type === "truth" ? 0 : 1]?.[Number(n) - 1];
+  const [, type, , variant] = match;
   const challenge = pack.twists[type]?.[Number(variant) - 1] ?? null;
   return { ...card, text: base || card.text, challenge };
 };

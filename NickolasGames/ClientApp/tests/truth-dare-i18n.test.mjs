@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { TRUTH_DARE_CARDS, TRUTH_DARE_CATEGORIES } from "../src/features/truth-or-dare/truthOrDare.uk.js";
-import { getTruthDareLocale, localizedCategory, localizeTruthDareCard } from "../src/features/truth-or-dare/i18n.js";
+import { getTruthDareLocale, localizedCategory, localizeTruthDareCard, baseTruthDareCardId } from "../src/features/truth-or-dare/i18n.js";
 
 test("all 800 truth/dare IDs are unique", () => {
   assert.equal(TRUTH_DARE_CARDS.length, 800);
@@ -16,8 +16,9 @@ for (const lang of ["uk", "en", "sv", "de", "es"]) {
       const translated = localizedCategory(category, lang);
       assert.ok(translated.name && translated.description, `${lang}: missing ${category.id}`);
       if (lang !== "uk") {
-        assert.equal(pack.prompts[category.id][0].length, 10);
-        assert.equal(pack.prompts[category.id][1].length, 10);
+        for (const type of ["truth", "dare"]) for (let n = 1; n <= 10; n++) {
+          assert.ok(pack.cardTextById[`${category.id}-${type}-${n}`], `${lang}: untranslated ${category.id}-${type}-${n}`);
+        }
       }
     }
     for (const card of TRUTH_DARE_CARDS) {
@@ -37,3 +38,17 @@ for (const lang of ["uk", "en", "sv", "de", "es"]) {
     }
   });
 }
+
+test("stable translation IDs survive unrelated order changes and preserve existing save IDs", () => {
+  const stableIds = TRUTH_DARE_CARDS.map(c => c.id);
+  const shuffled = [...TRUTH_DARE_CARDS].reverse();
+  assert.deepEqual(shuffled.map(c => c.id).sort(), stableIds.sort());
+  for(const lang of ["en","sv","de","es"]){
+    const pack=getTruthDareLocale(lang);
+    assert.equal(Object.keys(pack.cardTextById).length, 160);
+    for(const card of shuffled){
+      const base=baseTruthDareCardId(card.id);
+      assert.equal(localizeTruthDareCard(card,lang).text,pack.cardTextById[base]);
+    }
+  }
+});
