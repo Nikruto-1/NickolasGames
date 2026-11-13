@@ -8,7 +8,7 @@ const COPY = {
   es: { back: "Todos los juegos", label: "Elige un juego", intro: "Jugad a vuestro ritmo. Los ajustes y el progreso se guardan en este dispositivo." }
 };
 
-const GAME_KEYS = ["whoami", "crocodile", "alias", "truth"];
+const GAME_KEYS = ["whoami", "crocodile", "alias", "truth", "checkers"];
 
 export function GameScreen({ game, games, lang, onBack, onChoose, children }) {
   const copy = COPY[lang] || COPY.en;

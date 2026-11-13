@@ -1,6 +1,6 @@
 import { LANGUAGE_PATHS } from "./siteMetadata.js";
 
-export const GAMES = Object.freeze(["whoami", "crocodile", "alias", "truth"]);
+export const GAMES = Object.freeze(["whoami", "crocodile", "alias", "truth", "checkers"]);
 
 export function gameFromSearch(search = "") {
   const name = new URLSearchParams(search).get("game");

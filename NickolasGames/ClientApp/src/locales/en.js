@@ -148,6 +148,12 @@ export const UI_COPY = {
         }
       }
     },
+    "checkers": {
+      "n": "Cat Checkers",
+      "d": "Two players, one device. A wooden board, white and black cats, kings and classic checkers rules.",
+      "p": "2 players",
+      "t": "10–30 min"
+    },
     "random": {
       "n": "Random Game",
       "d": "Let the system pick what to play next.",

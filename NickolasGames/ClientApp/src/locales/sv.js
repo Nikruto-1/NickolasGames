@@ -148,6 +148,12 @@ export const UI_COPY = {
         }
       }
     },
+    "checkers": {
+      "n": "Kattdam",
+      "d": "Två spelare på en enhet. Träbräde, vita och svarta katter, dam och klassiska regler.",
+      "p": "2 spelare",
+      "t": "10–30 min"
+    },
     "random": {
       "n": "Slumpspel",
       "d": "Låt systemet välja vad ni ska spela härnäst.",

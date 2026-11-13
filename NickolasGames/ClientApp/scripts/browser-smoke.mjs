@@ -73,7 +73,7 @@ try {
     const errors=[];
     page.on("pageerror",error=>errors.push(error.message));
     page.on("console",message=>{ if(message.type()==="error" && message.text().includes("NickolasGames UI error")) errors.push(message.text().slice(0,500)); });
-    for(const game of ["whoami","crocodile","alias","truth"]){
+    for(const game of ["whoami","crocodile","alias","truth","checkers"]){
       await page.goto(`${base}/uk/?game=${game}`,{waitUntil:"domcontentloaded"});
       try {
         await page.locator(".game-screen-nav").waitFor({ timeout: 12000 });
@@ -82,6 +82,16 @@ try {
         throw new Error(`Game view failed: ${width}px ${game}; page errors: ${errors.join(" | ")}; heading: ${message}; ${error.message}`);
       }
       await check(page,`${width}px ${game}`);
+      if (game === "checkers") {
+        assert.equal(await page.locator(".ck-cell").count(),64,"Checkers board needs 64 squares");
+        assert.equal(await page.locator(".ck-piece").count(),26,"Checkers has 24 board pieces + 2 side indicators");
+        await page.locator(".ck-cell[data-cell=\"40\"]").click();
+        await page.locator(".ck-cell[data-cell=\"33\"]").click();
+        assert.ok(await page.locator(".ck-cell[data-cell=\"33\"] .ck-white").count(),"White cat moves");
+        await page.reload();
+        await page.locator(".ck-cell[data-cell=\"33\"] .ck-white").waitFor();
+        checks += 3;
+      }
       if(width === 320 && game !== "truth"){
         const legacyMigrated=await page.evaluate(game=>{
           const key=`nickolasgames-session-${game}-uk`;

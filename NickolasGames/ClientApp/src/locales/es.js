@@ -148,6 +148,12 @@ export const UI_COPY = {
         }
       }
     },
+    "checkers": {
+      "n": "Damas con gatos",
+      "d": "Dos jugadores en un dispositivo. Tablero de madera, gatos blancos y negros, damas y reglas clásicas.",
+      "p": "2 jugadores",
+      "t": "10–30 min"
+    },
     "random": {
       "n": "Juego aleatorio",
       "d": "Deja que el sistema elija qué jugar después.",

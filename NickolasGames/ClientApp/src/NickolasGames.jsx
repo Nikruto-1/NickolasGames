@@ -4,6 +4,7 @@ import { AliasGame } from "./features/alias/AliasGame.jsx";
 import { TruthOrDareGame } from "./features/truth-or-dare/TruthOrDareGame.jsx";
 import { CharadesGame } from "./features/charades/CharadesGame";
 import { WhoAmIGame } from "./features/whoami/WhoAmIGame";
+import { CheckersGame } from "./features/checkers/CheckersGame.jsx";
 import { Hero, GamesGrid, HowItWorks, FinalCta } from "./components/HomeSections.jsx";
 import { SiteNavigation } from "./components/SiteNavigation.jsx";
 import { HolmesIntro } from "./components/HolmesIntro";
@@ -48,6 +49,8 @@ export default function NickolasGames() {
             ? <WhoAmIGame key={`${lang}-whoami`} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={choose} />
           : screenGame === "alias"
             ? <AliasGame key={`${lang}-alias`} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={choose} />
+          : screenGame === "checkers"
+            ? <CheckersGame key={`${lang}-checkers`} lang={lang} />
           : screenGame === "truth"
             ? <TruthOrDareGame key={`${lang}-truth`} games={t.games} t={t} lang={lang} onGame={choose} />
           : null}

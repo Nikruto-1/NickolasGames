@@ -148,6 +148,12 @@ export const UI_COPY = {
         }
       }
     },
+    "checkers": {
+      "n": "Katzen-Dame",
+      "d": "Zwei Spieler an einem Gerät. Holzbrett, weiße und schwarze Katzen, Damen und klassische Regeln.",
+      "p": "2 Spieler",
+      "t": "10–30 Min."
+    },
     "random": {
       "n": "Zufallsspiel",
       "d": "Lass das System wählen, was als Nächstes gespielt wird.",
