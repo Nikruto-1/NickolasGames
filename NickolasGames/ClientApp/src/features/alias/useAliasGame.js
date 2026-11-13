@@ -6,13 +6,6 @@ import { readValue, writeValue } from '../../utils/progress.js';
 import { createHolmesTimerSound, HOLMES_TIME_UP } from '../../utils/holmesTimerSound.js';
 import { ALIAS_ALL, ALIAS_FORMATS, aliasActor, aliasCategories, aliasCategorySelection, aliasPool, aliasReducer, aliasSetupErrors, aliasWord, newAliasState, refreshAliasDeck, restoreAliasState, shuffleAlias, validAliasState, validAliasTarget } from './gameLogic.js';
 
-const dicePips = [[], [4], [0, 8], [0, 4, 8], [0, 2, 6, 8], [0, 2, 4, 6, 8], [0, 2, 3, 5, 6, 8]];
-
-function AliasDie({ value }) {
-  return <span className="alias-die" data-value={value}>{dicePips[value].map(position => <i className="alias-die-pip" key={position} style={{ gridRow: Math.floor(position / 3) + 1, gridColumn: position % 3 + 1 }} />)}</span>;
-}
-
-
 import { useVersionedReducer } from "../../utils/gameSession.js";
 
 export function useAliasGame({ games, t, lang, startRequest = 0 }) {
