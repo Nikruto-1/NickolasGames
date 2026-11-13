@@ -119,3 +119,135 @@
 @keyframes ck-victory-enter{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes ck-sparkle{from{opacity:.55;transform:scale(.95)}to{opacity:1;transform:scale(1.04)}}
 @media(prefers-reduced-motion:reduce){.ck-victory-dialog,.ck-victory-sparks{animation:none}}
+
+/* Desktop: scoreboard left, interactive board center, controls on right. */
+.game-screen[data-game="checkers"] .ck-page .wrap{max-width:1500px}
+.game-screen[data-game="checkers"] .ck-layout{
+  display:grid;
+  grid-template-areas:"ranking board controls";
+  grid-template-columns:minmax(185px,245px) minmax(0,auto) minmax(230px,300px);
+  gap:clamp(12px,1.8vw,26px);
+  align-items:start;
+  justify-content:space-between;
+  width:100%;
+}
+.game-screen[data-game="checkers"] .ck-leaderboard{grid-area:ranking}
+.game-screen[data-game="checkers"] .ck-board-frame{
+  grid-area:board;
+  width:min(100%,calc(100dvh - 310px),680px);
+  max-width:100%;
+  justify-self:center;
+}
+.game-screen[data-game="checkers"] .ck-sidebar{
+  grid-area:controls;
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  overflow-y:auto;
+  max-height:calc(100dvh - 215px);
+}
+.game-screen[data-game="checkers"] .ck-toolbar{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:12px;
+  margin:0 0 4px;
+}
+.game-screen[data-game="checkers"] .ck-toolbar .ck-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  width:100%;
+}
+.game-screen[data-game="checkers"] .ck-toolbar .ck-action{
+  flex:1 1 auto;
+  white-space:normal;
+  text-align:center;
+  font-size:12px;
+  padding:8px 9px;
+}
+.ck-leaderboard{
+  min-width:0;
+  background:linear-gradient(155deg,#fff8eb,#eadbc4);
+  border:1px solid #d5b992;
+  border-radius:16px;
+  padding:clamp(12px,1.5vw,19px);
+  box-shadow:0 6px 18px #61463113;
+  color:#382a20;
+}
+.ck-leaderboard-title{display:flex;flex-direction:column;gap:4px;margin-bottom:17px}
+.ck-leaderboard-title h3{font-size:clamp(20px,2vw,26px);line-height:1.2;color:#32271e}
+.ck-rank-list{display:grid;gap:9px}
+.ck-rank-item{display:flex;align-items:center;gap:8px;padding:9px 8px;border-radius:12px;background:#fffaf1;border:1px solid #dfcdb3}
+.ck-rank-num{font-size:14px;font-weight:800;flex:0 0 22px;display:grid;place-items:center;width:22px;height:26px;color:#776856}
+.ck-rank-num.ck-gold{color:#af7e31}
+.ck-rank-cat{width:39px;flex:0 0 39px}
+.ck-rank-cat .ck-piece{width:100%;border-width:1px}
+.ck-rank-name{min-width:0;flex:1}
+.ck-rank-name strong{display:block;font-size:13px;line-height:1.2;overflow-wrap:anywhere}
+.ck-rank-name small{display:block;font-size:11px;color:#807365}
+.ck-rank-score{font-size:22px;line-height:1;font-variant-numeric:tabular-nums}
+.ck-leaderboard-total{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:16px 0 0;padding:12px 0;border-block:1px solid #d8c5aa;font-size:12px}
+.ck-leaderboard-total strong{font-size:19px;font-variant-numeric:tabular-nums}
+.ck-recent{margin-top:16px}
+.ck-recent h4{font-size:15px;line-height:1.3;margin:0 0 10px}
+.ck-recent ol{list-style:none;display:grid;gap:7px;margin:0;padding:0}
+.ck-recent li{display:flex;gap:8px;align-items:center;background:#f8edda;border-radius:8px;padding:7px 9px;font-size:12px}
+.ck-recent li span:nth-child(2){flex:1}
+.ck-recent li span:last-child{color:#b2873a}
+.ck-recent-num{font-weight:800;color:#856e50}
+.ck-recent>p{color:#877866;font-size:12px;line-height:1.5}
+@media(max-width:1120px) and (min-width:811px){
+  .game-screen[data-game="checkers"] .ck-layout{
+    grid-template-columns:minmax(155px,195px) minmax(0,auto) minmax(205px,245px);
+    gap:12px;
+  }
+  .game-screen[data-game="checkers"] .ck-board-frame{
+    width:min(100%,calc(100dvh - 310px),calc(100vw - 540px));
+  }
+  .ck-leaderboard{padding:12px}
+  .ck-rank-item{gap:5px;padding:8px 5px}
+  .ck-rank-cat{width:32px;flex-basis:32px}
+}
+@media(max-width:810px){
+  .game-screen[data-game="checkers"] .ck-layout{
+    grid-template-areas:"board" "controls" "ranking";
+    grid-template-columns:minmax(0,1fr);
+    justify-items:center;
+    justify-content:stretch;
+  }
+  .game-screen[data-game="checkers"] .ck-board-frame{
+    width:min(100%,calc(100dvh - 310px),720px);
+  }
+  .game-screen[data-game="checkers"] .ck-sidebar{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    width:100%;
+    max-height:none;
+    overflow:visible;
+  }
+  .game-screen[data-game="checkers"] .ck-toolbar{
+    grid-column:1/-1;
+    flex-direction:row;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .game-screen[data-game="checkers"] .ck-toolbar .ck-actions{width:auto;max-width:62%}
+  .game-screen[data-game="checkers"] .ck-rule-box{grid-column:1/-1}
+  .ck-leaderboard{width:100%}
+  .ck-rank-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ck-leaderboard-total{margin-top:10px}
+}
+@media(max-width:480px){
+  .game-screen[data-game="checkers"] .ck-board-frame{
+    width:min(100%,calc(100dvh - 300px));
+  }
+  .game-screen[data-game="checkers"] .ck-toolbar{
+    flex-direction:column;
+    align-items:stretch;
+  }
+  .game-screen[data-game="checkers"] .ck-toolbar .ck-actions{
+    width:100%;max-width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))
+  }
+  .ck-rank-list{grid-template-columns:1fr}
+}
