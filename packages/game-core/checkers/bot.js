@@ -6,6 +6,7 @@ export const BOT_LEVELS = Object.freeze(["easy", "medium"]);
 
 function evaluate(state, side) {
   if (state.winner) return state.winner === side ? 100000 : -100000;
+  if (state.draw) return 0;
   let score = 0;
   for (let i = 0; i < 64; i++) {
     const piece = state.board[i];

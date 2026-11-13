@@ -1,4 +1,4 @@
-import { initialCheckers } from "./gameLogic.js";
+import { initialCheckers,checkersPositionKey } from "./gameLogic.js";
 
 // Keeps saved pre-feature settings compatible; never resets the selected AI level.
 export const normalizeCheckersSettings = value => ({
@@ -17,5 +17,6 @@ export function selectFirstSide(starter, draw = Math.random) {
 
 export function createCheckersMatch(starter, draw = Math.random, matchId = null) {
   const turn = selectFirstSide(starter, draw);
-  return { ...initialCheckers(), turn, startingSide: turn, ...(matchId ? {matchId} : {}) };
+  const state=initialCheckers();
+  return { ...state, turn, startingSide: turn, positionCounts:{[checkersPositionKey(state.board,turn)]:1}, ...(matchId ? {matchId} : {}) };
 }

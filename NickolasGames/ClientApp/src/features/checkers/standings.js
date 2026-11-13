@@ -19,6 +19,18 @@ export function recordCheckersWin(stats, id, side) {
     recent:[{id,side},...stats.recent].slice(0,10)
   };
 }
+// Revert the last confirmed result when the player undoes a winning move.
+export function revertCheckersWin(stats, id) {
+  if (typeof id!=="string" || !stats.recorded.includes(id)) return stats;
+  const result=stats.recent.find(item=>item.id===id);
+  if (!result) return stats; // Never modify a score without a matching result.
+  return {
+    ...stats,
+    [result.side]:Math.max(0,stats[result.side]-1),
+    recorded:stats.recorded.filter(item=>item!==id),
+    recent:stats.recent.filter(item=>item.id!==id)
+  };
+}
 export function rankedCheckersSides(stats) {
   return ["white","black"].sort((a,b)=>stats[b]-stats[a] || (a==="white"?-1:1));
 }
