@@ -72,6 +72,7 @@ try {
     const page=await browser.newPage({viewport:{width,height:850},serviceWorkers:"block"});
     const errors=[];
     page.on("pageerror",error=>errors.push(error.message));
+    page.on("console",message=>{ if(message.type()==="error") errors.push(message.text().slice(0,500)); });
     for(const game of ["whoami","crocodile","alias","truth"]){
       await page.goto(`${base}/uk/?game=${game}`,{waitUntil:"domcontentloaded"});
       try {
