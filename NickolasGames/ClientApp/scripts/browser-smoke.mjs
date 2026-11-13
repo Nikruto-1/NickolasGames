@@ -126,6 +126,9 @@ try {
         checks += 7;
       }
       if(width === 320 && ["whoami","crocodile","alias"].includes(game)){
+        const storedGame=game==="crocodile"?"charades":game;
+        await page.waitForFunction(name=>Boolean(localStorage.getItem(`nickolasgames-session-${name}-uk`)),
+          storedGame,{timeout:12000});
         const legacyMigrated=await page.evaluate(game=>{
           const key=`nickolasgames-session-${game}-uk`;
           const legacy={alias:"nickolasgames-alias-teams-v1-uk",charades:"nickolasgames-charades-v2-uk",whoami:"nickolasgames-whoami-v2-uk"}[game];
