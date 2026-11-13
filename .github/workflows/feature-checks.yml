@@ -6,6 +6,7 @@ on:
     branches:
       - 'refactor/**'
       - 'architecture/**'
+      - 'fix/**'
 
 permissions:
   contents: read
