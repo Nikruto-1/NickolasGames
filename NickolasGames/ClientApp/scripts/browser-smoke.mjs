@@ -201,7 +201,7 @@ try {
     });
     await page.reload();
     await page.getByRole("dialog").waitFor();
-    assert.equal(await page.getByRole("heading",{name:"Нічия!"}).count(),1);
+    assert.equal(await page.getByRole("dialog").getByRole("heading",{name:"Нічия!",exact:true}).count(),1);
     assert.equal(await page.getByText("Позиція повторилася тричі.").count(),1);
     await page.getByRole("button",{name:"Зіграти ще раз"}).click();
     assert.equal(await page.getByRole("dialog").count(),0);
