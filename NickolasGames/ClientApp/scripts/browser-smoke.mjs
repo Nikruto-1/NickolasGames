@@ -186,6 +186,60 @@ try {
     assert.deepEqual(errors,[],`Bot ${level} runtime errors`);
     checks+=7;
   }
+  // First move selection: black can begin, and flipping must not change turn.
+  {
+    const page=await browser.newPage({viewport:{width:1024,height:850},serviceWorkers:"block"});
+    const errors=[];
+    page.on("pageerror",error=>errors.push(error.message));
+    await page.goto(base+"/uk/?game=checkers",{waitUntil:"domcontentloaded"});
+    const first=page.getByRole("group",{name:"Хто ходить першим?"});
+    await first.getByRole("button",{name:"Чорні"}).click();
+    assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames-session-checkers-shared")).state.turn),"black");
+    await page.locator('.ck-cell[data-cell="17"]').click();
+    await page.locator('.ck-cell[data-cell="24"]').click();
+    await page.waitForFunction(()=>JSON.parse(localStorage.getItem("nickolasgames-session-checkers-shared")).state.turn==="white");
+    await page.getByRole("button",{name:"Повернути дошку"}).click();
+    assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames-session-checkers-shared")).state.turn),"white");
+    page.once("dialog",dialog=>dialog.accept());
+    await first.getByRole("button",{name:/Жереб/}).click();
+    await page.waitForFunction(()=>document.querySelector(".ck-draw-outcome")?.textContent.includes("Першими ходять:"));
+    const game=await page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames-session-checkers-shared")).state);
+    assert.ok(["white","black"].includes(game.turn));
+    assert.equal(game.moveNumber,1);
+    assert.equal(game.startingSide,game.turn);
+    await page.reload();
+    await page.locator(".ck-board").waitFor();
+    const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames-session-checkers-mode-shared")).state);
+    assert.equal(saved.starter,"random");
+    assert.deepEqual(errors,[],"First-turn browser runtime errors");
+    checks+=7;
+    await page.close();
+  }
+  // When the human picks black, the white computer must play the opening turn.
+  {
+    const page=await browser.newPage({viewport:{width:1024,height:850},serviceWorkers:"block"});
+    const errors=[];
+    page.on("pageerror",error=>errors.push(error.message));
+    await page.goto(base+"/uk/?game=checkers",{waitUntil:"domcontentloaded"});
+    await page.getByRole("button",{name:"Проти комп’ютера"}).click();
+    const myPieces=page.getByRole("group",{name:"Мої фігурки"});
+    await myPieces.getByRole("button",{name:"Чорні"}).click();
+    await page.waitForFunction(()=>{
+      const raw=localStorage.getItem("nickolasgames-session-checkers-shared");
+      const state=raw && JSON.parse(raw).state;
+      return state?.turn==="black" && state?.moveNumber>=2;
+    },null,{timeout:12000});
+    assert.equal(await page.getByText("Ви (чорні)").count(),1);
+    assert.equal(await page.getByText("Комп’ютер (білі)").count(),1);
+    const settings=await page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames-session-checkers-mode-shared")).state);
+    assert.equal(settings.humanSide,"black");
+    await page.reload();
+    await page.locator(".ck-board").waitFor();
+    assert.equal(await page.getByRole("group",{name:"Мої фігурки"}).getByRole("button",{name:"Чорні"}).getAttribute("aria-pressed"),"true");
+    assert.deepEqual(errors,[],"Black human browser runtime errors");
+    checks+=6;
+    await page.close();
+  }
   // Screenshot-sized desktop: increase board size without clipping below the fold.
   for (const width of [1100, 1536]) {
     const page = await browser.newPage({viewport:{width,height:700},serviceWorkers:"block"});
