@@ -65,7 +65,7 @@
   justify-content:center;
 }
 .game-screen[data-game="checkers"] .ck-board-frame{
-  width:min(100%,calc(100dvh - 222px),720px);
+  width:min(100%,calc(100dvh - 265px),720px);
   aspect-ratio:1;
   flex:0 1 auto;
   padding:clamp(6px,1.25vh,14px);
@@ -84,7 +84,7 @@
 .game-screen[data-game="checkers"] .ck-rule-box{padding:14px}
 .game-screen[data-game="checkers"] .ck-rule-box h3{font-size:17px;margin-bottom:6px}
 .game-screen[data-game="checkers"] .ck-rule-box p{font-size:12px;line-height:1.45}
-.game-screen[data-game="checkers"] .ck-sidebar{max-height:min(660px,calc(100dvh - 222px));overflow-y:auto}
+.game-screen[data-game="checkers"] .ck-sidebar{max-height:min(660px,calc(100dvh - 265px));overflow-y:auto}
 @media(max-width:810px){
   .game-screen[data-game="checkers"] .ck-layout{grid-template-columns:minmax(0,1fr);justify-items:center}
   .game-screen[data-game="checkers"] .ck-board-frame{width:min(100%,calc(100dvh - 310px),720px)}
