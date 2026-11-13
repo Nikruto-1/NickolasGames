@@ -149,6 +149,42 @@ try {
     assert.deepEqual(errors,[],`${width}px runtime errors`);
     await page.close();
   }
+  // Human vs. computer: browser-only opponent, two difficulties, and durable mode.
+  for (const level of ["easy", "medium"]) {
+    const page=await browser.newPage({viewport:{width:1024,height:850},serviceWorkers:"block"});
+    const errors=[];
+    page.on("pageerror",error=>errors.push(error.message));
+    await page.goto(base+"/uk/?game=checkers",{waitUntil:"domcontentloaded"});
+    await page.getByRole("button",{name:"Проти комп’ютера"}).click();
+    const selector=page.locator(".ck-bot-difficulty select");
+    await selector.selectOption(level);
+    await page.locator(".ck-cell[data-cell=\"40\"]").click();
+    await page.locator(".ck-cell[data-cell=\"33\"]").click();
+    await page.waitForFunction(()=>{
+      const raw=localStorage.getItem("nickolasgames-session-checkers-shared");
+      const state=raw && JSON.parse(raw).state;
+      return state?.turn==="white" && state?.moveNumber>=3;
+    },null,{timeout:12000});
+    const saved=await page.evaluate(()=>{
+      const board=JSON.parse(localStorage.getItem("nickolasgames-session-checkers-shared")).state;
+      const config=JSON.parse(localStorage.getItem("nickolasgames-session-checkers-mode-shared")).state;
+      return {board,config};
+    });
+    assert.equal(saved.config.mode,"bot");
+    assert.equal(saved.config.level,level);
+    assert.equal(saved.board.turn,"white");
+    assert.equal(saved.board.board.filter(p=>p?.side==="black").length,12);
+    await page.reload();
+    await page.getByRole("button",{name:"Проти комп’ютера"}).waitFor();
+    assert.equal(await page.locator(".ck-bot-difficulty select").inputValue(),level);
+    await page.getByRole("button",{name:"Скасувати хід"}).click();
+    const undone=await page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames-session-checkers-shared")).state);
+    assert.equal(undone.turn,"white");
+    assert.equal(undone.moveNumber,1,"undo returns to player's previous complete turn");
+    await page.close();
+    assert.deepEqual(errors,[],`Bot ${level} runtime errors`);
+    checks+=7;
+  }
   // Screenshot-sized desktop: increase board size without clipping below the fold.
   for (const width of [1100, 1536]) {
     const page = await browser.newPage({viewport:{width,height:700},serviceWorkers:"block"});
