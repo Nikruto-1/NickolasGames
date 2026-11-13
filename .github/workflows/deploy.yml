@@ -37,6 +37,10 @@ jobs:
         working-directory: NickolasGames/ClientApp
         run: npm ci
 
+      - name: Validate Truth or Dare translations
+        working-directory: NickolasGames/ClientApp
+        run: node --test tests/truth-dare-i18n.test.mjs
+
       - name: Build React application
         working-directory: NickolasGames/ClientApp
         run: npm run build
