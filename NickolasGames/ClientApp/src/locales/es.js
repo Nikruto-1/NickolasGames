@@ -1,5 +1,5 @@
-import { CROCODILE_ES } from "../data/crocodile.es.js";
-import { WHOAMI_ES } from "../data/whoami.es.js";
+import { CROCODILE_ES } from "../features/charades/crocodile.es.js";
+import { WHOAMI_ES } from "../features/whoami/whoami.es.js";
 
 export const UI_COPY = {
   "heroTitle": "Juegos para momentos reales.",

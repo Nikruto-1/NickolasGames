@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { PrivacyPanel } from "./components/PrivacyPanel.jsx";
-import { AliasGame } from "./components/AliasGame.jsx";
-import { TruthOrDareGame } from "./components/TruthOrDareGame.jsx";
-import { CharadesGame } from "./components/CharadesGame";
-import { WhoAmIGame } from "./components/WhoAmIGame";
-import { CardStackPreview } from "./components/CardStackPreview.jsx";
+import { AliasGame } from "./features/alias/AliasGame.jsx";
+import { TruthOrDareGame } from "./features/truth-or-dare/TruthOrDareGame.jsx";
+import { CharadesGame } from "./features/charades/CharadesGame";
+import { WhoAmIGame } from "./features/whoami/WhoAmIGame";
 import { Hero, GamesGrid, HowItWorks, FinalCta } from "./components/HomeSections.jsx";
 import { SiteNavigation } from "./components/SiteNavigation.jsx";
 import { HolmesIntro } from "./components/HolmesIntro";
@@ -86,7 +85,7 @@ export default function NickolasGames() {
             ? <AliasGame key={`${lang}-alias`} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={choose} />
           : screenGame === "truth"
             ? <TruthOrDareGame key={`${lang}-truth`} games={t.games} t={t} lang={lang} onGame={choose} />
-          : <CardStackPreview key={`${lang}-${screenGame}`} game={screenGame} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={choose} />}
+          : null}
       </GameScreen>}
       </main>
       <footer><span>{t.footer}</span><PrivacyPanel lang={lang} /><button className="btn sm" onClick={() => setShowIntro(true)}>{({uk:"Холмс · 2D-вступ",en:"Holmes · 2D intro",sv:"Holmes · 2D-intro",de:"Holmes · 2D-Intro",es:"Holmes · Intro 2D"})[lang]}</button></footer>
