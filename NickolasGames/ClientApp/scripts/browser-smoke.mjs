@@ -85,7 +85,7 @@ try {
       if(width === 320 && game !== "truth"){
         const legacyMigrated=await page.evaluate(game=>{
           const key=`nickolasgames-session-${game}-uk`;
-          const legacy={alias:"nickolasgames-alias-teams-v1-uk",crocodile:"nickolasgames-charades-v2-uk",whoami:"nickolasgames-whoami-v2-uk"}[game];
+          const legacy={alias:"nickolasgames-alias-teams-v1-uk",charades:"nickolasgames-charades-v2-uk",whoami:"nickolasgames-whoami-v2-uk"}[game];
           const snapshot=JSON.parse(localStorage.getItem(key) || "null");
           if(!snapshot || !legacy)return false;
           localStorage.setItem(legacy,JSON.stringify(snapshot.state));
