@@ -22,7 +22,9 @@ export function useGameRouting() {
     const nextPath = LANGUAGE_PATHS[lang] + (privacy ? "privacy/" : "");
     if (!ready.current) {
       ready.current = true;
-      const fromPath = pathLanguage(location.pathname);
+      // The bare root may redirect to a previously chosen language.
+      // A localized URL is authoritative when it explicitly specifies one.
+      const fromPath = location.pathname === "/" ? null : pathLanguage(location.pathname);
       if (fromPath && fromPath !== lang) { setLang(fromPath); return; }
     }
     if (location.pathname !== nextPath) history.replaceState(null, "", nextPath + location.search);
