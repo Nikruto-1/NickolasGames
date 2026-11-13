@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { readTruthDareSession, saveTruthDareSession, createTruthDareSession, chooseTruthDare, advanceTruthDare, ALL_TRUTH_DARE_CATEGORIES } from "../utils/truthDareSession.js";
 import { TRUTH_DARE_CARDS, TRUTH_DARE_CATEGORIES } from "../data/truthOrDare.uk.js";
 import "./TruthOrDareGame.css";
@@ -10,6 +10,7 @@ export function TruthOrDareGame({ games, t, lang, onGame }) {
   const [draftCategories, setDraftCategories] = useState(() => [...categories]);
   const [settingsOpen, setSettingsOpen] = useState(() => !readTruthDareSession(localStorage));
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const confirmationRef = useRef(null);
   const [storageOk, setStorageOk] = useState(true);
   const cardsById = useMemo(() => new Map(TRUTH_DARE_CARDS.map(card => [card.id, card])), []);
   const i18n = getTruthDareLocale(lang).ui;
@@ -25,6 +26,27 @@ export function TruthOrDareGame({ games, t, lang, onGame }) {
   useEffect(() => {
     setStorageOk(saveTruthDareSession(localStorage, session));
   }, [session]);
+
+  useEffect(() => {
+    if (!confirmOpen) return;
+    const previousFocus = document.activeElement;
+    const buttons = [...confirmationRef.current.querySelectorAll("button")];
+    buttons[0]?.focus();
+    const handleKeyDown = event => {
+      if (event.key === "Escape") { event.preventDefault(); setConfirmOpen(false); return; }
+      if (event.key !== "Tab" || !buttons.length) return;
+      if (event.shiftKey && document.activeElement === buttons[0]) {
+        event.preventDefault(); buttons[buttons.length - 1].focus();
+      } else if (!event.shiftKey && document.activeElement === buttons[buttons.length - 1]) {
+        event.preventDefault(); buttons[0].focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      if (previousFocus?.isConnected) previousFocus.focus();
+    };
+  }, [confirmOpen]);
 
   const chooseType = type => setSession(current => chooseTruthDare(current, type));
   const advance = skip => setSession(current => advanceTruthDare(current, skip));
@@ -87,7 +109,7 @@ export function TruthOrDareGame({ games, t, lang, onGame }) {
           <button type="button" className="btn td-cancel" onClick={closeSettings}>{i18n.cancel || "Cancel"}</button>
         </div>
         {confirmOpen && <div className="td-confirm-backdrop">
-          <div className="td-confirm-panel" role="alertdialog" aria-modal="true" aria-labelledby="td-confirm-title" aria-describedby="td-confirm-text">
+          <div ref={confirmationRef} className="td-confirm-panel" role="alertdialog" aria-modal="true" aria-labelledby="td-confirm-title" aria-describedby="td-confirm-text">
             <h3 id="td-confirm-title">{i18n.confirmTitle}</h3>
             <p id="td-confirm-text">{i18n.confirmText}</p>
             <div className="td-confirm-actions">
