@@ -43,3 +43,16 @@
 @media(prefers-reduced-motion:reduce){
   .game-screen-nav{scroll-behavior:auto}
 }
+
+/* Text must reflow at 200% zoom without creating a page-wide scrollbar. */
+.game-screen .td-root .td-settings-btn{min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;flex-shrink:1}
+.game-screen .td-root .td-inline-settings{min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;flex-shrink:1;text-align:left}
+.game-screen .td-root .td-play-header>*{min-width:0}
+.game-screen .td-root .td-card-top,.game-screen .td-root .td-card-bottom{min-width:0;flex-wrap:wrap}
+.game-screen .td-root .td-category,.game-screen .td-root .td-choice-button{min-width:0}
+@media(max-width:550px){
+ .game-screen .td-root .td-play-header{display:flex;flex-wrap:wrap}
+ .game-screen .td-root .td-progress{flex-basis:30%;min-width:20px}
+ .game-screen .td-root .td-inline-settings{flex-basis:100%}
+ .game-screen .td-root .td-settings-btn{width:100%;justify-content:space-between}
+}
