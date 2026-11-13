@@ -1,4 +1,4 @@
-import { TRUTH_DARE_CARDS, TRUTH_DARE_CATEGORIES } from "../data/truthOrDare.uk.js";
+import { TRUTH_DARE_CARDS, TRUTH_DARE_CATEGORIES } from "./truthOrDare.uk.js";
 
 export const TRUTH_DARE_STORAGE = "nickolasgames-truth-dare-v2";
 const validCategoryIds = new Set(TRUTH_DARE_CATEGORIES.map(c => c.id));

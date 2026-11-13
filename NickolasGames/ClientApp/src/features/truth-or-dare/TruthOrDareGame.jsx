@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { readTruthDareSession, saveTruthDareSession, createTruthDareSession, chooseTruthDare, advanceTruthDare, ALL_TRUTH_DARE_CATEGORIES } from "../utils/truthDareSession.js";
-import { TRUTH_DARE_CARDS, TRUTH_DARE_CATEGORIES } from "../data/truthOrDare.uk.js";
+import { readTruthDareSession, saveTruthDareSession, createTruthDareSession, chooseTruthDare, advanceTruthDare, ALL_TRUTH_DARE_CATEGORIES } from "./session.js";
+import { TRUTH_DARE_CARDS, TRUTH_DARE_CATEGORIES } from "./truthOrDare.uk.js";
 import "./TruthOrDareGame.css";
-import { getTruthDareLocale, localizeTruthDareCard, localizedCategory } from "../data/truthOrDare.i18n.js";
+import { getTruthDareLocale, localizeTruthDareCard, localizedCategory } from "./i18n.js";
 
 export function TruthOrDareGame({ games, t, lang, onGame }) {
   const [session, setSession] = useState(() => readTruthDareSession(localStorage) || createTruthDareSession());
