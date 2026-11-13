@@ -95,7 +95,7 @@ export function CheckersGame({lang="uk"}) {
     if(next===game)return;
     const gameId=game.matchId || roundId();
     setHistory(h=>[...h.slice(-79),game]);
-    setGame({...next,matchId:gameId});
+    setGame({...next,matchId:gameId,startingSide:game.startingSide || "white"});
     setSelected(next.forcedFrom);
     if(!game.winner && next.winner){
       setStandings(prev=>recordCheckersWin(prev,gameId,next.winner));
