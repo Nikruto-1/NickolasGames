@@ -44,6 +44,11 @@ async function check(page,label) {
       navDisplay:nav?getComputedStyle(nav).display:"",
       navPosition:nav?getComputedStyle(nav).position:"",
       documentWidth:document.documentElement.scrollWidth,
+      overflowNodes:[...document.querySelectorAll(".game-screen *")].filter(el=>{
+        const rect=el.getBoundingClientRect();
+        const style=getComputedStyle(el);
+        return rect.right>viewport+2 && style.position!=="absolute" && style.position!=="fixed";
+      }).slice(0,14).map(el=>({tag:el.tagName,cls:typeof el.className==="string"?el.className:"",text:(el.textContent||"").trim().slice(0,70),right:Math.round(el.getBoundingClientRect().right),scroll:el.scrollWidth,client:el.clientWidth})),
       articleWidths:[...document.querySelectorAll(".game-screen .wrap,.game-screen .pvg,.game-screen .td-card,.game-screen .alias-word-card")].map(node=>({
         width:node.clientWidth,scrollWidth:node.scrollWidth
       }))
