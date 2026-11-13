@@ -292,6 +292,11 @@ export default {
     "finishText": "Blanda om korten och spela en gång till.",
     "noRepeats": "Inga upprepade kort",
     "skipped": "Hoppade över",
-    "comfort": "Spela som ni vill"
+    "comfort": "Spela som ni vill",
+    "cancel": "Avbryt",
+    "confirmTitle": "Starta ett nytt spel?",
+    "confirmText": "Om du ändrar kategorier återställs kortleken och dina framsteg. Vill du fortsätta?",
+    "confirmReset": "Byt kategorier",
+    "saveError": "Det gick inte att spara spelet på den här enheten. Kontrollera webbläsarens lagring."
   }
 };
