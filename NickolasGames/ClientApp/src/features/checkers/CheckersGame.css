@@ -134,7 +134,7 @@
 .game-screen[data-game="checkers"] .ck-leaderboard{grid-area:ranking}
 .game-screen[data-game="checkers"] .ck-board-frame{
   grid-area:board;
-  width:min(100%,calc(100dvh - 310px),680px);
+  width:min(100%,calc(100dvh - 255px),740px);
   max-width:100%;
   justify-self:center;
 }
@@ -203,7 +203,7 @@
     gap:12px;
   }
   .game-screen[data-game="checkers"] .ck-board-frame{
-    width:min(100%,calc(100dvh - 310px),calc(100vw - 540px));
+    width:min(100%,calc(100dvh - 255px),calc(100vw - 510px));
   }
   .ck-leaderboard{padding:12px}
   .ck-rank-item{gap:5px;padding:8px 5px}
