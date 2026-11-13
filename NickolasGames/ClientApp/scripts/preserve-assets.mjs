@@ -7,7 +7,7 @@ const project = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const defaultRepo = resolve(project, '../..');
 const prefix = 'NickolasGames/wwwroot/assets/';
 
-export function preserveAssets({ repo = defaultRepo, output = resolve(repo, prefix), limit = 20 } = {}) {
+export function preserveAssets({ repo = defaultRepo, output = resolve(repo, prefix), limit = 5 } = {}) {
   const git = args => execFileSync('git', args, { cwd: repo });
   const commits = git(['log', '-n', String(limit), '--format=%H', '--', prefix])
     .toString().trim().split(/\s+/).filter(Boolean);

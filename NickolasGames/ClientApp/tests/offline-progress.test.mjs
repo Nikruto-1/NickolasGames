@@ -19,7 +19,7 @@ for (const scope of ['https://example.test/','https://example.test/NickolasGames
  test(`built service worker installs and serves offline at ${scope}`,async()=>{
   const listeners={}; const entries=new Map(); let claimed=false; let activated=false;
   const cache={async addAll(urls){for(const request of urls){assert.equal(request.cache,"reload");const url=request.url;const relative=url.slice(scope.length); entries.set(url,await readFile(new URL('../../wwwroot/'+relative,import.meta.url)));}},async match(req){return entries.get(typeof req==='string'?req:req.url);}};
-  const caches={open:async()=>cache,keys:async()=>['unrelated-cache','nickolasgames-old'],delete:async k=>{assert.equal(k,'nickolasgames-old');}};
+  const caches={open:async()=>cache,keys:async()=>['unrelated-cache','nickolasgames-old'],delete:async k=>{throw Error('Previous app cache should remain available for older open tabs: '+k);}};
   vm.runInNewContext(await readFile(new URL('../../wwwroot/sw.js',import.meta.url),'utf8'),{URL,Request,caches,fetch:()=>{throw Error('offline');},self:{registration:{scope},location:{origin:'https://example.test'},skipWaiting:()=>{activated=true;},clients:{claim:()=>{claimed=true},matchAll:async()=>[]},addEventListener:(k,f)=>listeners[k]=f}});
   let work; listeners.install({waitUntil:p=>work=p}); await work;
   assert(activated); listeners.activate({waitUntil:p=>work=p}); await work; assert(claimed);
@@ -45,4 +45,29 @@ test('online navigation bypasses old HTML, errors fall back to a complete offlin
  response={ok:false};listeners.fetch({request,respondWith:p=>result=p});assert.equal(await result,offline);
  rejectNetwork=true;listeners.fetch({request,respondWith:p=>result=p});assert.equal(await result,offline);
  let handled=false;listeners.fetch({request:{...request,url:'https://other.test/'},respondWith:()=>{handled=true;}});assert.equal(handled,false);
+});
+
+test('new worker caches dynamically loaded game chunks on demand, without precaching all games',async()=>{
+ const sw=await readFile(new URL('../../wwwroot/sw.js',import.meta.url),'utf8');
+ assert.match(sw,/const CORE_URLS=/);
+ const bundle=await (await import('node:fs/promises')).readdir(new URL('../../wwwroot/assets/',import.meta.url));
+ const lazy=bundle.find(name=>name.startsWith('CheckersGame-') && name.endsWith('.js'));
+ assert.ok(lazy,'Checkers lazy JS chunk must be emitted');
+ const listeners={},scope='https://example.test/';
+ const memory=new Map(),payload=Buffer.from('lazy chess code');
+ let online=true;
+ const cache={
+  match:async req=>memory.get(typeof req==='string'?req:req.url),
+  put:async(req,value)=>{memory.set(typeof req==='string'?req:req.url,value);}
+ };
+ vm.runInNewContext(sw,{URL,caches:{open:async()=>cache},
+  fetch:async()=>{if(!online)throw Error('offline');return {ok:true,body:payload,clone(){return this;}};},
+  self:{registration:{scope},location:{origin:'https://example.test'},addEventListener:(k,fn)=>listeners[k]=fn}});
+ const request={method:'GET',url:scope+'assets/'+lazy,mode:'cors'};
+ let work;
+ listeners.fetch({request,respondWith:p=>work=p});
+ assert.deepEqual((await work).body,payload);
+ online=false;
+ listeners.fetch({request,respondWith:p=>work=p});
+ assert.deepEqual((await work).body,payload);
 });

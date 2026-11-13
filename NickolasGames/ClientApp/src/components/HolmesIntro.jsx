@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import holmesAtlas from "../assets/holmes-pet.png";
+import holmesAtlas from "../assets/holmes-throw-optimized.jpg";
 import "./HolmesIntro.css";
 const COPY = {
  uk:{skip:"Пропустити",label:"Ласкаво просимо до NickolasGames",welcome:"Ласкаво просимо до NickolasGames!",subtitle:"Я Холмс. Збирай друзів — будемо грати."},
@@ -29,7 +29,7 @@ export function HolmesIntro({lang,onComplete,loop=false}) {
  },[onComplete,loopEnabled]);
  return <div className={`holmes-intro holmes-2d holmes-phase-${phase}`} role="dialog" aria-modal="true" aria-label={copy.label}>
   <div ref={canvasRef} className="holmes-2d-canvas" aria-hidden="true"/>
-  {fallback&&<div className="holmes-2d-fallback" style={{backgroundImage:`url(${holmesAtlas})`}} aria-hidden="true"/>}
+  {fallback&&<div className="holmes-2d-fallback" style={{backgroundImage:`url(${holmesAtlas})`,backgroundSize:"400% auto",backgroundPosition:"0 45%",backgroundRepeat:"no-repeat"}} aria-hidden="true"/>}
   <div className="holmes-intro-bar"><span>NickolasGames <span className="holmes-bar-dot">✦</span></span><div className="holmes-intro-controls"><button ref={loopRef} aria-pressed={loopEnabled} onClick={()=>setLoopEnabled(v=>!v)}>{({uk:"Повтор",en:"Loop",sv:"Upprepa",de:"Schleife",es:"Repetir"})[lang]||"Loop"} ↻</button><button ref={skipRef} onClick={onComplete}>{copy.skip} ↗</button></div></div>
   <div className="holmes-2d-copy"><h2>{copy.welcome}</h2><p>{copy.subtitle}</p></div>
  </div>;
