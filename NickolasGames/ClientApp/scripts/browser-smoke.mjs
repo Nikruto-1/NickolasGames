@@ -92,7 +92,7 @@ try {
         await page.locator(".ck-cell[data-cell=\"33\"] .ck-white").waitFor();
         checks += 3;
       }
-      if(width === 320 && game !== "truth"){
+      if(width === 320 && ["whoami","crocodile","alias"].includes(game)){
         const legacyMigrated=await page.evaluate(game=>{
           const key=`nickolasgames-session-${game}-uk`;
           const legacy={alias:"nickolasgames-alias-teams-v1-uk",charades:"nickolasgames-charades-v2-uk",whoami:"nickolasgames-whoami-v2-uk"}[game];
