@@ -1,14 +1,15 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { playCheckersVictory } from "./victorySound.js";
 import { useVersionedState } from "../../utils/gameSession.js";
 import { initialCheckers, legalCheckersMoves, applyCheckersMove, validateCheckersState, squareIsDark } from "./gameLogic.js";
 import "./CheckersGame.css";
 
 const COPY = {
- uk:{white:"Білі котики",black:"Чорні котики",turn:"Хід",win:"Перемога!",wins:"перемогли",moves:"Доступні ходи",capture:"Взяття обов’язкове",continue:"Продовжуй бити цією шашкою",how:"Правила",rules:"Шашки 8×8: по 12 котиків. Білі починають. Звичайна шашка ходить по діагоналі вперед, але б’є в обидва боки. Бити обов’язково; якщо можливе наступне взяття, його потрібно виконати. Дамка ходить по діагоналі на будь-яку вільну відстань. Дійшовши до останнього ряду, котик стає дамкою. Перемагає той, у кого суперник залишився без шашок або можливих ходів.",undo:"Скасувати хід",reset:"Нова партія",resetAsk:"Почати нову партію? Поточний прогрес буде втрачено.",flip:"Повернути дошку",saved:"Не вдалося зберегти партію в браузері.",local:"2 гравці · один пристрій",select:"Натисни свого котика, потім підсвічену клітинку",king:"дамка",cat:"котик",empty:"Порожня клітинка",pending:"Обов’язковий хід",whiteWin:"Білі котики перемогли!",blackWin:"Чорні котики перемогли!"},
- en:{white:"White cats",black:"Black cats",turn:"Turn",win:"Victory!",wins:"win",moves:"Legal moves",capture:"Capture is mandatory",continue:"Keep capturing with this piece",how:"Rules",rules:"8×8 checkers with 12 cats per side. White goes first. Ordinary pieces move diagonally forward and capture in both directions. Captures and further jumps are mandatory. Kings move any distance diagonally. A piece becomes a king on reaching the far edge. You win by taking every opponent piece or leaving them without a legal move.",undo:"Undo move",reset:"New game",resetAsk:"Start a new game and lose the current progress?",flip:"Flip board",saved:"This game could not be saved in your browser.",local:"2 players · one device",select:"Tap your cat, then a highlighted square",king:"king",cat:"cat",empty:"Empty square",pending:"Mandatory move",whiteWin:"White cats win!",blackWin:"Black cats win!"},
- sv:{white:"Vita katter",black:"Svarta katter",turn:"Tur",win:"Seger!",wins:"vinner",moves:"Möjliga drag",capture:"Slag är obligatoriskt",continue:"Fortsätt slå med samma pjäs",how:"Regler",rules:"Damspel på 8×8 med 12 katter per spelare. Vit börjar. Vanliga pjäser går diagonalt framåt men slår åt båda håll. Slag och fortsatta slag är obligatoriska. Dam kan gå valfri sträcka diagonalt. En pjäs blir dam på sista raden. Du vinner när motståndaren saknar pjäser eller möjliga drag.",undo:"Ångra drag",reset:"Nytt parti",resetAsk:"Starta ett nytt parti och förlora framstegen?",flip:"Vänd brädet",saved:"Partiet kunde inte sparas i webbläsaren.",local:"2 spelare · en enhet",select:"Tryck på din katt och sedan på en markerad ruta",king:"dam",cat:"katt",empty:"Tom ruta",pending:"Obligatoriskt drag",whiteWin:"Vita katter vinner!",blackWin:"Svarta katter vinner!"},
- de:{white:"Weiße Katzen",black:"Schwarze Katzen",turn:"Am Zug",win:"Sieg!",wins:"gewinnen",moves:"Mögliche Züge",capture:"Schlagen ist Pflicht",continue:"Mit dieser Figur weiterschlagen",how:"Regeln",rules:"Dame auf 8×8 mit 12 Katzen pro Seite. Weiß beginnt. Normale Steine ziehen diagonal vorwärts, schlagen aber in beide Richtungen. Schlagen und weitere Sprünge sind Pflicht. Damen ziehen beliebig weit diagonal. Auf der letzten Reihe wird ein Stein zur Dame. Wer alle gegnerischen Steine schlägt oder den Gegner bewegungsunfähig macht, gewinnt.",undo:"Zug zurücknehmen",reset:"Neues Spiel",resetAsk:"Neues Spiel starten und den Fortschritt verlieren?",flip:"Brett drehen",saved:"Dieses Spiel konnte nicht im Browser gespeichert werden.",local:"2 Spieler · ein Gerät",select:"Wähle deine Katze und dann ein markiertes Feld",king:"Dame",cat:"Katze",empty:"Leeres Feld",pending:"Pflichtzug",whiteWin:"Weiße Katzen gewinnen!",blackWin:"Schwarze Katzen gewinnen!"},
- es:{white:"Gatos blancos",black:"Gatos negros",turn:"Turno",win:"¡Victoria!",wins:"ganan",moves:"Movimientos legales",capture:"Capturar es obligatorio",continue:"Sigue capturando con esta ficha",how:"Reglas",rules:"Damas 8×8 con 12 gatos por lado. Empiezan los blancos. Las fichas avanzan en diagonal, pero capturan en ambas direcciones. Capturar y continuar los saltos es obligatorio. Las damas se mueven cualquier distancia en diagonal. Una ficha se corona al llegar al extremo opuesto. Gana quien deje al rival sin fichas o sin movimientos.",undo:"Deshacer jugada",reset:"Nueva partida",resetAsk:"¿Empezar de nuevo y perder el progreso?",flip:"Girar tablero",saved:"No se pudo guardar la partida en el navegador.",local:"2 jugadores · un dispositivo",select:"Toca tu gato y luego una casilla resaltada",king:"dama",cat:"gato",empty:"Casilla vacía",pending:"Movimiento obligatorio",whiteWin:"¡Ganan los gatos blancos!",blackWin:"¡Ganan los gatos negros!"}
+ uk:{white:"Білі котики",black:"Чорні котики",turn:"Хід",win:"Перемога!",wins:"перемогли",moves:"Доступні ходи",capture:"Взяття обов’язкове",continue:"Продовжуй бити цією шашкою",how:"Правила",rules:"Шашки 8×8: по 12 котиків. Білі починають. Звичайна шашка ходить по діагоналі вперед, але б’є в обидва боки. Бити обов’язково; якщо можливе наступне взяття, його потрібно виконати. Дамка ходить по діагоналі на будь-яку вільну відстань. Дійшовши до останнього ряду, котик стає дамкою. Перемагає той, у кого суперник залишився без шашок або можливих ходів.",undo:"Скасувати хід",reset:"Нова партія",resetAsk:"Почати нову партію? Поточний прогрес буде втрачено.",flip:"Повернути дошку",saved:"Не вдалося зберегти партію в браузері.",winnerTitle:"Перемога!",congrats:"Вітаємо! Чудова партія — перемога за вами!",again:"Зіграти ще раз",close:"Переглянути дошку",local:"2 гравці · один пристрій",select:"Натисни свого котика, потім підсвічену клітинку",king:"дамка",cat:"котик",empty:"Порожня клітинка",pending:"Обов’язковий хід",whiteWin:"Білі котики перемогли!",blackWin:"Чорні котики перемогли!"},
+ en:{white:"White cats",black:"Black cats",turn:"Turn",win:"Victory!",wins:"win",moves:"Legal moves",capture:"Capture is mandatory",continue:"Keep capturing with this piece",how:"Rules",rules:"8×8 checkers with 12 cats per side. White goes first. Ordinary pieces move diagonally forward and capture in both directions. Captures and further jumps are mandatory. Kings move any distance diagonally. A piece becomes a king on reaching the far edge. You win by taking every opponent piece or leaving them without a legal move.",undo:"Undo move",reset:"New game",resetAsk:"Start a new game and lose the current progress?",flip:"Flip board",saved:"This game could not be saved in your browser.",winnerTitle:"Victory!",congrats:"Congratulations! What a game — the win is yours!",again:"Play again",close:"View the board",local:"2 players · one device",select:"Tap your cat, then a highlighted square",king:"king",cat:"cat",empty:"Empty square",pending:"Mandatory move",whiteWin:"White cats win!",blackWin:"Black cats win!"},
+ sv:{white:"Vita katter",black:"Svarta katter",turn:"Tur",win:"Seger!",wins:"vinner",moves:"Möjliga drag",capture:"Slag är obligatoriskt",continue:"Fortsätt slå med samma pjäs",how:"Regler",rules:"Damspel på 8×8 med 12 katter per spelare. Vit börjar. Vanliga pjäser går diagonalt framåt men slår åt båda håll. Slag och fortsatta slag är obligatoriska. Dam kan gå valfri sträcka diagonalt. En pjäs blir dam på sista raden. Du vinner när motståndaren saknar pjäser eller möjliga drag.",undo:"Ångra drag",reset:"Nytt parti",resetAsk:"Starta ett nytt parti och förlora framstegen?",flip:"Vänd brädet",saved:"Partiet kunde inte sparas i webbläsaren.",winnerTitle:"Seger!",congrats:"Grattis! Vilket parti — ni vann!",again:"Spela igen",close:"Visa brädet",local:"2 spelare · en enhet",select:"Tryck på din katt och sedan på en markerad ruta",king:"dam",cat:"katt",empty:"Tom ruta",pending:"Obligatoriskt drag",whiteWin:"Vita katter vinner!",blackWin:"Svarta katter vinner!"},
+ de:{white:"Weiße Katzen",black:"Schwarze Katzen",turn:"Am Zug",win:"Sieg!",wins:"gewinnen",moves:"Mögliche Züge",capture:"Schlagen ist Pflicht",continue:"Mit dieser Figur weiterschlagen",how:"Regeln",rules:"Dame auf 8×8 mit 12 Katzen pro Seite. Weiß beginnt. Normale Steine ziehen diagonal vorwärts, schlagen aber in beide Richtungen. Schlagen und weitere Sprünge sind Pflicht. Damen ziehen beliebig weit diagonal. Auf der letzten Reihe wird ein Stein zur Dame. Wer alle gegnerischen Steine schlägt oder den Gegner bewegungsunfähig macht, gewinnt.",undo:"Zug zurücknehmen",reset:"Neues Spiel",resetAsk:"Neues Spiel starten und den Fortschritt verlieren?",flip:"Brett drehen",saved:"Dieses Spiel konnte nicht im Browser gespeichert werden.",winnerTitle:"Sieg!",congrats:"Glückwunsch! Tolles Spiel — ihr habt gewonnen!",again:"Noch mal spielen",close:"Brett ansehen",local:"2 Spieler · ein Gerät",select:"Wähle deine Katze und dann ein markiertes Feld",king:"Dame",cat:"Katze",empty:"Leeres Feld",pending:"Pflichtzug",whiteWin:"Weiße Katzen gewinnen!",blackWin:"Schwarze Katzen gewinnen!"},
+ es:{white:"Gatos blancos",black:"Gatos negros",turn:"Turno",win:"¡Victoria!",wins:"ganan",moves:"Movimientos legales",capture:"Capturar es obligatorio",continue:"Sigue capturando con esta ficha",how:"Reglas",rules:"Damas 8×8 con 12 gatos por lado. Empiezan los blancos. Las fichas avanzan en diagonal, pero capturan en ambas direcciones. Capturar y continuar los saltos es obligatorio. Las damas se mueven cualquier distancia en diagonal. Una ficha se corona al llegar al extremo opuesto. Gana quien deje al rival sin fichas o sin movimientos.",undo:"Deshacer jugada",reset:"Nueva partida",resetAsk:"¿Empezar de nuevo y perder el progreso?",flip:"Girar tablero",saved:"No se pudo guardar la partida en el navegador.",winnerTitle:"¡Victoria!",congrats:"¡Felicidades! ¡Qué partida! ¡Habéis ganado!",again:"Jugar otra vez",close:"Ver el tablero",local:"2 jugadores · un dispositivo",select:"Toca tu gato y luego una casilla resaltada",king:"dama",cat:"gato",empty:"Casilla vacía",pending:"Movimiento obligatorio",whiteWin:"¡Ganan los gatos blancos!",blackWin:"¡Ganan los gatos negros!"}
 };
 
 function CatPiece({side,king}) {
@@ -37,6 +38,26 @@ export function CheckersGame({lang="uk"}) {
   const [selected,setSelected]=useState(null);
   const [history,setHistory]=useState([]);
   const [flipped,setFlipped]=useState(false);
+  const [victoryOpen,setVictoryOpen]=useState(()=>Boolean(game.winner));
+  const closeVictory=useRef(null);
+  const previouslyFocused=useRef(null);
+  useEffect(()=>{
+    if(!victoryOpen) return;
+    previouslyFocused.current=document.activeElement;
+    closeVictory.current?.focus();
+    const onKey=event=>{
+      if(event.key==="Escape"){event.preventDefault();setVictoryOpen(false);}
+      if(event.key==="Tab"){
+        const elements=[...document.querySelectorAll(".ck-victory-dialog button")];
+        if(elements.length===0)return;
+        const first=elements[0],last=elements[elements.length-1];
+        if(event.shiftKey && document.activeElement===first){event.preventDefault();last.focus();}
+        else if(!event.shiftKey && document.activeElement===last){event.preventDefault();first.focus();}
+      }
+    };
+    document.addEventListener("keydown",onKey);
+    return ()=>{document.removeEventListener("keydown",onKey);if(previouslyFocused.current?.isConnected)previouslyFocused.current.focus();};
+  },[victoryOpen]);
   const moves=useMemo(()=>legalCheckersMoves(game),[game]);
   const active=game.forcedFrom===null?selected:game.forcedFrom;
   const targets=moves.filter(m=>m.from===active).map(m=>m.to);
@@ -46,20 +67,21 @@ export function CheckersGame({lang="uk"}) {
     if(game.winner || !squareIsDark(index))return;
     if(active!==null && targets.includes(index)){
       const next=applyCheckersMove(game,active,index);
-      if(next!==game){setHistory(h=>[...h.slice(-79),game]);setGame(next);setSelected(next.forcedFrom);}
+      if(next!==game){setHistory(h=>[...h.slice(-79),game]);setGame(next);setSelected(next.forcedFrom);if(!game.winner && next.winner){setVictoryOpen(true);playCheckersVictory();}}
       return;
     }
     if(game.forcedFrom!==null)return;
     if(game.board[index]?.side===game.turn && moves.some(m=>m.from===index))setSelected(index);
     else setSelected(null);
   };
+  const startNewGame=()=>{setGame(initialCheckers());setHistory([]);setSelected(null);setVictoryOpen(false);};
   const reset=()=>{
     if(!window.confirm(t.resetAsk))return;
-    setGame(initialCheckers());setHistory([]);setSelected(null);
+    startNewGame();
   };
   const undo=()=>{
     if(!history.length)return;
-    setGame(history[history.length-1]);setHistory(h=>h.slice(0,-1));setSelected(null);
+    setGame(history[history.length-1]);setHistory(h=>h.slice(0,-1));setSelected(null);setVictoryOpen(false);
   };
   const indices=Array.from({length:64},(_,i)=>flipped?63-i:i);
   return <section className="ck-page s pv" aria-label={t.local}>
@@ -108,6 +130,20 @@ export function CheckersGame({lang="uk"}) {
           {!storageOk && <p role="alert" className="ck-save-error">{t.saved}</p>}
         </aside>
       </div>
+      {victoryOpen && game.winner && <div className="ck-victory-backdrop">
+        <div className="ck-victory-dialog" role="dialog" aria-modal="true" aria-labelledby="ck-victory-title" aria-describedby="ck-victory-desc">
+          <div className="ck-victory-sparks" aria-hidden="true">✦ ✧ ✦</div>
+          <div className="ck-victory-cat"><CatPiece side={game.winner} king={true}/></div>
+          <p className="ck-victory-overline">NICKOLASGAMES</p>
+          <h2 id="ck-victory-title">{t.winnerTitle}</h2>
+          <h3>{game.winner==="white"?t.whiteWin:t.blackWin}</h3>
+          <p id="ck-victory-desc">{t.congrats}</p>
+          <div className="ck-victory-actions">
+            <button type="button" className="ck-victory-restart" ref={closeVictory} onClick={startNewGame}>{t.again}</button>
+            <button type="button" className="ck-victory-close" onClick={()=>setVictoryOpen(false)}>{t.close}</button>
+          </div>
+        </div>
+      </div>}
     </div>
   </section>;
 }
