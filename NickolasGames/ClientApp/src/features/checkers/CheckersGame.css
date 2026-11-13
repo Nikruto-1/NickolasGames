@@ -263,3 +263,17 @@
 .ck-bot-difficulty select{appearance:auto;background:#fffaf1;border:1px solid #c9ac84;border-radius:9px;color:#36291e;padding:10px 9px;max-width:100%;min-height:42px}
 @media(min-width:811px) and (max-width:1120px){.ck-opponent-panel{padding:9px}.ck-opponent-choices button{font-size:11px}}
 @media(max-width:480px){.ck-opponent-choices button{font-size:12px}}
+
+/* First-turn setup lives in the right panel. Rotating the board remains visual only. */
+.ck-start-choice,.ck-color-choice{display:grid;gap:7px;padding-top:8px;border-top:1px solid #d9c5a8;min-width:0}
+.ck-start-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.ck-start-buttons.ck-human-colors{grid-template-columns:repeat(2,minmax(0,1fr))}
+.ck-start-buttons button{min-width:0;min-height:39px;max-width:100%;padding:7px 4px;border-radius:9px;border:1px solid #cbb28f;background:#fff9ed;color:#382b21;font-size:11px;line-height:1.25;font-weight:750;overflow-wrap:anywhere}
+.ck-start-buttons button.is-active{background:#493327;color:#fff;border-color:#493327}
+.ck-start-buttons button:focus-visible{outline:3px solid #b98a4c;outline-offset:2px}
+.ck-start-buttons button:disabled{opacity:.65;cursor:wait}
+.ck-draw-outcome{font-size:12px;font-weight:800;color:#684425;background:#f7e9cd;border-radius:9px;padding:8px 9px;text-align:center}
+.ck-draw-outcome.is-rolling{animation:ck-roll-pulse .24s ease-in-out infinite alternate}
+@keyframes ck-roll-pulse{from{transform:scale(.98);opacity:.7}to{transform:scale(1);opacity:1}}
+@media(prefers-reduced-motion:reduce){.ck-draw-outcome.is-rolling{animation:none}}
+@media(max-width:1120px) and (min-width:811px){.ck-start-buttons button{font-size:10px;padding:6px 2px}}
