@@ -27,7 +27,7 @@ export default function NickolasGames() {
   const [screenGame, setScreenGame] = useState(() => gameFromSearch(location.search));
   const finishIntro = useCallback(() => setShowIntro(false), []);
   const [lang, setLang] = useState(initialLanguage);
-  const [game, setGame] = useState(() => { const g = readValue("nickolasgames-active-game"); return PLAYABLE.includes(g) ? g : "crocodile"; });
+  const [game, setGame] = useState(() => { const route = gameFromSearch(location.search); const saved = readValue("nickolasgames-active-game"); return route || (PLAYABLE.includes(saved) ? saved : "crocodile"); });
   useEffect(() => { writeValue("nickolasgames-active-game", game); }, [game]);
   const t = COPY[lang] || COPY.en;
   const navigate = (k) => {
@@ -57,7 +57,7 @@ export default function NickolasGames() {
       const route = gameFromSearch(location.search);
       setScreenGame(route);
       if (route) setGame(route);
-      const pathLang = location.pathname.split("/").find(part => Object.hasOwn(LANGUAGE_PATHS, part));
+      const pathLang = location.pathname === "/" ? "en" : location.pathname.split("/").find(part => Object.hasOwn(LANGUAGE_PATHS, part));
       if (pathLang && pathLang !== lang) setLang(pathLang);
     };
     addEventListener("popstate", onHistory);
