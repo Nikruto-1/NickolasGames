@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { TRUTH_DARE_CARDS, TRUTH_DARE_CATEGORIES } from "../src/features/truth-or-dare/truthOrDare.uk.js";
+import { TRUTH_DARE_CARDS, TRUTH_DARE_CATEGORIES, TRUTH_DARE_DEFINITIONS, buildTruthDareCards } from "../src/features/truth-or-dare/truthOrDare.uk.js";
 import { getTruthDareLocale, localizedCategory, localizeTruthDareCard, baseTruthDareCardId } from "../src/features/truth-or-dare/i18n.js";
 
 test("all 800 truth/dare IDs are unique", () => {
@@ -49,6 +49,20 @@ test("stable translation IDs survive unrelated order changes and preserve existi
     for(const card of shuffled){
       const base=baseTruthDareCardId(card.id);
       assert.equal(localizeTruthDareCard(card,lang).text,pack.cardTextById[base]);
+    }
+  }
+});
+
+test("reordering canonical Ukrainian base prompts cannot change their IDs or translations", () => {
+  const reverse = TRUTH_DARE_DEFINITIONS.map(([id,name,desc,truths,dares]) =>
+    [id,name,desc,[...truths].reverse(),[...dares].reverse()]).reverse();
+  const reordered = buildTruthDareCards(reverse);
+  const compare = cards => new Map(cards.map(c => [c.id, c.type+"|"+c.text+"|"+c.challenge]));
+  assert.deepEqual([...compare(reordered)].sort(), [...compare(TRUTH_DARE_CARDS)].sort());
+  for (const lang of ["en","sv","de","es"]) {
+    for(const card of reordered) {
+      assert.deepEqual(localizeTruthDareCard(card,lang),
+        localizeTruthDareCard(TRUTH_DARE_CARDS.find(c=>c.id===card.id),lang));
     }
   }
 });
