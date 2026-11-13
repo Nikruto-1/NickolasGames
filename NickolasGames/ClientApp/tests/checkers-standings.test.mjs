@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { emptyCheckersStandings,validateCheckersStandings,recordCheckersWin,rankedCheckersSides } from "../src/features/checkers/standings.js";
+import { emptyCheckersStandings,validateCheckersStandings,recordCheckersWin,revertCheckersWin,rankedCheckersSides } from "../src/features/checkers/standings.js";
 
 test("checkers standings record wins once per game id",()=>{
   const initial=emptyCheckersStandings();
@@ -21,4 +21,28 @@ test("invalid saved standings fall back safely",()=>{
   assert.equal(validateCheckersStandings({white:-1,black:0,recent:[],recorded:[]}),null);
   assert.equal(validateCheckersStandings({white:1,black:0,recent:[{side:"evil",id:"1"}],recorded:[]}),null);
   assert.deepEqual(validateCheckersStandings(emptyCheckersStandings()),emptyCheckersStandings());
+});
+
+test("undoing a recorded win subtracts the correct result and allows a replay",()=>{
+  let stats=emptyCheckersStandings();
+  stats=recordCheckersWin(stats,"match-a","white");
+  assert.equal(stats.white,1);
+  stats=revertCheckersWin(stats,"match-a");
+  assert.equal(stats.white,0);
+  assert.equal(stats.recorded.includes("match-a"),false);
+  assert.equal(stats.recent.length,0);
+  stats=recordCheckersWin(stats,"match-a","black");
+  assert.equal(stats.black,1);
+  assert.equal(stats.white,0);
+  assert.equal(revertCheckersWin(stats,"not-found"),stats);
+});
+
+test("result undo preserves all other match outcomes",()=>{
+  let stats=recordCheckersWin(emptyCheckersStandings(),"one","white");
+  stats=recordCheckersWin(stats,"two","black");
+  stats=recordCheckersWin(stats,"three","white");
+  const reverted=revertCheckersWin(stats,"three");
+  assert.equal(reverted.white,1);
+  assert.equal(reverted.black,1);
+  assert.deepEqual(reverted.recent.map(x=>x.id),["two","one"]);
 });
