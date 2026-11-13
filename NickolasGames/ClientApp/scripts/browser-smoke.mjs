@@ -213,6 +213,41 @@ try {
     checks+=3;
     await page.close();
   }
+  // Durable checkers timeline and board orientation, even across a fresh page load.
+  {
+    const page=await browser.newPage({viewport:{width:1024,height:850},serviceWorkers:"block"});
+    const errors=[];
+    page.on("pageerror",error=>errors.push(error.message));
+    await page.goto(base+"/uk/?game=checkers",{waitUntil:"domcontentloaded"});
+    await page.locator(".ck-board").waitFor();
+    const lazyModules=await page.evaluate(()=>performance.getEntriesByType("resource")
+      .map(entry=>entry.name).filter(name=>name.includes("/assets/")&&name.endsWith(".js")));
+    assert.equal(lazyModules.some(name=>/WhoAmIGame-|AliasGame-|CharadesGame-|TruthOrDareGame-/.test(name)),
+      false,"Only active game JS should load at first visit");
+    await page.locator('.ck-cell[data-cell="40"]').click();
+    await page.locator('.ck-cell[data-cell="33"]').click();
+    await page.getByRole("button",{name:"Повернути дошку"}).click();
+    await page.waitForFunction(()=>JSON.parse(localStorage.getItem("nickolasgames-session-checkers-shared")).state.flipped===true);
+    await page.reload();
+    await page.locator(".ck-board").waitFor();
+    assert.equal(await page.locator(".ck-cell").first().getAttribute("data-cell"),"63");
+    await page.getByRole("button",{name:"Скасувати хід"}).click();
+    await page.waitForFunction(()=>JSON.parse(localStorage.getItem("nickolasgames-session-checkers-shared")).state.moveNumber===1);
+    const restored=await page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames-session-checkers-shared")).state);
+    assert.equal(restored.board[40].side,"white");
+    assert.equal(restored.history.length,0);
+    assert.equal(restored.flipped,true);
+    await page.locator('.ck-cell[data-cell="40"]').click();
+    await page.locator('.ck-cell[data-cell="33"]').click();
+    page.once("dialog",dialog=>dialog.accept());
+    await page.getByRole("button",{name:"Нова партія"}).click();
+    const fresh=await page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames-session-checkers-shared")).state);
+    assert.equal(fresh.moveNumber,1);
+    assert.deepEqual(fresh.history,[],"A new match must not reuse the old party history");
+    assert.deepEqual(errors,[],"Persisted checkers timeline browser runtime errors");
+    checks+=8;
+    await page.close();
+  }
   // Human vs. computer: browser-only opponent, two difficulties, and durable mode.
   for (const level of ["easy", "medium"]) {
     const page=await browser.newPage({viewport:{width:1024,height:850},serviceWorkers:"block"});
