@@ -149,6 +149,21 @@ try {
     assert.deepEqual(errors,[],`${width}px runtime errors`);
     await page.close();
   }
+  // Screenshot-sized desktop: increase board size without clipping below the fold.
+  for (const width of [1100, 1536]) {
+    const page = await browser.newPage({viewport:{width,height:700},serviceWorkers:"block"});
+    await page.goto(base+"/uk/?game=checkers",{waitUntil:"domcontentloaded"});
+    await page.locator(".ck-board").waitFor();
+    const rects = await page.evaluate(()=>{
+      const rect=selector=>{const r=document.querySelector(selector).getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height};};
+      return {board:rect(".ck-board-frame"),left:rect(".ck-leaderboard"),right:rect(".ck-sidebar"),viewport:innerHeight};
+    });
+    assert.ok(rects.board.width>=425,`Checkers board should be larger at ${width}x700: ${JSON.stringify(rects)}`);
+    assert.ok(rects.board.top>=0 && rects.board.bottom<=rects.viewport+2,`Enlarged board must fit height: ${JSON.stringify(rects)}`);
+    assert.ok(rects.left.right<rects.board.left && rects.right.left>rects.board.right,`Keep the 3 desktop columns: ${JSON.stringify(rects)}`);
+    checks+=3;
+    await page.close();
+  }
   for(const lang of ["uk","en","sv","de","es"]){
     const page=await browser.newPage({viewport:{width:390,height:844},serviceWorkers:"block"});
     await page.goto(`${base}/${lang==="en"?"":lang+"/"}?game=truth`,{waitUntil:"domcontentloaded"});
