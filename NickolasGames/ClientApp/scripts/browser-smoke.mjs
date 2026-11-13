@@ -84,20 +84,28 @@ try {
       await check(page,`${width}px ${game}`);
       if (game === "checkers") {
         assert.equal(await page.locator(".ck-cell").count(),64,"Checkers board needs 64 squares");
-        assert.equal(await page.locator(".ck-piece").count(),26,"Checkers has 24 board pieces + 2 side indicators");
+        assert.equal(await page.locator(".ck-board .ck-piece").count(),24,"Checkers has 24 board pieces");
         await page.locator(".ck-cell[data-cell=\"40\"]").click();
         await page.locator(".ck-cell[data-cell=\"33\"]").click();
         assert.ok(await page.locator(".ck-cell[data-cell=\"33\"] .ck-white").count(),"White cat moves");
         await page.reload();
         await page.locator(".ck-cell[data-cell=\"33\"] .ck-white").waitFor();
+        const leaderboard=page.locator(".ck-leaderboard");
+        await leaderboard.waitFor();
+        assert.equal(await leaderboard.locator(".ck-rank-item").count(),2,"Both teams appear in ranking");
         const geometry=await page.evaluate(()=>{
           const board=document.querySelector(".ck-board-frame").getBoundingClientRect();
           const title=document.querySelector(".game-screen-header").getBoundingClientRect();
-          return { top:board.top,bottom:board.bottom,width:board.width,height:board.height,viewport:innerHeight,header: title.height };
+          const ranking=document.querySelector(".ck-leaderboard").getBoundingClientRect();
+          const controls=document.querySelector(".ck-sidebar").getBoundingClientRect();
+          return { top:board.top,bottom:board.bottom,width:board.width,height:board.height,viewport:innerHeight,header: title.height,ranking:{left:ranking.left,right:ranking.right,top:ranking.top},controls:{left:controls.left,right:controls.right,top:controls.top} };
         });
         assert.ok(geometry.top>=0 && geometry.bottom<=geometry.viewport+2,
           `Checkers board must fit viewport at ${width}px: ${JSON.stringify(geometry)}`);
         assert.ok(Math.abs(geometry.width-geometry.height)<=2,"Board frame stays square");
+        if(width>=1024){
+          assert.ok(geometry.ranking.right<geometry.left && geometry.controls.left>geometry.left+geometry.width,`Desktop columns must be in scoreboard-board-controls order: ${JSON.stringify(geometry)}`);
+        }
         if(width===375){
           await page.evaluate(()=>{
             const key="nickolasgames-session-checkers-shared";
@@ -112,10 +120,10 @@ try {
             "Victory modal must name the winning cats");
           await page.getByRole("button",{name:"Зіграти ще раз"}).click();
           assert.equal(await page.getByRole("dialog").count(),0,"New game closes victory modal");
-          assert.equal(await page.locator(".ck-piece").count(),26,"New game restores all cats");
+          assert.equal(await page.locator(".ck-board .ck-piece").count(),24,"New game restores all cats");
           checks+=3;
         }
-        checks += 5;
+        checks += 7;
       }
       if(width === 320 && ["whoami","crocodile","alias"].includes(game)){
         const legacyMigrated=await page.evaluate(game=>{
