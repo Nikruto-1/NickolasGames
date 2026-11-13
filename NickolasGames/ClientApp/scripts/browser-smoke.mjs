@@ -141,6 +141,8 @@ try {
         assert.ok(legacyMigrated,`Missing stored session for ${game}`);
         await page.reload();
         await page.locator(".game-screen-nav").waitFor();
+        await page.waitForFunction(name=>Boolean(localStorage.getItem(`nickolasgames-session-${name}-uk`)),
+          game === "crocodile" ? "charades" : game,{timeout:12000});
         const hasSession=await page.evaluate(game=>{
           const value=localStorage.getItem(`nickolasgames-session-${game}-uk`);
           return value && JSON.parse(value).schemaVersion === 1;
