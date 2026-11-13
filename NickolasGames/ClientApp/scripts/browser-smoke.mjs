@@ -4,7 +4,7 @@ import { createServer } from "node:http";
 import { readFile, stat } from "node:fs/promises";
 import { resolve, extname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { chromium } from "playwright";
+const { chromium } = await import(process.env.NICKOLAS_PLAYWRIGHT_PATH || "playwright");
 
 const root = resolve(fileURLToPath(new URL("../../wwwroot/", import.meta.url)));
 const types = {".html":"text/html; charset=utf-8",".js":"application/javascript; charset=utf-8",".css":"text/css; charset=utf-8",".svg":"image/svg+xml",".json":"application/json",".webmanifest":"application/manifest+json",".png":"image/png",".webp":"image/webp",".mp3":"audio/mpeg",".ico":"image/x-icon"};
@@ -26,7 +26,7 @@ const server = createServer(async (request,response)=>{
 
 await new Promise(resolve=>server.listen(0,"127.0.0.1",resolve));
 const base=`http://127.0.0.1:${server.address().port}`;
-const browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
+const browser=await chromium.launch({headless:true,executablePath:process.env.NICKOLAS_CHROME_PATH || undefined,args:["--no-sandbox"]});
 const failures=[];
 let checks=0;
 
