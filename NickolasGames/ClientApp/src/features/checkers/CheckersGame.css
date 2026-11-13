@@ -87,11 +87,11 @@
 .game-screen[data-game="checkers"] .ck-sidebar{max-height:min(660px,calc(100dvh - 222px));overflow-y:auto}
 @media(max-width:810px){
   .game-screen[data-game="checkers"] .ck-layout{grid-template-columns:minmax(0,1fr);justify-items:center}
-  .game-screen[data-game="checkers"] .ck-board-frame{width:min(100%,calc(100dvh - 242px),720px)}
+  .game-screen[data-game="checkers"] .ck-board-frame{width:min(100%,calc(100dvh - 310px),720px)}
   .game-screen[data-game="checkers"] .ck-sidebar{width:100%;max-height:none;overflow:visible}
 }
 @media(max-width:480px){
-  .game-screen[data-game="checkers"] .ck-board-frame{width:min(100%,calc(100dvh - 235px));padding:6px}
+  .game-screen[data-game="checkers"] .ck-board-frame{width:min(100%,calc(100dvh - 300px));padding:6px}
   .game-screen[data-game="checkers"] .ck-toolbar{margin-bottom:10px}
   .game-screen[data-game="checkers"] .ck-action{font-size:11px;min-height:39px}
 }
