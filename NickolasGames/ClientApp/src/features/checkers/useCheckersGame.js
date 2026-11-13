@@ -4,12 +4,19 @@ import { createCheckersMatch, normalizeCheckersSettings, selectFirstSide } from 
 import { chooseCheckersBotMove } from "../../../../../packages/game-core/checkers/bot.js";
 import { emptyCheckersStandings,validateCheckersStandings,recordCheckersWin,revertCheckersWin,rankedCheckersSides } from "./standings.js";
 import { useVersionedState } from "../../utils/gameSession.js";
+import { restoreGameTimeline,appendGameHistory,rewindGameHistory } from "../../utils/gameHistory.js";
 import { initialCheckers, legalCheckersMoves,applyCheckersMove,validateCheckersState,squareIsDark,checkersFinished } from "./gameLogic.js";
+
+const roundId = () => {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  return String(Date.now())+"-"+String(Math.random());
+};
 
 export function useCheckersGame(t) {
   const [game,setGame,storageOk] = useVersionedState({
     game:"checkers",lang:"shared",
-    restore:s=>validateCheckersState(s)?s:null,initialize:initialCheckers
+    restore:s=>restoreGameTimeline(s,validateCheckersState,roundId),
+    initialize:()=>({...createCheckersMatch("white",Math.random,roundId()),history:[],flipped:false})
   });
   const [modeSettings,setModeSettings] = useVersionedState({
     game:"checkers-mode",lang:"shared",
@@ -30,14 +37,13 @@ export function useCheckersGame(t) {
     game:"checkers-standings",lang:"shared",
     restore:validateCheckersStandings,initialize:emptyCheckersStandings
   });
-  const roundId = () => {
-    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
-    return String(Date.now())+"-"+String(Math.random());
-  };
   const leaderboard = rankedCheckersSides(standings);
   const matchesPlayed = standings.white + standings.black;
-  const [history,setHistory]=useState([]);
-  const [flipped,setFlipped]=useState(false);
+  const history=Array.isArray(game.history)?game.history:[];
+  const flipped=Boolean(game.flipped);
+  const setFlipped=choice=>setGame(current=>({
+    ...current,flipped:Boolean(typeof choice==="function" ? choice(Boolean(current.flipped)) : choice)
+  }));
   const [victoryOpen,setVictoryOpen]=useState(()=>checkersFinished(game));
   const moves=useMemo(()=>legalCheckersMoves(game),[game]);
   const active=game.forcedFrom===null?selected:game.forcedFrom;
@@ -48,8 +54,7 @@ export function useCheckersGame(t) {
     const next=applyCheckersMove(game,from,to);
     if(next===game)return;
     const gameId=game.matchId || roundId();
-    setHistory(h=>[...h.slice(-79),game]);
-    setGame({...next,matchId:gameId,startingSide:game.startingSide || "white"});
+    setGame(appendGameHistory(game,{...next,matchId:gameId,startingSide:game.startingSide || "white"},validateCheckersState));
     setSelected(next.forcedFrom);
     if(!checkersFinished(game) && checkersFinished(next)){
       if(next.winner) {
@@ -81,10 +86,9 @@ export function useCheckersGame(t) {
     if(game.board[index]?.side===game.turn && moves.some(m=>m.from===index))setSelected(index);
     else setSelected(null);
   };
-  const startNewGame=(settings=modeSettings, chosen=null)=>{
-    const next=chosen ? {...createCheckersMatch(chosen,Math.random,roundId())} : createCheckersMatch(settings.starter,Math.random,roundId());
-    setGame(next);
-    setHistory([]);
+  const startNewGame=(settings=modeSettings, chosen=null,orientation=flipped)=>{
+    const next=createCheckersMatch(chosen || settings.starter,Math.random,roundId());
+    setGame({...next,history:[],flipped:Boolean(orientation)});
     setSelected(null);
     setVictoryOpen(false);
     setDrawResult(chosen || null);
@@ -113,26 +117,20 @@ export function useCheckersGame(t) {
     if(side===humanSide || drawing || !canRestart())return;
     const next={...modeSettings,humanSide:side};
     setModeSettings(next);
-    setFlipped(side==="black");
-    startNewGame(next);
+    startNewGame(next,null,side==="black");
   };
   const reset=()=>{
     if(!window.confirm(t.resetAsk))return;
     startNewGame();
   };
   const undo=()=>{
-    if(!history.length)return;
-    let target=history.length-1;
-    if(againstBot){
-      // Take back both the human and computer turn (including capture sequences).
-      while(target>=0 && (history[target].turn!==humanSide || history[target].forcedFrom!==null))
-        target--;
-      if(target<0)return;
-    }
-    if(game.winner && game.matchId && history[target].winner!==game.winner)
-      setStandings(prev=>revertCheckersWin(prev,game.matchId));
-    setGame(history[target]);
-    setHistory(h=>h.slice(0,target));
+    const previous=rewindGameHistory(game,
+      againstBot ? entry=>entry.turn===humanSide && entry.forcedFrom===null : ()=>true,
+      validateCheckersState);
+    if(!previous) return;
+    if(game.winner && game.matchId && previous.winner!==game.winner)
+      setStandings(current=>revertCheckersWin(current,game.matchId));
+    setGame(previous);
     setSelected(null);
     setVictoryOpen(false);
   };
