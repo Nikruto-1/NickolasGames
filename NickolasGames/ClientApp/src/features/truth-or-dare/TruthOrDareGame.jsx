@@ -6,7 +6,7 @@ import { getTruthDareLocale, localizeTruthDareCard, localizedCategory } from "./
 
 import { useTruthOrDareGame } from "./useTruthOrDareGame.js";
 export function TruthOrDareGame({ games, t, lang, onGame }) {
-  const { session, setSession, draftCategories, setDraftCategories, settingsOpen, setSettingsOpen, confirmOpen, setConfirmOpen, confirmationRef, storageOk, cardsById, i18n, current, activeCategory, translatedCategory, available, remainingTypes, all, changed, completed, chooseType, advance, toggleCategory, closeSettings, toggleSettings, applyCategories, confirmCategories, reset } = useTruthOrDareGame({lang});
+  const { session, setSession, categories, queue, index, chosen, skipped, draftCategories, setDraftCategories, settingsOpen, setSettingsOpen, confirmOpen, setConfirmOpen, confirmationRef, storageOk, cardsById, i18n, current, activeCategory, translatedCategory, available, remainingTypes, all, changed, completed, chooseType, advance, toggleCategory, closeSettings, toggleSettings, applyCategories, confirmCategories, reset } = useTruthOrDareGame({lang});
   return (
     <section className="s pv td-root" id="preview" aria-label={games.truth.n}>
       <div className="wrap">

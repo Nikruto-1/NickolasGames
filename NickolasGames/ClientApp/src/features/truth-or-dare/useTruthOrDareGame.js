@@ -76,5 +76,5 @@ export function useTruthOrDareGame({ lang }) {
     setSession(createTruthDareSession(categories));
     setDraftCategories([...categories]);
   };
-  return { session, setSession, draftCategories, setDraftCategories, settingsOpen, setSettingsOpen, confirmOpen, setConfirmOpen, confirmationRef, storageOk, cardsById, i18n, current, activeCategory, translatedCategory, available, remainingTypes, all, changed, completed, chooseType, advance, toggleCategory, closeSettings, toggleSettings, applyCategories, confirmCategories, reset };
+  return { session, setSession, categories, queue, index, chosen, skipped, draftCategories, setDraftCategories, settingsOpen, setSettingsOpen, confirmOpen, setConfirmOpen, confirmationRef, storageOk, cardsById, i18n, current, activeCategory, translatedCategory, available, remainingTypes, all, changed, completed, chooseType, advance, toggleCategory, closeSettings, toggleSettings, applyCategories, confirmCategories, reset };
 }
