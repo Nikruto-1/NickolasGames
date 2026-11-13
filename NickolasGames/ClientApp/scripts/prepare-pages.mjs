@@ -79,8 +79,33 @@ const notFound = `<!doctype html>
     <p class="code">ПОМИЛКА 404</p>
     <h1>Холмс не знайшов цю сторінку</h1>
     <p>Схоже, посилання неправильне або сторінку перемістили. Повернися до ігор — там на тебе вже чекає наступний раунд.</p>
-    <div class="actions"><a href="/uk/">До ігор</a><a href="/">English</a></div>
+    <div class="actions"><a id="notfound-home" href="/uk/">До ігор</a><a id="notfound-lang" href="/">English</a></div>
   </article></main>
+  <script>
+    (function () {
+      var messages = {
+        uk:{code:"ПОМИЛКА 404",title:"Холмс не знайшов цю сторінку",text:"Схоже, посилання неправильне або сторінку перемістили. Повернися до ігор — там на тебе вже чекає наступний раунд.",home:"До ігор"},
+        en:{code:"ERROR 404",title:"Holmes couldn't find this page",text:"This link may be broken or the page may have moved. Head back to the games and start another round.",home:"Back to games"},
+        sv:{code:"FEL 404",title:"Holmes hittade inte sidan",text:"Länken kan vara fel eller sidan kan ha flyttats. Gå tillbaka till spelen och starta en ny omgång.",home:"Till spelen"},
+        de:{code:"FEHLER 404",title:"Holmes konnte diese Seite nicht finden",text:"Der Link ist möglicherweise falsch oder die Seite wurde verschoben. Zurück zu den Spielen!",home:"Zu den Spielen"},
+        es:{code:"ERROR 404",title:"Holmes no encuentra esta página",text:"Puede que el enlace no funcione o que la página se haya movido. Vuelve a los juegos para otra ronda.",home:"Volver a los juegos"}
+      };
+      var match = location.pathname.match(/^\/(uk|en|sv|de|es)(?:\/|$)/);
+      var lang = match ? match[1] : "en";
+      if (!match) {try {var saved=localStorage.getItem("nickolasgames-lang");if(messages[saved])lang=saved;}catch(e){}}
+      var t = messages[lang] || messages.en;
+      document.documentElement.lang = lang;
+      document.title = "404 — " + t.title + " | NickolasGames";
+      document.querySelector(".code").textContent = t.code;
+      document.querySelector("h1").textContent = t.title;
+      document.querySelector("article > p:not(.code)").textContent = t.text;
+      var home = lang === "en" ? "/" : "/" + lang + "/";
+      document.getElementById("notfound-home").textContent = t.home;
+      document.getElementById("notfound-home").href = home;
+      document.getElementById("notfound-lang").textContent = "NickolasGames";
+      document.getElementById("notfound-lang").href = home;
+    })();
+  </script>
 </body>
 </html>`;
 writeFileSync(resolve(root,'404.html'), notFound);
