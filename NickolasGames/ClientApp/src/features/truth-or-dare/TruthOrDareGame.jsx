@@ -4,79 +4,9 @@ import { TRUTH_DARE_CARDS, TRUTH_DARE_CATEGORIES } from "./truthOrDare.uk.js";
 import "./TruthOrDareGame.css";
 import { getTruthDareLocale, localizeTruthDareCard, localizedCategory } from "./i18n.js";
 
+import { useTruthOrDareGame } from "./useTruthOrDareGame.js";
 export function TruthOrDareGame({ games, t, lang, onGame }) {
-  const [session, setSession] = useState(() => readTruthDareSession(localStorage) || createTruthDareSession());
-  const { categories, queue, index, chosen, skipped } = session;
-  const [draftCategories, setDraftCategories] = useState(() => [...categories]);
-  const [settingsOpen, setSettingsOpen] = useState(() => !readTruthDareSession(localStorage));
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const confirmationRef = useRef(null);
-  const [storageOk, setStorageOk] = useState(true);
-  const cardsById = useMemo(() => new Map(TRUTH_DARE_CARDS.map(card => [card.id, card])), []);
-  const i18n = getTruthDareLocale(lang).ui;
-  const current = localizeTruthDareCard(cardsById.get(queue[index]), lang);
-  const activeCategory = TRUTH_DARE_CATEGORIES.find(c => c.id === current?.category);
-  const translatedCategory = activeCategory ? localizedCategory(activeCategory, lang) : null;
-  const available = TRUTH_DARE_CARDS.filter(c => draftCategories.includes(c.category)).length;
-  const remainingTypes = new Set(queue.slice(index).map(id => cardsById.get(id)?.type));
-  const all = draftCategories.length === TRUTH_DARE_CATEGORIES.length;
-  const changed = draftCategories.length !== categories.length || draftCategories.some(id => !categories.includes(id));
-  const completed = index >= queue.length;
-
-  useEffect(() => {
-    setStorageOk(saveTruthDareSession(localStorage, session));
-  }, [session]);
-
-  useEffect(() => {
-    if (!confirmOpen) return;
-    const previousFocus = document.activeElement;
-    const buttons = [...confirmationRef.current.querySelectorAll("button")];
-    buttons[0]?.focus();
-    const handleKeyDown = event => {
-      if (event.key === "Escape") { event.preventDefault(); setConfirmOpen(false); return; }
-      if (event.key !== "Tab" || !buttons.length) return;
-      if (event.shiftKey && document.activeElement === buttons[0]) {
-        event.preventDefault(); buttons[buttons.length - 1].focus();
-      } else if (!event.shiftKey && document.activeElement === buttons[buttons.length - 1]) {
-        event.preventDefault(); buttons[0].focus();
-      }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      if (previousFocus?.isConnected) previousFocus.focus();
-    };
-  }, [confirmOpen]);
-
-  const chooseType = type => setSession(current => chooseTruthDare(current, type));
-  const advance = skip => setSession(current => advanceTruthDare(current, skip));
-  const toggleCategory = id => setDraftCategories(current =>
-    current.includes(id) ? (current.length === 1 ? current : current.filter(c => c !== id)) : [...current, id]
-  );
-  const closeSettings = () => {
-    setDraftCategories([...categories]);
-    setConfirmOpen(false);
-    setSettingsOpen(false);
-  };
-  const toggleSettings = () => {
-    if (settingsOpen) closeSettings();
-    else { setDraftCategories([...categories]); setSettingsOpen(true); }
-  };
-  const applyCategories = () => {
-    if (!changed) { setSettingsOpen(false); return; }
-    if (index > 0 || chosen) { setConfirmOpen(true); return; }
-    setSession(createTruthDareSession(draftCategories));
-    setSettingsOpen(false);
-  };
-  const confirmCategories = () => {
-    setSession(createTruthDareSession(draftCategories));
-    setConfirmOpen(false);
-    setSettingsOpen(false);
-  };
-  const reset = () => {
-    setSession(createTruthDareSession(categories));
-    setDraftCategories([...categories]);
-  };
+  const { session, setSession, draftCategories, setDraftCategories, settingsOpen, setSettingsOpen, confirmOpen, setConfirmOpen, confirmationRef, storageOk, cardsById, i18n, current, activeCategory, translatedCategory, available, remainingTypes, all, changed, completed, chooseType, advance, toggleCategory, closeSettings, toggleSettings, applyCategories, confirmCategories, reset } = useTruthOrDareGame({lang});
   return (
     <section className="s pv td-root" id="preview" aria-label={games.truth.n}>
       <div className="wrap">
