@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { PrivacyPanel } from "./components/PrivacyPanel.jsx";
-import { AliasGame } from "./features/alias/AliasGame.jsx";
-import { TruthOrDareGame } from "./features/truth-or-dare/TruthOrDareGame.jsx";
-import { CharadesGame } from "./features/charades/CharadesGame";
-import { WhoAmIGame } from "./features/whoami/WhoAmIGame";
-import { CheckersGame } from "./features/checkers/CheckersGame.jsx";
+
+
+
+
+
 import { Hero, GamesGrid, HowItWorks, FinalCta } from "./components/HomeSections.jsx";
 import { SiteNavigation } from "./components/SiteNavigation.jsx";
-import { HolmesIntro } from "./components/HolmesIntro";
+
 import { AppStatus } from "./components/AppStatus";
 import { updateSiteMetadata } from "./utils/siteMetadata.js";
 import { PRIVACY_COPY } from "./locales/privacy.js";
@@ -16,6 +16,20 @@ import { GameScreen } from "./components/GameScreen.jsx";
 import { COPY } from "./locales";
 import "./nickolasgames.css";
 import "./product.css";
+
+const AliasGame=lazy(()=>import("./features/alias/AliasGame.jsx").then(m=>({default:m.AliasGame})));
+
+const TruthOrDareGame=lazy(()=>import("./features/truth-or-dare/TruthOrDareGame.jsx").then(m=>({default:m.TruthOrDareGame})));
+
+const CharadesGame=lazy(()=>import("./features/charades/CharadesGame.jsx").then(m=>({default:m.CharadesGame})));
+
+const WhoAmIGame=lazy(()=>import("./features/whoami/WhoAmIGame.jsx").then(m=>({default:m.WhoAmIGame})));
+
+const CheckersGame=lazy(()=>import("./features/checkers/CheckersGame.jsx").then(m=>({default:m.CheckersGame})));
+
+const HolmesIntro=lazy(()=>import("./components/HolmesIntro.jsx").then(m=>({default:m.HolmesIntro})));
+
+const LOADING_GAME={uk:"Завантаження гри…",en:"Loading game…",sv:"Laddar spel…",de:"Spiel wird geladen…",es:"Cargando juego…"};
 
 export default function NickolasGames() {
   const [showIntro, setShowIntro] = useState(false);
@@ -31,7 +45,7 @@ export default function NickolasGames() {
 
   return (
     <>
-      {showIntro && <HolmesIntro lang={lang} onComplete={finishIntro} />}
+      {showIntro && <Suspense fallback={<div role="status" aria-live="polite">{LOADING_GAME[lang]||LOADING_GAME.en}</div>}><HolmesIntro lang={lang} onComplete={finishIntro}/></Suspense>}
       <div className={"app-shell" + (screenGame ? " is-playing" : "")} inert={showIntro ? true : undefined}>
       <SiteNavigation lang={lang} setLang={setLang} label={t.language} onHome={() => navigate(null)} />
       {screenGame !== "checkers" && <AppStatus lang={lang} />}
@@ -43,6 +57,7 @@ export default function NickolasGames() {
         <FinalCta t={t} onStart={requestStart} />
       </> : <GameScreen game={screenGame} games={t.games} lang={lang}
         onBack={() => navigate(null)} onChoose={choose}>
+        <Suspense fallback={<div role="status" className="game-loading" aria-live="polite" aria-busy="true">{LOADING_GAME[lang]||LOADING_GAME.en}</div>}>
         {screenGame === "crocodile"
           ? <CharadesGame key={`${lang}-crocodile`} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={choose} />
           : screenGame === "whoami"
@@ -54,6 +69,7 @@ export default function NickolasGames() {
           : screenGame === "truth"
             ? <TruthOrDareGame key={`${lang}-truth`} games={t.games} t={t} lang={lang} onGame={choose} />
           : null}
+        </Suspense>
       </GameScreen>}
       </main>
       <footer><span>{t.footer}</span><PrivacyPanel lang={lang} /><button className="btn sm" onClick={() => setShowIntro(true)}>{({uk:"Холмс · 2D-вступ",en:"Holmes · 2D intro",sv:"Holmes · 2D-intro",de:"Holmes · 2D-Intro",es:"Holmes · Intro 2D"})[lang]}</button></footer>
