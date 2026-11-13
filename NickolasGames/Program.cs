@@ -10,8 +10,8 @@ builder.Services.AddSingleton<SessionStore>();
 builder.Services.AddHostedService<SessionCleanupService>();
 builder.Services.AddCors(options => options.AddPolicy("GamesClient", policy =>
     policy.WithOrigins("https://games.nickolasspace.com", "http://localhost:5173", "https://localhost:5173")
-        .WithHeaders("Content-Type", "X-Session-Token")
-        .WithMethods("GET", "POST")
+        .AllowAnyHeader()
+        .AllowAnyMethod()
 ));
 builder.Services.AddRateLimiter(options =>
 {
