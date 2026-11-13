@@ -56,3 +56,9 @@
  .game-screen .td-root .td-inline-settings{flex-basis:100%}
  .game-screen .td-root .td-settings-btn{width:100%;justify-content:space-between}
 }
+
+/* The category title and active-count must stack in narrow/zoomed layouts. */
+@media(max-width:760px){
+ .game-screen .td-root .td-section-head{flex-direction:column;align-items:flex-start;gap:6px}
+ .game-screen .td-root .td-section-head>span{max-width:100%;white-space:normal}
+}
