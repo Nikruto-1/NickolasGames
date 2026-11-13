@@ -98,7 +98,7 @@ try {
           const title=document.querySelector(".game-screen-header").getBoundingClientRect();
           const ranking=document.querySelector(".ck-leaderboard").getBoundingClientRect();
           const controls=document.querySelector(".ck-sidebar").getBoundingClientRect();
-          return { top:board.top,bottom:board.bottom,width:board.width,height:board.height,viewport:innerHeight,header: title.height,ranking:{left:ranking.left,right:ranking.right,top:ranking.top},controls:{left:controls.left,right:controls.right,top:controls.top} };
+          return { left:board.left,top:board.top,bottom:board.bottom,width:board.width,height:board.height,viewport:innerHeight,header: title.height,ranking:{left:ranking.left,right:ranking.right,top:ranking.top},controls:{left:controls.left,right:controls.right,top:controls.top} };
         });
         assert.ok(geometry.top>=0 && geometry.bottom<=geometry.viewport+2,
           `Checkers board must fit viewport at ${width}px: ${JSON.stringify(geometry)}`);
