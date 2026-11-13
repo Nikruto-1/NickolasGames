@@ -1,4 +1,4 @@
-import { DIFFICULTIES, wordsByDifficulty } from './difficulty.js';
+import { DIFFICULTIES, wordsByDifficulty } from '../../utils/difficulty.js';
 export const WHOAMI_ALL = '__all__';
 export const WHOAMI_DIFFICULTIES = [...DIFFICULTIES, 'all'];
 const CATEGORY_ALIASES = {

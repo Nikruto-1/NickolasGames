@@ -1,11 +1,11 @@
-import { StartFeedback } from "./StartFeedback";
-import { validateWhoamiStart } from "../utils/startValidation";
+import { StartFeedback } from "../../components/StartFeedback";
+import { validateWhoamiStart } from "../../utils/startValidation";
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { createHolmesTimerSound } from '../utils/holmesTimerSound.js';
-import { WHOAMI_UI, WHOAMI_RULES } from '../locales/whoami-ui.js';
-import { PLAYER_SETUP } from '../locales/index.js';
-import { readValue, readProgress, writeValue } from '../utils/progress.js';
-import { initialWhoami, restoreWhoamiCategory, validWhoami, WHOAMI_ALL, WHOAMI_DIFFICULTIES, whoamiPool, whoamiReducer } from '../utils/whoami.js';
+import { createHolmesTimerSound } from '../../utils/holmesTimerSound.js';
+import { WHOAMI_UI, WHOAMI_RULES } from './translations.js';
+import { PLAYER_SETUP } from '../../locales/index.js';
+import { readValue, readProgress, writeValue } from '../../utils/progress.js';
+import { initialWhoami, restoreWhoamiCategory, validWhoami, WHOAMI_ALL, WHOAMI_DIFFICULTIES, whoamiPool, whoamiReducer } from './gameLogic.js';
 import './WhoAmIGame.css';
 
 export function WhoAmIGame({games,t,lang,onGame,startRequest=0}) {
