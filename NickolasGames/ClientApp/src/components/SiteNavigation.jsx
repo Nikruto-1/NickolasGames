@@ -21,10 +21,10 @@ export function LanguageSwitcher({ lang, setLang, label }) {
   );
 }
 
-export function SiteNavigation({ lang, setLang, label }) {
+export function SiteNavigation({ lang, setLang, label, onHome }) {
   return (
     <nav>
-      <a className="site-logo" href={LANGUAGE_PATHS[lang]} aria-label="NickolasGames">
+      <a className="site-logo" href={LANGUAGE_PATHS[lang]} aria-label="NickolasGames" onClick={event => { if (!onHome || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return; event.preventDefault(); onHome(); }}>
         <img src={holmesLogo} alt="NickolasGames" width="1024" height="341" />
       </a>
       <LanguageSwitcher lang={lang} setLang={setLang} label={label} />
