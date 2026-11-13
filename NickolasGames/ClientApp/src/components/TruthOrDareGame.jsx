@@ -123,7 +123,7 @@ export function TruthOrDareGame({ games, t, lang, onGame }) {
           <div className="td-play-header">
             <div className="td-stat"><b>{Math.min(index + 1, queue.length)}</b><span> / {queue.length} {i18n.cards}</span></div>
             <div className="td-progress"><span style={{width: (queue.length ? Math.min(index, queue.length) / queue.length * 100 : 0) + "%"}} /></div>
-            <button type="button" className="td-inline-settings" onClick={() => setSettingsOpen((v) => !v)}>{categories.length} {i18n.categories} · {i18n.preferences} ↗</button>
+            <button type="button" className="td-inline-settings" onClick={toggleSettings}>{categories.length} {i18n.categories} · {i18n.preferences} ↗</button>
           </div>
           <div className={"td-card" + (chosen ? " is-revealed" : "")} aria-live="polite">
             <div className="td-card-top">
