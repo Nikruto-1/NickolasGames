@@ -7,6 +7,9 @@ import { readValue, writeValue } from '../../utils/progress.js';
 import { createHolmesTimerSound, HOLMES_TIME_UP } from '../../utils/holmesTimerSound.js';
 import { ALIAS_ALL, ALIAS_FORMATS, aliasActor, aliasCategories, aliasCategorySelection, aliasPool, aliasReducer, aliasSetupErrors, aliasWord, newAliasState, refreshAliasDeck, restoreAliasState, shuffleAlias, validAliasTarget } from './gameLogic.js';
 import './AliasGame.css';
+import { useAliasGame } from "./useAliasGame.js";
+import { AliasDie } from "./AliasDie.jsx";
+import { AliasScoreboard } from "./AliasScoreboard.jsx";
 
 export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
 
