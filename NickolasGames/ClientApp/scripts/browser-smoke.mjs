@@ -241,6 +241,7 @@ try {
     await page.locator('.ck-cell[data-cell="33"]').click();
     page.once("dialog",dialog=>dialog.accept());
     await page.getByRole("button",{name:"Нова партія"}).click();
+    await page.waitForFunction(()=>JSON.parse(localStorage.getItem("nickolasgames-session-checkers-shared")).state.moveNumber===1);
     const fresh=await page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames-session-checkers-shared")).state);
     assert.equal(fresh.moveNumber,1);
     assert.deepEqual(fresh.history,[],"A new match must not reuse the old party history");
