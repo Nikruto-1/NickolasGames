@@ -67,7 +67,7 @@ export default function NickolasGames() {
   return (
     <>
       {showIntro && <HolmesIntro lang={lang} onComplete={finishIntro} />}
-      <div inert={showIntro ? true : undefined}>
+      <div className={"app-shell" + (screenGame ? " is-playing" : "")} inert={showIntro ? true : undefined}>
       <SiteNavigation lang={lang} setLang={setLang} label={t.language} onHome={() => navigate(null)} />
       <AppStatus lang={lang} />
       <main id="main">
