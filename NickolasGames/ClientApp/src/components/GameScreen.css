@@ -1,0 +1,40 @@
+/* One consistent navigation shell across every game. */
+.game-screen{min-width:0;background:var(--bg2)}
+.game-screen-header{background:var(--bg);border-bottom:1px solid var(--line);padding:20px 0 0}
+.game-screen-header .wrap{max-width:1120px}
+.game-back{display:inline-flex;align-items:center;gap:10px;min-height:48px;padding:9px 3px;border:0;background:transparent;color:var(--fg);font-size:15px;font-weight:700;text-align:left}
+.game-back span{font-size:22px;line-height:1}
+.game-back:hover{text-decoration:underline;text-underline-offset:4px}
+.game-screen-heading{padding:23px 0 25px}
+.game-screen-heading h1{font-size:clamp(32px,5.5vw,58px);line-height:1.15;letter-spacing:-.04em;overflow-wrap:anywhere}
+.game-screen-heading>div>p:last-child{margin-top:12px;font-size:15px;line-height:1.6;color:#63594b;max-width:65ch}
+.game-screen-kicker{font-size:12px;font-weight:800;letter-spacing:.13em;color:#805d31;margin:0 0 10px}
+.game-screen-nav{display:flex;align-items:stretch;gap:8px;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:thin;padding:0 0 12px;max-width:100%;-webkit-overflow-scrolling:touch}
+.game-screen-tab{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;white-space:normal;text-align:center;min-height:48px;min-width:100px;border:1px solid #cfc1ad;border-radius:10px;background:#f8f3e9;padding:10px 16px;font-weight:700;font-size:15px;line-height:1.3}
+.game-screen-tab:hover{border-color:#9d7645;background:#fff9ef}
+.game-screen-tab.is-active{background:#292724;border-color:#292724;color:#fff}
+.game-screen .pv{border-top:0}
+.game-screen section.s.pv{padding-top:clamp(28px,4vw,50px);padding-bottom:clamp(42px,6vw,78px)}
+.game-screen :is(.tabs,.td-switcher){display:none}
+.game-screen .wrap,.game-screen .pvg,.game-screen :is(.alias-layout,.whoami-setup,.td-categories){min-width:0}
+.game-screen :is(.alias-game,.charades-game,.whoami-game,.td-root) :is(h2,h3,p,button,small,strong){overflow-wrap:break-word}
+.game-screen :is(button,input,select,textarea){max-width:100%}
+.game-screen :is(.whoami-rule-sections,.charades-rule-sections){min-width:0}
+.game-screen :is(.alias-scores,.whoami-summary){overflow-x:auto}
+.game-screen .game-back:focus-visible,.game-screen .game-screen-tab:focus-visible{outline:3px solid #755529;outline-offset:2px}
+@media(max-width:640px){
+  .game-screen-header{padding-top:12px}
+  .game-screen-heading{padding:17px 0 21px}
+  .game-screen-heading h1{font-size:clamp(30px,8vw,42px)}
+  .game-screen-nav{margin-inline:-16px;padding-inline:16px;gap:7px}
+  .game-screen-tab{min-width:92px;font-size:14px;padding:10px 12px}
+  .game-screen section.s.pv{padding-top:24px;padding-bottom:48px}
+}
+@media(max-width:390px){
+  .game-screen-nav{margin-inline:-16px}
+  .game-screen-tab{font-size:13px;min-width:84px}
+  .game-screen :is(.charades-card,.players-panel,.alias-word-card){padding-inline:clamp(12px,4vw,20px)}
+}
+@media(prefers-reduced-motion:reduce){
+  .game-screen-nav{scroll-behavior:auto}
+}
