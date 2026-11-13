@@ -27,6 +27,8 @@ test('all local module imports resolve to existing files after refactors', async
   for (const file of list) {
     const code = await readFile(file, 'utf8');
     for (const match of code.matchAll(pattern)) {
+      // Computed imports concatenate a language suffix; a string fragment is not a complete path.
+      if (/^\s*\+/.test(code.slice(match.index + match[0].length))) continue;
       const target = resolve(dirname(file), match[2]);
       if (!candidates.some(ext => existsSync(target + ext))) {
         missing.push(file.slice(root.length) + ' -> ' + match[2]);
