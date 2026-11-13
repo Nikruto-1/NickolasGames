@@ -7,6 +7,7 @@ on:
       - 'refactor/**'
       - 'architecture/**'
       - 'fix/**'
+      - 'feature/**'
 
 permissions:
   contents: read
