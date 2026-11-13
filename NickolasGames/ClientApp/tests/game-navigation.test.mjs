@@ -25,3 +25,13 @@ test("navigation retains unrelated query parameters and removes only game", () =
   assert.equal(pageForGame("uk", "truth", "?utm_source=discord"), "/uk/?utm_source=discord&game=truth");
   assert.equal(pageForGame("sv", null, "?utm_source=discord&game=alias"), "/sv/?utm_source=discord");
 });
+
+test("language and privacy paths are recognized for browser history navigation", async () => {
+  const { pathLanguage } = await import("../src/app/routeParsing.js");
+  for (const lang of ["uk","en","sv","de","es"]) {
+    assert.equal(pathLanguage(`/${lang}/`),lang);
+    assert.equal(pathLanguage(`/${lang}/privacy/`),lang);
+  }
+  assert.equal(pathLanguage("/"),"en");
+  assert.equal(pathLanguage("/random/"),null);
+});

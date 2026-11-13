@@ -8,60 +8,25 @@ import { Hero, GamesGrid, HowItWorks, FinalCta } from "./components/HomeSections
 import { SiteNavigation } from "./components/SiteNavigation.jsx";
 import { HolmesIntro } from "./components/HolmesIntro";
 import { AppStatus } from "./components/AppStatus";
-import { initialLanguage, updateSiteMetadata, LANGUAGE_PATHS } from "./utils/siteMetadata.js";
+import { updateSiteMetadata } from "./utils/siteMetadata.js";
 import { PRIVACY_COPY } from "./locales/privacy.js";
-import { readValue, writeValue } from "./utils/progress";
-import { gameFromSearch, pageForGame } from "./utils/gameNavigation.js";
+import { useGameRouting } from "./app/useGameRouting.js";
 import { GameScreen } from "./components/GameScreen.jsx";
 import { COPY } from "./locales";
 import "./nickolasgames.css";
 import "./product.css";
 
-const PLAYABLE = ["whoami", "crocodile", "alias", "truth"];
-const pickRandom = () => PLAYABLE[Math.floor(Math.random() * PLAYABLE.length)];
-
 export default function NickolasGames() {
   const [showIntro, setShowIntro] = useState(false);
   const [startRequest,setStartRequest] = useState(0);
-  const [screenGame, setScreenGame] = useState(() => gameFromSearch(location.search));
   const finishIntro = useCallback(() => setShowIntro(false), []);
-  const [lang, setLang] = useState(initialLanguage);
-  const [game, setGame] = useState(() => { const route = gameFromSearch(location.search); const saved = readValue("nickolasgames-active-game"); return route || (PLAYABLE.includes(saved) ? saved : "crocodile"); });
-  useEffect(() => { writeValue("nickolasgames-active-game", game); }, [game]);
+  const { screenGame, lang, setLang, game, navigate } = useGameRouting();
   const t = COPY[lang] || COPY.en;
-  const navigate = (k) => {
-    const selected = k === "random" ? pickRandom() : (PLAYABLE.includes(k) ? k : null);
-    if (selected) setGame(selected);
-    setScreenGame(selected);
-    setStartRequest(0);
-    history.pushState(null, "", pageForGame(lang, selected, location.search));
-    window.scrollTo({ top: 0, behavior: "instant" });
-  };
-  const requestStart = () => navigate(game);
-  const choose = (k) => navigate(k);
-
+  const choose = (requested) => { setStartRequest(0); navigate(requested); };
+  const requestStart = () => choose(game);
   useEffect(() => {
-    try { localStorage.setItem("nickolasgames-lang", lang); } catch {}
-    document.documentElement.lang = lang;
-    const privacy = location.pathname.endsWith("/privacy/");
-    const nextPath = LANGUAGE_PATHS[lang] + (privacy ? "privacy/" : "");
-    if (location.pathname !== nextPath) history.replaceState(null, "", nextPath + location.search);
-    const update = () => updateSiteMetadata(lang, t.games, (PRIVACY_COPY[lang] || PRIVACY_COPY.en).title);
-    update();
-    return undefined;
-  }, [lang]);
-
-  useEffect(() => {
-    const onHistory = () => {
-      const route = gameFromSearch(location.search);
-      setScreenGame(route);
-      if (route) setGame(route);
-      const pathLang = location.pathname === "/" ? "en" : location.pathname.split("/").find(part => Object.hasOwn(LANGUAGE_PATHS, part));
-      if (pathLang && pathLang !== lang) setLang(pathLang);
-    };
-    addEventListener("popstate", onHistory);
-    return () => removeEventListener("popstate", onHistory);
-  }, [lang]);
+    updateSiteMetadata(lang, t.games, (PRIVACY_COPY[lang] || PRIVACY_COPY.en).title);
+  }, [lang, screenGame, t.games]);
 
   return (
     <>
