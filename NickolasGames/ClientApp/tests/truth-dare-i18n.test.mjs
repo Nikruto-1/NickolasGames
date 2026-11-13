@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { TRUTH_DARE_CARDS, TRUTH_DARE_CATEGORIES } from "../src/data/truthOrDare.uk.js";
-import { getTruthDareLocale, localizedCategory, localizeTruthDareCard } from "../src/data/truthOrDare.i18n.js";
+import { TRUTH_DARE_CARDS, TRUTH_DARE_CATEGORIES } from "../src/features/truth-or-dare/truthOrDare.uk.js";
+import { getTruthDareLocale, localizedCategory, localizeTruthDareCard } from "../src/features/truth-or-dare/i18n.js";
 
 test("all 800 truth/dare IDs are unique", () => {
   assert.equal(TRUTH_DARE_CARDS.length, 800);

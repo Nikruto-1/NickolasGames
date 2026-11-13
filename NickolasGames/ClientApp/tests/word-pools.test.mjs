@@ -2,8 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { wordsByDifficulty } from '../src/utils/difficulty.js';
 import { uniqueWords } from '../src/utils/words.js';
-import { canCompleteRound, createCharadesDeck, deckReady } from '../src/utils/charades.js';
-import { initialWhoami, whoamiPool, whoamiReducer } from '../src/utils/whoami.js';
+import { canCompleteRound, createCharadesDeck, deckReady } from '../src/features/charades/gameLogic.js';
+import { initialWhoami, whoamiPool, whoamiReducer } from '../src/features/whoami/gameLogic.js';
 
 test('difficulty follows explicit content labels rather than word length', () => {
   const category = { easy: ['A very familiar long phrase'], medium: ['Astronaut'], hard: ['Quark'] };
@@ -84,7 +84,7 @@ for (const language of ['uk', 'en', 'sv', 'de', 'es']) {
  });
 
  test(language + ': expanded Crocodile categories support complete rounds and matching translations', async () => {
-  const { CROCODILE_UK } = await import('../src/data/crocodile.uk.js');
+  const { CROCODILE_UK } = await import('../src/features/charades/crocodile.uk.js');
   const module = await import('../src/data/crocodile.' + language + '.js');
   const categories = Object.entries(Object.values(module)[0]);
   const reference = Object.values(CROCODILE_UK);
@@ -103,7 +103,7 @@ for (const language of ['uk', 'en', 'sv', 'de', 'es']) {
  });
 }
 test('requested Ukrainian Crocodile levels are preserved and legacy words remain playable',async()=>{
- const {CROCODILE_UK:categories}=await import('../src/data/crocodile.uk.js');
+ const {CROCODILE_UK:categories}=await import('../src/features/charades/crocodile.uk.js');
  const at=level=>Object.values(categories).flatMap(category=>wordsByDifficulty(category,level));
  for(const [level,words] of Object.entries({easy:['Читати книгу'],medium:['Землетрус','Пилосос'],hard:['Капібара','Хамелеон','Качкодзьоб','Еволюція']})){
   for(const word of words){assert(at(level).includes(word),word);for(const other of ['easy','medium','hard'].filter(value=>value!==level))assert(!at(other).includes(word),word);}

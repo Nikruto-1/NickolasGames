@@ -1,9 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { COPY } from '../src/locales/index.js';
-import { ALIAS_COPY } from '../src/locales/alias.js';
-import { ALIAS_WORDS } from '../src/data/alias.js';
-import { ALIAS_FORMATS, ALIAS_ROLL_MS, aliasActor, aliasCategories, aliasCategorySelection, aliasPool, aliasReducer as reduce, aliasSetupErrors, aliasWord, isAliasPhrase, isAliasWord, newAliasState, refreshAliasDeck, restoreAliasState, shuffleAlias, validAliasState } from '../src/utils/alias.js';
+import { ALIAS_COPY } from '../src/features/alias/translations.js';
+import { ALIAS_WORDS } from '../src/features/alias/words.js';
+import { ALIAS_FORMATS, ALIAS_ROLL_MS, aliasActor, aliasCategories, aliasCategorySelection, aliasPool, aliasReducer as reduce, aliasSetupErrors, aliasWord, isAliasPhrase, isAliasWord, newAliasState, refreshAliasDeck, restoreAliasState, shuffleAlias, validAliasState } from '../src/features/alias/gameLogic.js';
 
 const NOW = 100_000;
 function setup(count = 2, size = 300) {

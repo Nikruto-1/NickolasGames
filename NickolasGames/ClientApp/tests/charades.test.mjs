@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { charadesReducer as reduce, newCharadesState, validCharadesState, currentCharadesCard, createCharadesDeck, deckReady } from '../src/utils/charades.js';
+import { charadesReducer as reduce, newCharadesState, validCharadesState, currentCharadesCard, createCharadesDeck, deckReady } from '../src/features/charades/gameLogic.js';
 
 const categories = { Test: { easy: ['easy-1','easy-2','easy-3','easy-4','easy-5','easy-6'], medium: ['medium-1','medium-2','medium-3','medium-4','medium-5','medium-6'], hard: ['hard-1','hard-2','hard-3','hard-4','hard-5','hard-6'] } };
 function setup(targetScore = 30) {

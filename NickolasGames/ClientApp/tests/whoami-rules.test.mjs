@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { WHOAMI_RULES, WHOAMI_UI } from '../src/locales/whoami-ui.js';
+import { WHOAMI_RULES, WHOAMI_UI } from '../src/features/whoami/translations.js';
 
 test('Who Am I rules have a description and complete, readable sections in all five languages', () => {
   assert.deepEqual(Object.keys(WHOAMI_RULES).sort(), Object.keys(WHOAMI_UI).sort());

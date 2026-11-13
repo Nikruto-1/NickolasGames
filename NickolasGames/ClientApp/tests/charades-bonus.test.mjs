@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { charadesReducer as reduce, newCharadesState, restoreCharadesState, validCharadesState, hasCharadesCard } from '../src/utils/charades.js';
+import { charadesReducer as reduce, newCharadesState, restoreCharadesState, validCharadesState, hasCharadesCard } from '../src/features/charades/gameLogic.js';
 
 const categories = { Test: Object.fromEntries(['easy','medium','hard'].map(level => [level, Array.from({length:9},(_,i)=>level+'-'+i)])) };
 function start(target = 100, timed = true) {

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CHARADES_RULES, CHARADES_COPY } from '../src/locales/charades.js';
+import { CHARADES_RULES, CHARADES_COPY } from '../src/features/charades/translations.js';
 
 test('Charades rules provide complete descriptions and sections in all five languages', () => {
   assert.deepEqual(Object.keys(CHARADES_RULES).sort(), Object.keys(CHARADES_COPY).sort());

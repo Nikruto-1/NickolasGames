@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { charadesReducer as reduce, newCharadesState, restoreCharadesState, validCharadesState, CHARADES_ROLL_MS } from '../src/utils/charades.js';
+import { charadesReducer as reduce, newCharadesState, restoreCharadesState, validCharadesState, CHARADES_ROLL_MS } from '../src/features/charades/gameLogic.js';
 import { validateCharadesStart } from '../src/utils/startValidation.js';
-import { CHARADES_MODES } from '../src/locales/charades-modes.js';
+import { CHARADES_MODES } from '../src/features/charades/modes.js';
 
 const categories = { Test: Object.fromEntries(['easy', 'medium', 'hard'].map(level => [level, Array.from({ length: 12 }, (_, i) => `${level}-${i}`)])) };
 const roll = (id, a, b) => ({ id, values: [a, b] });

@@ -4,8 +4,8 @@ import {
  ALL_TRUTH_DARE_CATEGORIES, TRUTH_DARE_STORAGE, createTruthDareSession,
  chooseTruthDare, advanceTruthDare, readTruthDareSession, saveTruthDareSession,
  restoreTruthDareSession
-} from "../src/utils/truthDareSession.js";
-import { TRUTH_DARE_CARDS } from "../src/data/truthOrDare.uk.js";
+} from "../src/features/truth-or-dare/session.js";
+import { TRUTH_DARE_CARDS } from "../src/features/truth-or-dare/truthOrDare.uk.js";
 
 function storage() {
  const values=new Map();

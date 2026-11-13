@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {initialWhoami,restoreWhoamiCategory,validWhoami,whoamiReducer as reduce,whoamiPool,WHOAMI_ALL} from '../src/utils/whoami.js';
+import {initialWhoami,restoreWhoamiCategory,validWhoami,whoamiReducer as reduce,whoamiPool,WHOAMI_ALL} from '../src/features/whoami/gameLogic.js';
 function game(pool=['Cat','Dog','Fox','Bear']) {
  let s=initialWhoami();
  s=reduce(s,{type:'add',id:'a',name:'Anna'});s=reduce(s,{type:'add',id:'b',name:'Bohdan'});
