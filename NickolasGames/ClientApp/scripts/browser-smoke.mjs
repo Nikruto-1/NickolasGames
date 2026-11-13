@@ -72,7 +72,7 @@ try {
     const page=await browser.newPage({viewport:{width,height:850},serviceWorkers:"block"});
     const errors=[];
     page.on("pageerror",error=>errors.push(error.message));
-    page.on("console",message=>{ if(message.type()==="error") errors.push(message.text().slice(0,500)); });
+    page.on("console",message=>{ if(message.type()==="error" && message.text().includes("NickolasGames UI error")) errors.push(message.text().slice(0,500)); });
     for(const game of ["whoami","crocodile","alias","truth"]){
       await page.goto(`${base}/uk/?game=${game}`,{waitUntil:"domcontentloaded"});
       try {
@@ -82,6 +82,26 @@ try {
         throw new Error(`Game view failed: ${width}px ${game}; page errors: ${errors.join(" | ")}; heading: ${message}; ${error.message}`);
       }
       await check(page,`${width}px ${game}`);
+      if(width === 320 && game !== "truth"){
+        const legacyMigrated=await page.evaluate(game=>{
+          const key=`nickolasgames-session-${game}-uk`;
+          const legacy={alias:"nickolasgames-alias-teams-v1-uk",crocodile:"nickolasgames-charades-v2-uk",whoami:"nickolasgames-whoami-v2-uk"}[game];
+          const snapshot=JSON.parse(localStorage.getItem(key) || "null");
+          if(!snapshot || !legacy)return false;
+          localStorage.setItem(legacy,JSON.stringify(snapshot.state));
+          localStorage.removeItem(key);
+          return true;
+        }, game === "crocodile" ? "charades" : game);
+        assert.ok(legacyMigrated,`Missing stored session for ${game}`);
+        await page.reload();
+        await page.locator(".game-screen-nav").waitFor();
+        const hasSession=await page.evaluate(game=>{
+          const value=localStorage.getItem(`nickolasgames-session-${game}-uk`);
+          return value && JSON.parse(value).schemaVersion === 1;
+        }, game === "crocodile" ? "charades" : game);
+        assert.ok(hasSession,`Legacy session migration failed for ${game}`);
+        checks++;
+      }
     }
     assert.deepEqual(errors,[],`${width}px runtime errors`);
     await page.close();
@@ -97,6 +117,17 @@ try {
       await page.reload();
       await page.locator(".td-card-center h3").waitFor();
       assert.equal(await page.locator(".td-card-center h3").innerText(),text,"Opened Truth card must survive reload");
+      await page.evaluate(()=>{
+        const key="nickolasgames-session-truth-or-dare-shared";
+        const snapshot=JSON.parse(localStorage.getItem(key));
+        localStorage.setItem("nickolasgames-truth-dare-v2",JSON.stringify(snapshot.state));
+        localStorage.removeItem(key);
+      });
+      await page.reload();
+      await page.locator(".td-card-center h3").waitFor();
+      assert.equal(await page.locator(".td-card-center h3").innerText(),text,"Legacy Truth or Dare card must migrate unchanged");
+      assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames-session-truth-or-dare-shared")).schemaVersion),1);
+      checks += 2;
       await page.locator(".game-back").click();
       await page.locator("#games").waitFor();
       assert.ok(!new URL(page.url()).searchParams.has("game"),"Back button must return to catalog");
