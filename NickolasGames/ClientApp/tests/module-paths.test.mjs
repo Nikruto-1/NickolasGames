@@ -9,7 +9,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const scanned = ['src', 'scripts', 'tests'];
 const extensions = new Set(['.js', '.jsx', '.mjs', '.cjs']);
 const candidates = ['', '.js', '.jsx', '.mjs', '.cjs', '.css', '.json', '/index.js', '/index.jsx'];
-const pattern = /(?:\\bfrom\\s*|\\bimport\\s*(?:\\(\\s*)?|\\bexport\\s*[^;\\n]*?\\bfrom\\s*)(['"])(\\.[^'"]+)\\1/g;
+const pattern = /(?:\bfrom\s*|\bimport\s*(?:\(\s*)?|\bexport\s*[^;\n]*?\bfrom\s*)(['"])(\.[^'"]+)\1/g;
 
 async function files(dir) {
   const result = [];

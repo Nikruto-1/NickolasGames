@@ -82,7 +82,7 @@ test('legacy players migrate with reset scores; corrupt saves are rejected',()=>
 });
 test('all five languages provide complete three-tier cards in all-category mode',async()=>{
   for(const lang of ['uk','en','sv','de','es']){
-    const mod=await import(`../src/data/crocodile.${lang}.js`);
+    const mod=await import(`../src/features/charades/crocodile.${lang}.js`);
     assert(deckReady(createCharadesDeck(mod[`CROCODILE_${lang.toUpperCase()}`])));
   }
 });

@@ -20,7 +20,7 @@ test('custom cards deduplicate spaces and letter case without losing display tex
 
 for (const language of ['uk', 'en', 'sv', 'de', 'es']) {
   test(language + ': every Who Am I category has explicit levels and every word belongs to one level', async () => {
-    const module = await import('../src/data/whoami.' + language + '.js');
+    const module = await import('../src/features/whoami/whoami.' + language + '.js');
     const categories = Object.values(module)[0];
     for (const category of Object.values(categories)) {
       assert(!Array.isArray(category));
@@ -38,7 +38,7 @@ for (const language of ['uk', 'en', 'sv', 'de', 'es']) {
 
 for (const language of ['uk', 'en', 'sv', 'de', 'es']) {
   test(language + ': expanded Who Am I categories can deal distinct cards at every difficulty', async () => {
-    const module = await import('../src/data/whoami.' + language + '.js');
+    const module = await import('../src/features/whoami/whoami.' + language + '.js');
     const categories = Object.values(module)[0];
     const categoryNames = {
       uk: ['Професії', 'Персонажі', 'Предмети', 'Нові', 'Географія'],
@@ -71,7 +71,7 @@ for (const language of ['uk', 'en', 'sv', 'de', 'es']) {
 
 for (const language of ['uk', 'en', 'sv', 'de', 'es']) {
  test(language + ': every Crocodile category has explicit levels and no duplicated words', async () => {
-  const module=await import('../src/data/crocodile.'+language+'.js');
+  const module=await import('../src/features/charades/crocodile.'+language+'.js');
   const categories=Object.values(module)[0];
   const all=[];
   for(const category of Object.values(categories)){
@@ -85,7 +85,7 @@ for (const language of ['uk', 'en', 'sv', 'de', 'es']) {
 
  test(language + ': expanded Crocodile categories support complete rounds and matching translations', async () => {
   const { CROCODILE_UK } = await import('../src/features/charades/crocodile.uk.js');
-  const module = await import('../src/data/crocodile.' + language + '.js');
+  const module = await import('../src/features/charades/crocodile.' + language + '.js');
   const categories = Object.entries(Object.values(module)[0]);
   const reference = Object.values(CROCODILE_UK);
   const previousCounts = [8, 5, 5, 11, 10, 11, 10, 11, 10];

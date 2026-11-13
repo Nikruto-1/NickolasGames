@@ -66,7 +66,7 @@ for (const [language, oldName, newName] of [
  ["es", "Héroes, personas y animales", "Personajes"],
 ]) {
  test(language + ': category migration from ' + oldName + ' preserves saved games and remains playable', async () => {
-  const module = await import('../src/data/whoami.' + language + '.js');
+  const module = await import('../src/features/whoami/whoami.' + language + '.js');
   const categories = Object.values(module)[0];
   assert(Object.hasOwn(categories, newName));
   assert(!Object.hasOwn(categories, oldName));
