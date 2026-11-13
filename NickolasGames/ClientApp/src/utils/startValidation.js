@@ -1,5 +1,5 @@
 import {validTargetScore} from './playerScores.js';
-import {deckReady,canCompleteRound} from './charades.js';
+import {deckReady,canCompleteRound} from '../features/charades/gameLogic.js';
 export function validateCharadesStart({state,targetDraft,pendingName=''}) {
  const errors=[];
  if(pendingName.trim())errors.push('pendingPlayer');

@@ -1,0 +1,40 @@
+name: Feature refactor checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - 'refactor/**'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: NickolasGames/ClientApp/package-lock.json
+      - name: Install pinned dependencies
+        working-directory: NickolasGames/ClientApp
+        run: npm ci
+      - name: Build React and static pages
+        working-directory: NickolasGames/ClientApp
+        run: npm run build
+      - name: Run full tests
+        working-directory: NickolasGames/ClientApp
+        run: npm test
+      - name: Prepare Chrome
+        run: |
+          npm install --prefix /tmp/nickolasgames-browser --no-audit --no-fund playwright-core@1.56.1
+          CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium)
+          test -n "$CHROME"
+          echo "NICKOLAS_CHROME_PATH=$CHROME" >> "$GITHUB_ENV"
+          echo "NICKOLAS_PLAYWRIGHT_PATH=/tmp/nickolasgames-browser/node_modules/playwright-core/index.mjs" >> "$GITHUB_ENV"
+      - name: Verify game UX at different screen widths
+        working-directory: NickolasGames/ClientApp
+        run: node scripts/browser-smoke.mjs
