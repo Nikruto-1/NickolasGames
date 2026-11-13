@@ -4,16 +4,25 @@ import { useEffect, useReducer, useState } from "react";
 // owns its payload schema; older raw saves are read by each game's initializer.
 export const GAME_SESSION_VERSION = 1;
 export const gameSessionKey = (game, lang = "shared") =>
-  `nickolasgames-session-v${GAME_SESSION_VERSION}-${game}-${lang}`;
+  `nickolasgames-session-${game}-${lang}`;
 
-export function restoreGameSession(storage, game, lang, validate) {
+export function restoreGameSession(storage, game, lang, validate, migrations = {}) {
   try {
     const raw = storage.getItem(gameSessionKey(game, lang));
     if (!raw) return null;
     const envelope = JSON.parse(raw);
-    if (!envelope || envelope.schemaVersion !== GAME_SESSION_VERSION ||
-        envelope.game !== game || envelope.lang !== lang) return null;
-    return validate(envelope.state);
+    if (!envelope || envelope.game !== game || envelope.lang !== lang ||
+        !Number.isInteger(envelope.schemaVersion) || envelope.schemaVersion < 0 ||
+        envelope.schemaVersion > GAME_SESSION_VERSION) return null;
+    let version = envelope.schemaVersion;
+    let state = envelope.state;
+    while (version < GAME_SESSION_VERSION) {
+      const migrate = migrations[version];
+      if (typeof migrate !== "function") return null;
+      state = migrate(state);
+      version += 1;
+    }
+    return validate(state);
   } catch { return null; }
 }
 
