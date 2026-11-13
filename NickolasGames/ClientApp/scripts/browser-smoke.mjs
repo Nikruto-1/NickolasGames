@@ -58,7 +58,7 @@ async function check(page,label) {
     assert.ok(result.headerWidth>0,label+": game header not visible");
     assert.ok(result.headerLeft>=-2 && result.headerRight<=result.viewport+2,label+": header extends beyond screen "+JSON.stringify(result));
     assert.equal(result.navPosition,"static",label+": game tabs must not inherit absolute positioning");
-    assert.equal(result.navDisplay,"flex",label+": game tabs not displayed");
+    assert.equal(result.navDisplay,label.includes("checkers") ? "none" : "flex",label+": unexpected game tabs visibility");
     assert.ok(result.documentWidth<=result.viewport+3,label+": horizontal page overflow "+JSON.stringify(result));
     for(const item of result.articleWidths){
       assert.ok(item.scrollWidth<=item.width+6,label+": layout content overflows "+JSON.stringify(item));
@@ -90,7 +90,32 @@ try {
         assert.ok(await page.locator(".ck-cell[data-cell=\"33\"] .ck-white").count(),"White cat moves");
         await page.reload();
         await page.locator(".ck-cell[data-cell=\"33\"] .ck-white").waitFor();
-        checks += 3;
+        const geometry=await page.evaluate(()=>{
+          const board=document.querySelector(".ck-board-frame").getBoundingClientRect();
+          const title=document.querySelector(".game-screen-header").getBoundingClientRect();
+          return { top:board.top,bottom:board.bottom,width:board.width,height:board.height,viewport:innerHeight,header: title.height };
+        });
+        assert.ok(geometry.top>=0 && geometry.bottom<=geometry.viewport+2,
+          `Checkers board must fit viewport at ${width}px: ${JSON.stringify(geometry)}`);
+        assert.ok(Math.abs(geometry.width-geometry.height)<=2,"Board frame stays square");
+        if(width===375){
+          await page.evaluate(()=>{
+            const key="nickolasgames-session-checkers-shared";
+            const envelope=JSON.parse(localStorage.getItem(key));
+            envelope.state.winner="black";
+            envelope.state.turn="white";
+            localStorage.setItem(key,JSON.stringify(envelope));
+          });
+          await page.reload();
+          await page.getByRole("dialog").waitFor();
+          assert.ok(await page.getByRole("heading",{name:"Чорні котики перемогли!"}).count(),
+            "Victory modal must name the winning cats");
+          await page.getByRole("button",{name:"Зіграти ще раз"}).click();
+          assert.equal(await page.getByRole("dialog").count(),0,"New game closes victory modal");
+          assert.equal(await page.locator(".ck-piece").count(),26,"New game restores all cats");
+          checks+=3;
+        }
+        checks += 5;
       }
       if(width === 320 && ["whoami","crocodile","alias"].includes(game)){
         const legacyMigrated=await page.evaluate(game=>{
