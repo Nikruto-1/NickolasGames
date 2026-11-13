@@ -7,9 +7,9 @@ const { pathToFileURL } = require('node:url');
 const { chromium, webkit } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 
 (async () => {
-  const { CHARADES_RULES, CHARADES_COPY, CHARADES_TIME_COPY } = await import(pathToFileURL(path.resolve(__dirname, '../src/locales/charades.js')));
+  const { CHARADES_RULES, CHARADES_COPY, CHARADES_TIME_COPY } = await import(pathToFileURL(path.resolve(__dirname, '../src/features/charades/translations.js')));
   const { COPY } = await import(pathToFileURL(path.resolve(__dirname, '../src/locales/index.js')));
-  const { CHARADES_MODES } = await import(pathToFileURL(path.resolve(__dirname, '../src/locales/charades-modes.js')));
+  const { CHARADES_MODES } = await import(pathToFileURL(path.resolve(__dirname, '../src/features/charades/modes.js')));
   const root = path.resolve(__dirname, '../../wwwroot');
   const output = process.env.QA_OUTPUT || path.join(os.tmpdir(), 'nickolasgames-charades-qa');
   await fs.mkdir(output, { recursive: true });

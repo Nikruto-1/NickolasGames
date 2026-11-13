@@ -7,7 +7,7 @@ const { pathToFileURL } = require('node:url');
 const { chromium, webkit } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 
 (async () => {
-  const { WHOAMI_RULES, WHOAMI_UI } = await import(pathToFileURL(path.resolve(__dirname, '../src/locales/whoami-ui.js')));
+  const { WHOAMI_RULES, WHOAMI_UI } = await import(pathToFileURL(path.resolve(__dirname, '../src/features/whoami/translations.js')));
   const { COPY } = await import(pathToFileURL(path.resolve(__dirname, '../src/locales/index.js')));
   const root = path.resolve(__dirname, '../../wwwroot');
   const output = process.env.QA_OUTPUT || path.join(os.tmpdir(), 'nickolasgames-whoami-qa');

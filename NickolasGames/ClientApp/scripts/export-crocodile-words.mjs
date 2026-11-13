@@ -1,5 +1,5 @@
 import { writeFile } from 'node:fs/promises';
-import { CROCODILE_UK } from '../src/data/crocodile.uk.js';
+import { CROCODILE_UK } from '../src/features/charades/crocodile.uk.js';
 import { DIFFICULTIES } from '../src/utils/difficulty.js';
 
 const labels = { easy: 'Легкий', medium: 'Середній', hard: 'Складний' };

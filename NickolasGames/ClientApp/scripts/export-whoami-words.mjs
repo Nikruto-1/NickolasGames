@@ -1,5 +1,5 @@
 import { writeFile } from 'node:fs/promises';
-import { WHOAMI_UK } from '../src/data/whoami.uk.js';
+import { WHOAMI_UK } from '../src/features/whoami/whoami.uk.js';
 import { DIFFICULTIES } from '../src/utils/difficulty.js';
 
 const labels = { easy: 'Легкий', medium: 'Середній', hard: 'Складний' };

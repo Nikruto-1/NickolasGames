@@ -7,10 +7,10 @@ const { pathToFileURL } = require('node:url');
 const { chromium, webkit } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 
 async function main() {
-  const { newAliasState, validAliasState, aliasCategories, aliasPool } = await import(pathToFileURL(path.resolve(__dirname, '../src/utils/alias.js')));
-  const { ALIAS_COPY } = await import(pathToFileURL(path.resolve(__dirname, '../src/locales/alias.js')));
+  const { newAliasState, validAliasState, aliasCategories, aliasPool } = await import(pathToFileURL(path.resolve(__dirname, '../src/features/alias/gameLogic.js')));
+  const { ALIAS_COPY } = await import(pathToFileURL(path.resolve(__dirname, '../src/features/alias/translations.js')));
   const { COPY } = await import(pathToFileURL(path.resolve(__dirname, '../src/locales/index.js')));
-  const { ALIAS_WORDS } = await import(pathToFileURL(path.resolve(__dirname, '../src/data/alias.js')));
+  const { ALIAS_WORDS } = await import(pathToFileURL(path.resolve(__dirname, '../src/features/alias/words.js')));
   const root = path.resolve(__dirname, '../../wwwroot');
   const output = process.env.QA_OUTPUT || path.join(os.tmpdir(), 'nickolasgames-dice-qa');
   await fs.mkdir(output, { recursive: true });

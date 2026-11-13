@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createTimerSound} from '../src/utils/timerSound.js';
-import {initialWhoami,whoamiReducer} from '../src/utils/whoami.js';
+import {initialWhoami,whoamiReducer} from '../src/features/whoami/gameLogic.js';
 test('alarm unlocks on gesture, schedules three short tones, and releases audio',()=>{
  const calls=[];class Context {
   state='running';currentTime=10;sampleRate=44100;destination={};
