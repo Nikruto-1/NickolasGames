@@ -1,0 +1,22 @@
+/* hero */
+.hero{position:relative;min-height:100svh;display:flex;align-items:center;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,#CBB89A,#EEE4D1 70%)}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(238,228,209,.3),rgba(238,228,209,0) 40%,var(--bg));pointer-events:none}
+.hero .wrap{position:relative;z-index:2;padding-top:90px;padding-bottom:70px}
+.hero h1{font-size:clamp(46px,10.5vw,128px);max-width:11ch}
+.hero p{margin-top:24px;font-size:clamp(18px,2.4vw,24px);color:#292724;max-width:30ch}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:36px}
+/* games */
+section.s{padding:96px 0}
+.head{margin-bottom:44px}
+.head h2{font-size:clamp(34px,5.5vw,64px)}
+.head p{color:var(--mut);margin-top:14px;max-width:44ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.gc{border:1px solid var(--line);background:var(--bg2);border-radius:18px;padding:26px;display:flex;flex-direction:column;gap:14px;transition:border-color .25s,transform .25s}
+.gc:hover{border-color:var(--acc);transform:translateY(-3px)}
+.gc h3{font-size:28px}
+.gc p{color:var(--mut)}
+.meta{display:flex;gap:16px;font-size:15px;color:#292724;margin-top:auto;padding-top:6px}
+.meta span{display:inline-flex;align-items:center;gap:6px}
+.gc .btn{align-self:flex-start}
+.reveal-games{opacity:0;transform:translateY(28px);transition:opacity .8s,transform .8s}
+.reveal-games.in{opacity:1;transform:none}
