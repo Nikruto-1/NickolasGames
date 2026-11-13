@@ -1,0 +1,14 @@
+{
+  "name": "@nickolasgames/game-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Platform-independent game state transitions and validation",
+  "exports": {
+    "./alias": "./alias/rules.js",
+    "./charades": "./charades/rules.js",
+    "./whoami": "./whoami/rules.js",
+    "./truth-or-dare": "./truth-or-dare/session.js",
+    "./cards": "./truth-or-dare/cards.uk.js"
+  }
+}

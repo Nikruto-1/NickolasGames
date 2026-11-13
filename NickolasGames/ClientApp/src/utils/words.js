@@ -1,2 +1,2 @@
-export const uniqueWords = words =>
-  [...new Map(words.map(word => [word.trim().toLocaleLowerCase(), word.trim()])).values()].filter(Boolean);
+// Compatibility export: keep existing frontend and test imports working.
+export * from "../../../../packages/game-core/shared/words.js";
