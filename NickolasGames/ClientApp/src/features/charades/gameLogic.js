@@ -1,5 +1,5 @@
-import { DIFFICULTIES, wordsByDifficulty } from './difficulty.js';
-import { DEFAULT_TARGET_SCORE, POINTS_BY_DIFFICULTY, nextPlayerId, validPlayers, validTargetScore } from './playerScores.js';
+import { DIFFICULTIES, wordsByDifficulty } from '../../utils/difficulty.js';
+import { DEFAULT_TARGET_SCORE, POINTS_BY_DIFFICULTY, nextPlayerId, validPlayers, validTargetScore } from '../../utils/playerScores.js';
 
 export const CHARADES_DURATION = 60_000;
 export const ALL_CHARADES_CATEGORIES = '__all__';

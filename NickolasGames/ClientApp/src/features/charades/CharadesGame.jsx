@@ -1,16 +1,16 @@
-import { StartFeedback } from "./StartFeedback";
-import { validateCharadesStart } from "../utils/startValidation";
-import { createHolmesTimerSound, HOLMES_TIME_UP } from '../utils/holmesTimerSound.js';
+import { StartFeedback } from "../../components/StartFeedback";
+import { validateCharadesStart } from "../../utils/startValidation";
+import { createHolmesTimerSound, HOLMES_TIME_UP } from '../../utils/holmesTimerSound.js';
 import { useEffect, useReducer, useRef, useState } from 'react';
-import { ROUND_MESSAGES } from '../locales/round.js';
-import { CHARADES_COPY, CHARADES_TIME_COPY, CHARADES_RULES } from '../locales/charades.js';
-import { CHARADES_MODES } from '../locales/charades-modes.js';
+import { ROUND_MESSAGES } from '../../locales/round.js';
+import { CHARADES_COPY, CHARADES_TIME_COPY, CHARADES_RULES } from './translations.js';
+import { CHARADES_MODES } from './modes.js';
 import { CharadesDraw } from './CharadesDraw.jsx';
 import './CharadesGame.css';
-import { DIFFICULTIES } from '../utils/difficulty.js';
-import { POINTS_BY_DIFFICULTY, validTargetScore } from '../utils/playerScores.js';
-import { readValue, writeValue } from '../utils/progress.js';
-import { ALL_CHARADES_CATEGORIES, charadesGuesserMode, charadesReducer, createCharadesDeck, currentCharadesCard, hasCharadesCard, deckReady, newCharadesState, validCharadesState, restoreCharadesState, charadesPoints, canCompleteRound } from '../utils/charades.js';
+import { DIFFICULTIES } from '../../utils/difficulty.js';
+import { POINTS_BY_DIFFICULTY, validTargetScore } from '../../utils/playerScores.js';
+import { readValue, writeValue } from '../../utils/progress.js';
+import { ALL_CHARADES_CATEGORIES, charadesGuesserMode, charadesReducer, createCharadesDeck, currentCharadesCard, hasCharadesCard, deckReady, newCharadesState, validCharadesState, restoreCharadesState, charadesPoints, canCompleteRound } from './gameLogic.js';
 
 export function CharadesGame({ games, t, lang, onGame, startRequest=0 }) {
   const copy = { ...(CHARADES_COPY[lang] || CHARADES_COPY.en), ...(CHARADES_TIME_COPY[lang] || CHARADES_TIME_COPY.en) };
