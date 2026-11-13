@@ -174,13 +174,14 @@ try {
     assert.equal(saved.config.level,level);
     assert.equal(saved.board.turn,"white");
     assert.equal(saved.board.board.filter(p=>p?.side==="black").length,12);
-    await page.reload();
-    await page.getByRole("button",{name:"Проти комп’ютера"}).waitFor();
-    assert.equal(await page.locator(".ck-bot-difficulty select").inputValue(),level);
     await page.getByRole("button",{name:"Скасувати хід"}).click();
+    await page.waitForFunction(()=>JSON.parse(localStorage.getItem("nickolasgames-session-checkers-shared")).state.moveNumber===1);
     const undone=await page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames-session-checkers-shared")).state);
     assert.equal(undone.turn,"white");
     assert.equal(undone.moveNumber,1,"undo returns to player's previous complete turn");
+    await page.reload();
+    await page.getByRole("button",{name:"Проти комп’ютера"}).waitFor();
+    assert.equal(await page.locator(".ck-bot-difficulty select").inputValue(),level);
     await page.close();
     assert.deepEqual(errors,[],`Bot ${level} runtime errors`);
     checks+=7;
