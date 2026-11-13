@@ -292,6 +292,11 @@ export default {
     "finishText": "Shuffle the deck to start a new game.",
     "noRepeats": "Cards won't repeat",
     "skipped": "Skipped",
-    "comfort": "Play at your own pace"
+    "comfort": "Play at your own pace",
+    "cancel": "Cancel",
+    "confirmTitle": "Start a new game?",
+    "confirmText": "Changing categories will reset the deck and your progress. Do you want to continue?",
+    "confirmReset": "Change categories",
+    "saveError": "Your game couldn't be saved on this device. Check your browser storage settings."
   }
 };
