@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { playCheckersVictory } from "./victorySound.js";
+import { emptyCheckersStandings, validateCheckersStandings, recordCheckersWin, rankedCheckersSides } from "./standings.js";
 import { useVersionedState } from "../../utils/gameSession.js";
 import { initialCheckers, legalCheckersMoves, applyCheckersMove, validateCheckersState, squareIsDark } from "./gameLogic.js";
 import "./CheckersGame.css";
 
 const COPY = {
- uk:{white:"Білі котики",black:"Чорні котики",turn:"Хід",win:"Перемога!",wins:"перемогли",moves:"Доступні ходи",capture:"Взяття обов’язкове",continue:"Продовжуй бити цією шашкою",how:"Правила",rules:"Шашки 8×8: по 12 котиків. Білі починають. Звичайна шашка ходить по діагоналі вперед, але б’є в обидва боки. Бити обов’язково; якщо можливе наступне взяття, його потрібно виконати. Дамка ходить по діагоналі на будь-яку вільну відстань. Дійшовши до останнього ряду, котик стає дамкою. Перемагає той, у кого суперник залишився без шашок або можливих ходів.",undo:"Скасувати хід",reset:"Нова партія",resetAsk:"Почати нову партію? Поточний прогрес буде втрачено.",flip:"Повернути дошку",saved:"Не вдалося зберегти партію в браузері.",winnerTitle:"Перемога!",congrats:"Вітаємо! Чудова партія — перемога за вами!",again:"Зіграти ще раз",close:"Переглянути дошку",local:"2 гравці · один пристрій",select:"Натисни свого котика, потім підсвічену клітинку",king:"дамка",cat:"котик",empty:"Порожня клітинка",pending:"Обов’язковий хід",whiteWin:"Білі котики перемогли!",blackWin:"Чорні котики перемогли!"},
- en:{white:"White cats",black:"Black cats",turn:"Turn",win:"Victory!",wins:"win",moves:"Legal moves",capture:"Capture is mandatory",continue:"Keep capturing with this piece",how:"Rules",rules:"8×8 checkers with 12 cats per side. White goes first. Ordinary pieces move diagonally forward and capture in both directions. Captures and further jumps are mandatory. Kings move any distance diagonally. A piece becomes a king on reaching the far edge. You win by taking every opponent piece or leaving them without a legal move.",undo:"Undo move",reset:"New game",resetAsk:"Start a new game and lose the current progress?",flip:"Flip board",saved:"This game could not be saved in your browser.",winnerTitle:"Victory!",congrats:"Congratulations! What a game — the win is yours!",again:"Play again",close:"View the board",local:"2 players · one device",select:"Tap your cat, then a highlighted square",king:"king",cat:"cat",empty:"Empty square",pending:"Mandatory move",whiteWin:"White cats win!",blackWin:"Black cats win!"},
- sv:{white:"Vita katter",black:"Svarta katter",turn:"Tur",win:"Seger!",wins:"vinner",moves:"Möjliga drag",capture:"Slag är obligatoriskt",continue:"Fortsätt slå med samma pjäs",how:"Regler",rules:"Damspel på 8×8 med 12 katter per spelare. Vit börjar. Vanliga pjäser går diagonalt framåt men slår åt båda håll. Slag och fortsatta slag är obligatoriska. Dam kan gå valfri sträcka diagonalt. En pjäs blir dam på sista raden. Du vinner när motståndaren saknar pjäser eller möjliga drag.",undo:"Ångra drag",reset:"Nytt parti",resetAsk:"Starta ett nytt parti och förlora framstegen?",flip:"Vänd brädet",saved:"Partiet kunde inte sparas i webbläsaren.",winnerTitle:"Seger!",congrats:"Grattis! Vilket parti — ni vann!",again:"Spela igen",close:"Visa brädet",local:"2 spelare · en enhet",select:"Tryck på din katt och sedan på en markerad ruta",king:"dam",cat:"katt",empty:"Tom ruta",pending:"Obligatoriskt drag",whiteWin:"Vita katter vinner!",blackWin:"Svarta katter vinner!"},
- de:{white:"Weiße Katzen",black:"Schwarze Katzen",turn:"Am Zug",win:"Sieg!",wins:"gewinnen",moves:"Mögliche Züge",capture:"Schlagen ist Pflicht",continue:"Mit dieser Figur weiterschlagen",how:"Regeln",rules:"Dame auf 8×8 mit 12 Katzen pro Seite. Weiß beginnt. Normale Steine ziehen diagonal vorwärts, schlagen aber in beide Richtungen. Schlagen und weitere Sprünge sind Pflicht. Damen ziehen beliebig weit diagonal. Auf der letzten Reihe wird ein Stein zur Dame. Wer alle gegnerischen Steine schlägt oder den Gegner bewegungsunfähig macht, gewinnt.",undo:"Zug zurücknehmen",reset:"Neues Spiel",resetAsk:"Neues Spiel starten und den Fortschritt verlieren?",flip:"Brett drehen",saved:"Dieses Spiel konnte nicht im Browser gespeichert werden.",winnerTitle:"Sieg!",congrats:"Glückwunsch! Tolles Spiel — ihr habt gewonnen!",again:"Noch mal spielen",close:"Brett ansehen",local:"2 Spieler · ein Gerät",select:"Wähle deine Katze und dann ein markiertes Feld",king:"Dame",cat:"Katze",empty:"Leeres Feld",pending:"Pflichtzug",whiteWin:"Weiße Katzen gewinnen!",blackWin:"Schwarze Katzen gewinnen!"},
- es:{white:"Gatos blancos",black:"Gatos negros",turn:"Turno",win:"¡Victoria!",wins:"ganan",moves:"Movimientos legales",capture:"Capturar es obligatorio",continue:"Sigue capturando con esta ficha",how:"Reglas",rules:"Damas 8×8 con 12 gatos por lado. Empiezan los blancos. Las fichas avanzan en diagonal, pero capturan en ambas direcciones. Capturar y continuar los saltos es obligatorio. Las damas se mueven cualquier distancia en diagonal. Una ficha se corona al llegar al extremo opuesto. Gana quien deje al rival sin fichas o sin movimientos.",undo:"Deshacer jugada",reset:"Nueva partida",resetAsk:"¿Empezar de nuevo y perder el progreso?",flip:"Girar tablero",saved:"No se pudo guardar la partida en el navegador.",winnerTitle:"¡Victoria!",congrats:"¡Felicidades! ¡Qué partida! ¡Habéis ganado!",again:"Jugar otra vez",close:"Ver el tablero",local:"2 jugadores · un dispositivo",select:"Toca tu gato y luego una casilla resaltada",king:"dama",cat:"gato",empty:"Casilla vacía",pending:"Movimiento obligatorio",whiteWin:"¡Ganan los gatos blancos!",blackWin:"¡Ganan los gatos negros!"}
+ uk:{white:"Білі котики",black:"Чорні котики",turn:"Хід",win:"Перемога!",wins:"перемогли",moves:"Доступні ходи",capture:"Взяття обов’язкове",continue:"Продовжуй бити цією шашкою",how:"Правила",rules:"Шашки 8×8: по 12 котиків. Білі починають. Звичайна шашка ходить по діагоналі вперед, але б’є в обидва боки. Бити обов’язково; якщо можливе наступне взяття, його потрібно виконати. Дамка ходить по діагоналі на будь-яку вільну відстань. Дійшовши до останнього ряду, котик стає дамкою. Перемагає той, у кого суперник залишився без шашок або можливих ходів.",undo:"Скасувати хід",reset:"Нова партія",resetAsk:"Почати нову партію? Поточний прогрес буде втрачено.",flip:"Повернути дошку",saved:"Не вдалося зберегти партію в браузері.",winnerTitle:"Перемога!",congrats:"Вітаємо! Чудова партія — перемога за вами!",again:"Зіграти ще раз",close:"Переглянути дошку",leaderboard:"Рейтинг",winsLabel:"Перемоги",recentMatches:"Останні партії",played:"Партій зіграно",noResults:"Поки немає результатів",rankLabel:"Місце",local:"2 гравці · один пристрій",select:"Натисни свого котика, потім підсвічену клітинку",king:"дамка",cat:"котик",empty:"Порожня клітинка",pending:"Обов’язковий хід",whiteWin:"Білі котики перемогли!",blackWin:"Чорні котики перемогли!"},
+ en:{white:"White cats",black:"Black cats",turn:"Turn",win:"Victory!",wins:"win",moves:"Legal moves",capture:"Capture is mandatory",continue:"Keep capturing with this piece",how:"Rules",rules:"8×8 checkers with 12 cats per side. White goes first. Ordinary pieces move diagonally forward and capture in both directions. Captures and further jumps are mandatory. Kings move any distance diagonally. A piece becomes a king on reaching the far edge. You win by taking every opponent piece or leaving them without a legal move.",undo:"Undo move",reset:"New game",resetAsk:"Start a new game and lose the current progress?",flip:"Flip board",saved:"This game could not be saved in your browser.",winnerTitle:"Victory!",congrats:"Congratulations! What a game — the win is yours!",again:"Play again",close:"View the board",leaderboard:"Leaderboard",winsLabel:"Wins",recentMatches:"Recent matches",played:"Games played",noResults:"No results yet",rankLabel:"Rank",local:"2 players · one device",select:"Tap your cat, then a highlighted square",king:"king",cat:"cat",empty:"Empty square",pending:"Mandatory move",whiteWin:"White cats win!",blackWin:"Black cats win!"},
+ sv:{white:"Vita katter",black:"Svarta katter",turn:"Tur",win:"Seger!",wins:"vinner",moves:"Möjliga drag",capture:"Slag är obligatoriskt",continue:"Fortsätt slå med samma pjäs",how:"Regler",rules:"Damspel på 8×8 med 12 katter per spelare. Vit börjar. Vanliga pjäser går diagonalt framåt men slår åt båda håll. Slag och fortsatta slag är obligatoriska. Dam kan gå valfri sträcka diagonalt. En pjäs blir dam på sista raden. Du vinner när motståndaren saknar pjäser eller möjliga drag.",undo:"Ångra drag",reset:"Nytt parti",resetAsk:"Starta ett nytt parti och förlora framstegen?",flip:"Vänd brädet",saved:"Partiet kunde inte sparas i webbläsaren.",winnerTitle:"Seger!",congrats:"Grattis! Vilket parti — ni vann!",again:"Spela igen",close:"Visa brädet",leaderboard:"Topplista",winsLabel:"Vinster",recentMatches:"Senaste partier",played:"Spelade partier",noResults:"Inga resultat ännu",rankLabel:"Placering",local:"2 spelare · en enhet",select:"Tryck på din katt och sedan på en markerad ruta",king:"dam",cat:"katt",empty:"Tom ruta",pending:"Obligatoriskt drag",whiteWin:"Vita katter vinner!",blackWin:"Svarta katter vinner!"},
+ de:{white:"Weiße Katzen",black:"Schwarze Katzen",turn:"Am Zug",win:"Sieg!",wins:"gewinnen",moves:"Mögliche Züge",capture:"Schlagen ist Pflicht",continue:"Mit dieser Figur weiterschlagen",how:"Regeln",rules:"Dame auf 8×8 mit 12 Katzen pro Seite. Weiß beginnt. Normale Steine ziehen diagonal vorwärts, schlagen aber in beide Richtungen. Schlagen und weitere Sprünge sind Pflicht. Damen ziehen beliebig weit diagonal. Auf der letzten Reihe wird ein Stein zur Dame. Wer alle gegnerischen Steine schlägt oder den Gegner bewegungsunfähig macht, gewinnt.",undo:"Zug zurücknehmen",reset:"Neues Spiel",resetAsk:"Neues Spiel starten und den Fortschritt verlieren?",flip:"Brett drehen",saved:"Dieses Spiel konnte nicht im Browser gespeichert werden.",winnerTitle:"Sieg!",congrats:"Glückwunsch! Tolles Spiel — ihr habt gewonnen!",again:"Noch mal spielen",close:"Brett ansehen",leaderboard:"Rangliste",winsLabel:"Siege",recentMatches:"Letzte Partien",played:"Gespielte Partien",noResults:"Noch keine Ergebnisse",rankLabel:"Platz",local:"2 Spieler · ein Gerät",select:"Wähle deine Katze und dann ein markiertes Feld",king:"Dame",cat:"Katze",empty:"Leeres Feld",pending:"Pflichtzug",whiteWin:"Weiße Katzen gewinnen!",blackWin:"Schwarze Katzen gewinnen!"},
+ es:{white:"Gatos blancos",black:"Gatos negros",turn:"Turno",win:"¡Victoria!",wins:"ganan",moves:"Movimientos legales",capture:"Capturar es obligatorio",continue:"Sigue capturando con esta ficha",how:"Reglas",rules:"Damas 8×8 con 12 gatos por lado. Empiezan los blancos. Las fichas avanzan en diagonal, pero capturan en ambas direcciones. Capturar y continuar los saltos es obligatorio. Las damas se mueven cualquier distancia en diagonal. Una ficha se corona al llegar al extremo opuesto. Gana quien deje al rival sin fichas o sin movimientos.",undo:"Deshacer jugada",reset:"Nueva partida",resetAsk:"¿Empezar de nuevo y perder el progreso?",flip:"Girar tablero",saved:"No se pudo guardar la partida en el navegador.",winnerTitle:"¡Victoria!",congrats:"¡Felicidades! ¡Qué partida! ¡Habéis ganado!",again:"Jugar otra vez",close:"Ver el tablero",leaderboard:"Clasificación",winsLabel:"Victorias",recentMatches:"Últimas partidas",played:"Partidas jugadas",noResults:"Aún no hay resultados",rankLabel:"Puesto",local:"2 jugadores · un dispositivo",select:"Toca tu gato y luego una casilla resaltada",king:"dama",cat:"gato",empty:"Casilla vacía",pending:"Movimiento obligatorio",whiteWin:"¡Ganan los gatos blancos!",blackWin:"¡Ganan los gatos negros!"}
 };
 
 function CatPiece({side,king}) {
@@ -36,6 +37,16 @@ export function CheckersGame({lang="uk"}) {
     restore:s=>validateCheckersState(s)?s:null,initialize:initialCheckers
   });
   const [selected,setSelected]=useState(null);
+  const [standings,setStandings] = useVersionedState({
+    game:"checkers-standings",lang:"shared",
+    restore:validateCheckersStandings,initialize:emptyCheckersStandings
+  });
+  const roundId = () => {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+    return String(Date.now())+"-"+String(Math.random());
+  };
+  const leaderboard = rankedCheckersSides(standings);
+  const matchesPlayed = standings.white + standings.black;
   const [history,setHistory]=useState([]);
   const [flipped,setFlipped]=useState(false);
   const [victoryOpen,setVictoryOpen]=useState(()=>Boolean(game.winner));
@@ -67,14 +78,24 @@ export function CheckersGame({lang="uk"}) {
     if(game.winner || !squareIsDark(index))return;
     if(active!==null && targets.includes(index)){
       const next=applyCheckersMove(game,active,index);
-      if(next!==game){setHistory(h=>[...h.slice(-79),game]);setGame(next);setSelected(next.forcedFrom);if(!game.winner && next.winner){setVictoryOpen(true);playCheckersVictory();}}
+      if(next!==game){
+        const gameId = game.matchId || roundId();
+        setHistory(h=>[...h.slice(-79),game]);
+        setGame({...next,matchId:gameId});
+        setSelected(next.forcedFrom);
+        if(!game.winner && next.winner){
+          setStandings(prev=>recordCheckersWin(prev,gameId,next.winner));
+          setVictoryOpen(true);
+          playCheckersVictory();
+        }
+      }
       return;
     }
     if(game.forcedFrom!==null)return;
     if(game.board[index]?.side===game.turn && moves.some(m=>m.from===index))setSelected(index);
     else setSelected(null);
   };
-  const startNewGame=()=>{setGame(initialCheckers());setHistory([]);setSelected(null);setVictoryOpen(false);};
+  const startNewGame=()=>{setGame({...initialCheckers(),matchId:roundId()});setHistory([]);setSelected(null);setVictoryOpen(false);};
   const reset=()=>{
     if(!window.confirm(t.resetAsk))return;
     startNewGame();
@@ -86,19 +107,32 @@ export function CheckersGame({lang="uk"}) {
   const indices=Array.from({length:64},(_,i)=>flipped?63-i:i);
   return <section className="ck-page s pv" aria-label={t.local}>
     <div className="wrap">
-      <div className="ck-toolbar">
-        <div className="ck-status">
-          <p className="ck-eyebrow">{t.local}</p>
-          <h2 aria-live="polite">{game.winner?(game.winner==="white"?t.whiteWin:t.blackWin):t.turn+": "+(game.turn==="white"?t.white:t.black)}</h2>
-          <p className="ck-help" aria-live="polite">{game.forcedFrom!==null?t.continue:mustCapture?t.capture:t.select}</p>
-        </div>
-        <div className="ck-actions">
-          <button type="button" className="ck-action" onClick={()=>setFlipped(v=>!v)}>{t.flip}</button>
-          <button type="button" className="ck-action" onClick={undo} disabled={!history.length}>{t.undo}</button>
-          <button type="button" className="ck-action ck-new" onClick={reset}>{t.reset}</button>
-        </div>
-      </div>
       <div className="ck-layout">
+        <aside className="ck-leaderboard" aria-label={t.leaderboard}>
+          <div className="ck-leaderboard-title">
+            <p className="ck-eyebrow">NICKOLASGAMES</p>
+            <h3>{t.leaderboard}</h3>
+          </div>
+          <div className="ck-rank-list">
+            {leaderboard.map((side,i)=><div className="ck-rank-item" key={side}>
+              <span className={"ck-rank-num"+(i===0?" ck-gold":"")}>{i+1}</span>
+              <div className="ck-rank-cat"><CatPiece side={side} king={false}/></div>
+              <div className="ck-rank-name"><strong>{side==="white"?t.white:t.black}</strong><small>{t.winsLabel}</small></div>
+              <strong className="ck-rank-score">{standings[side]}</strong>
+            </div>)}
+          </div>
+          <div className="ck-leaderboard-total"><span>{t.played}</span><strong>{matchesPlayed}</strong></div>
+          <div className="ck-recent">
+            <h4>{t.recentMatches}</h4>
+            {standings.recent.length
+              ? <ol>{standings.recent.slice(0,3).map((result,i)=><li key={result.id}>
+                  <span className="ck-recent-num">{i+1}.</span>
+                  <span>{result.side==="white"?t.white:t.black}</span>
+                  <span aria-hidden="true">★</span>
+                </li>)}</ol>
+              : <p>{t.noResults}</p>}
+          </div>
+        </aside>
         <div className="ck-board-frame">
           <div className="ck-board" role="group" aria-label={t.local}>
             {indices.map(index=>{
@@ -116,6 +150,18 @@ export function CheckersGame({lang="uk"}) {
           </div>
         </div>
         <aside className="ck-sidebar">
+            <div className="ck-toolbar">
+          <div className="ck-status">
+            <p className="ck-eyebrow">{t.local}</p>
+            <h2 aria-live="polite">{game.winner?(game.winner==="white"?t.whiteWin:t.blackWin):t.turn+": "+(game.turn==="white"?t.white:t.black)}</h2>
+            <p className="ck-help" aria-live="polite">{game.forcedFrom!==null?t.continue:mustCapture?t.capture:t.select}</p>
+              </div>
+          <div className="ck-actions">
+            <button type="button" className="ck-action" onClick={()=>setFlipped(v=>!v)}>{t.flip}</button>
+            <button type="button" className="ck-action" onClick={undo} disabled={!history.length}>{t.undo}</button>
+            <button type="button" className="ck-action ck-new" onClick={reset}>{t.reset}</button>
+          </div>
+        </div>
           <div className={"ck-player "+(game.turn==="white"?"ck-current":"")}>
             <CatPiece side="white" king={false}/><div><strong>{t.white}</strong><small>{count("white")} / 12</small></div>
           </div>
