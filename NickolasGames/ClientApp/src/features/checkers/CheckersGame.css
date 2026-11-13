@@ -251,3 +251,15 @@
   }
   .ck-rank-list{grid-template-columns:1fr}
 }
+
+/* Local friend vs computer selector - fits the right-hand controls column. */
+.ck-opponent-panel{display:grid;gap:9px;padding:12px;border:1px solid #d9c3a2;background:linear-gradient(145deg,#f9f2e7,#eddfc9);border-radius:13px;min-width:0}
+.ck-opponent-label{font-size:12px;font-weight:800;color:#72563a}
+.ck-opponent-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.ck-opponent-choices button{min-height:43px;max-width:100%;min-width:0;padding:7px;border-radius:9px;border:1px solid #cbb28f;background:#fff9ed;color:#382b21;font-size:12px;font-weight:750;line-height:1.25;overflow-wrap:anywhere}
+.ck-opponent-choices button.is-active{background:#463125;color:#fff;border-color:#463125}
+.ck-opponent-choices button:focus-visible,.ck-bot-difficulty select:focus-visible{outline:3px solid #ae8750;outline-offset:2px}
+.ck-bot-difficulty{display:grid;gap:6px;font-size:12px;font-weight:750;color:#72563a}
+.ck-bot-difficulty select{appearance:auto;background:#fffaf1;border:1px solid #c9ac84;border-radius:9px;color:#36291e;padding:10px 9px;max-width:100%;min-height:42px}
+@media(min-width:811px) and (max-width:1120px){.ck-opponent-panel{padding:9px}.ck-opponent-choices button{font-size:11px}}
+@media(max-width:480px){.ck-opponent-choices button{font-size:12px}}
