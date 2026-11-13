@@ -19,8 +19,9 @@ export function CheckersResultModal({t,game,victoryOpen,setVictoryOpen,startNewG
     document.addEventListener("keydown",onKey);
     return ()=>{document.removeEventListener("keydown",onKey);if(previouslyFocused.current?.isConnected)previouslyFocused.current.focus();};
   },[victoryOpen,setVictoryOpen]);
+  if(!victoryOpen || (!game.winner && !game.draw))return null;
   return (
-{victoryOpen && (game.winner || game.draw) && <div className="ck-victory-backdrop">
+<div className="ck-victory-backdrop">
         <div className="ck-victory-dialog" role="dialog" aria-modal="true" aria-labelledby="ck-victory-title" aria-describedby="ck-victory-desc">
           <div className="ck-victory-sparks" aria-hidden="true">✦ ✧ ✦</div>
           <div className="ck-victory-cat">{game.draw?<span aria-hidden="true">⚖</span>:<CatPiece side={game.winner} king={true}/>}</div>
@@ -33,6 +34,6 @@ export function CheckersResultModal({t,game,victoryOpen,setVictoryOpen,startNewG
             <button type="button" className="ck-victory-close" onClick={()=>setVictoryOpen(false)}>{t.close}</button>
           </div>
         </div>
-      </div>}
+      </div>
   );
 }

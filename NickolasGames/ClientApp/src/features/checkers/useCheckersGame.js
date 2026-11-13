@@ -39,25 +39,6 @@ export function useCheckersGame(t) {
   const [history,setHistory]=useState([]);
   const [flipped,setFlipped]=useState(false);
   const [victoryOpen,setVictoryOpen]=useState(()=>checkersFinished(game));
-  const closeVictory=useRef(null);
-  const previouslyFocused=useRef(null);
-  useEffect(()=>{
-    if(!victoryOpen) return;
-    previouslyFocused.current=document.activeElement;
-    closeVictory.current?.focus();
-    const onKey=event=>{
-      if(event.key==="Escape"){event.preventDefault();setVictoryOpen(false);}
-      if(event.key==="Tab"){
-        const elements=[...document.querySelectorAll(".ck-victory-dialog button")];
-        if(elements.length===0)return;
-        const first=elements[0],last=elements[elements.length-1];
-        if(event.shiftKey && document.activeElement===first){event.preventDefault();last.focus();}
-        else if(!event.shiftKey && document.activeElement===last){event.preventDefault();first.focus();}
-      }
-    };
-    document.addEventListener("keydown",onKey);
-    return ()=>{document.removeEventListener("keydown",onKey);if(previouslyFocused.current?.isConnected)previouslyFocused.current.focus();};
-  },[victoryOpen]);
   const moves=useMemo(()=>legalCheckersMoves(game),[game]);
   const active=game.forcedFrom===null?selected:game.forcedFrom;
   const targets=moves.filter(m=>m.from===active).map(m=>m.to);
@@ -163,6 +144,6 @@ export function useCheckersGame(t) {
   };
   const indices=Array.from({length:64},(_,i)=>flipped?63-i:i);
   return {game,setGame,storageOk,modeSettings,setModeSettings,againstBot,humanSide,botSide,botTurn,drawing,drawResult,standings,
-    selected,leaderboard,matchesPlayed,history,flipped,victoryOpen,closeVictory,moves,active,targets,mustCapture,
+    selected,leaderboard,matchesPlayed,history,flipped,victoryOpen,moves,active,targets,mustCapture,
     count,handleCell,finishMove,startNewGame,changeFirst,changeHumanSide,reset,undo,changeMode,setFlipped,setVictoryOpen,indices};
 }
