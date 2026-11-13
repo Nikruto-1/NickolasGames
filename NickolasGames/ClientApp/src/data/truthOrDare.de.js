@@ -292,6 +292,11 @@ export default {
     "finishText": "Mische die Karten für eine neue Runde.",
     "noRepeats": "Keine Wiederholungen",
     "skipped": "Übersprungen",
-    "comfort": "Spielt, wie es euch gefällt"
+    "comfort": "Spielt, wie es euch gefällt",
+    "cancel": "Abbrechen",
+    "confirmTitle": "Neues Spiel starten?",
+    "confirmText": "Wenn du die Kategorien änderst, werden der Kartenstapel und dein Fortschritt zurückgesetzt. Fortfahren?",
+    "confirmReset": "Kategorien ändern",
+    "saveError": "Das Spiel konnte auf diesem Gerät nicht gespeichert werden. Prüfe den Browserspeicher."
   }
 };
