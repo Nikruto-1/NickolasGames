@@ -12,7 +12,8 @@ import { AppStatus } from "./components/AppStatus";
 import { initialLanguage, updateSiteMetadata, LANGUAGE_PATHS } from "./utils/siteMetadata.js";
 import { PRIVACY_COPY } from "./locales/privacy.js";
 import { readValue, writeValue } from "./utils/progress";
-import { scrollToSection } from "./utils/pageNavigation.js";
+import { gameFromSearch, pageForGame } from "./utils/gameNavigation.js";
+import { GameScreen } from "./components/GameScreen.jsx";
 import { COPY } from "./locales";
 import "./nickolasgames.css";
 import "./product.css";
@@ -22,18 +23,23 @@ const pickRandom = () => PLAYABLE[Math.floor(Math.random() * PLAYABLE.length)];
 
 export default function NickolasGames() {
   const [showIntro, setShowIntro] = useState(false);
-  const [startRequest,setStartRequest]=useState(0);
-  const requestStart=()=>{setStartRequest(value=>value+1);document.querySelector("#preview")?.scrollIntoView({behavior:"instant",block:"start"});};
+  const [startRequest,setStartRequest] = useState(0);
+  const [screenGame, setScreenGame] = useState(() => gameFromSearch(location.search));
   const finishIntro = useCallback(() => setShowIntro(false), []);
   const [lang, setLang] = useState(initialLanguage);
   const [game, setGame] = useState(() => { const g = readValue("nickolasgames-active-game"); return PLAYABLE.includes(g) ? g : "crocodile"; });
   useEffect(() => { writeValue("nickolasgames-active-game", game); }, [game]);
   const t = COPY[lang] || COPY.en;
-  const choose = (k, scroll) => {
+  const navigate = (k) => {
+    const selected = k === "random" ? pickRandom() : (PLAYABLE.includes(k) ? k : null);
+    if (selected) setGame(selected);
+    setScreenGame(selected);
     setStartRequest(0);
-    setGame(k === "random" ? pickRandom() : k);
-    if (scroll) scrollToSection("#preview");
+    history.pushState(null, "", pageForGame(lang, selected, location.search));
+    window.scrollTo({ top: 0, behavior: "instant" });
   };
+  const requestStart = () => navigate(game);
+  const choose = (k) => navigate(k);
 
   useEffect(() => {
     try { localStorage.setItem("nickolasgames-lang", lang); } catch {}
@@ -43,27 +49,45 @@ export default function NickolasGames() {
     if (location.pathname !== nextPath) history.replaceState(null, "", nextPath + location.search);
     const update = () => updateSiteMetadata(lang, t.games, (PRIVACY_COPY[lang] || PRIVACY_COPY.en).title);
     update();
-    addEventListener("popstate", update);
-    return () => removeEventListener("popstate", update);
+    return undefined;
+  }, [lang]);
+
+  useEffect(() => {
+    const onHistory = () => {
+      const route = gameFromSearch(location.search);
+      setScreenGame(route);
+      if (route) setGame(route);
+      const pathLang = location.pathname.split("/").find(part => Object.hasOwn(LANGUAGE_PATHS, part));
+      if (pathLang && pathLang !== lang) setLang(pathLang);
+    };
+    addEventListener("popstate", onHistory);
+    return () => removeEventListener("popstate", onHistory);
   }, [lang]);
 
   return (
     <>
       {showIntro && <HolmesIntro lang={lang} onComplete={finishIntro} />}
       <div inert={showIntro ? true : undefined}>
-      <SiteNavigation lang={lang} setLang={setLang} label={t.language} />
+      <SiteNavigation lang={lang} setLang={setLang} label={t.language} onHome={() => navigate(null)} />
       <AppStatus lang={lang} />
       <main id="main">
-      <Hero t={t} onStart={requestStart} />
-      <GamesGrid games={t.games} t={t} onPlay={(k) => choose(k, true)} />
-      {game === "crocodile"
-        ? <CharadesGame key={`${lang}-${game}`} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={(k) => choose(k, false)} />
-        : game === "whoami" ? <WhoAmIGame key={`${lang}-${game}`} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={(k) => choose(k, false)} />
-        : game === "alias" ? <AliasGame key={`${lang}-${game}`} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={(k) => choose(k, false)} />
-        : game === "truth" ? <TruthOrDareGame key={`${lang}-${game}`} games={t.games} t={t} lang={lang} onGame={(k) => choose(k, false)} />
-        : <CardStackPreview key={`${lang}-${game}`} game={game} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={(k) => choose(k, false)} />}
-      <HowItWorks t={t} />
-      <FinalCta t={t} onStart={requestStart} />
+      {screenGame === null ? <>
+        <Hero t={t} onStart={requestStart} />
+        <GamesGrid games={t.games} t={t} onPlay={choose} />
+        <HowItWorks t={t} />
+        <FinalCta t={t} onStart={requestStart} />
+      </> : <GameScreen game={screenGame} games={t.games} lang={lang}
+        onBack={() => navigate(null)} onChoose={choose}>
+        {screenGame === "crocodile"
+          ? <CharadesGame key={`${lang}-crocodile`} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={choose} />
+          : screenGame === "whoami"
+            ? <WhoAmIGame key={`${lang}-whoami`} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={choose} />
+          : screenGame === "alias"
+            ? <AliasGame key={`${lang}-alias`} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={choose} />
+          : screenGame === "truth"
+            ? <TruthOrDareGame key={`${lang}-truth`} games={t.games} t={t} lang={lang} onGame={choose} />
+          : <CardStackPreview key={`${lang}-${screenGame}`} game={screenGame} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={choose} />}
+      </GameScreen>}
       </main>
       <footer><span>{t.footer}</span><PrivacyPanel lang={lang} /><button className="btn sm" onClick={() => setShowIntro(true)}>{({uk:"Холмс · 2D-вступ",en:"Holmes · 2D intro",sv:"Holmes · 2D-intro",de:"Holmes · 2D-Intro",es:"Holmes · Intro 2D"})[lang]}</button></footer>
       </div>
