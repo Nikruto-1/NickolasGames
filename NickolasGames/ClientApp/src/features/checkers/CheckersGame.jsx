@@ -46,11 +46,11 @@ export function CheckersGame({lang="uk"}) {
   const againstBot=modeSettings.mode==="bot";
   const humanSide=modeSettings.humanSide;
   const botSide=humanSide==="white"?"black":"white";
-  const botTurn=againstBot && game.turn===botSide && !game.winner;
   const botTimer=useRef(null);
   const drawTimer=useRef(null);
   const [drawing,setDrawing]=useState(false);
   const [drawResult,setDrawResult]=useState(null);
+  const botTurn=againstBot && game.turn===botSide && !game.winner && !drawing;
   useEffect(()=>()=>{if(drawTimer.current!==null)window.clearTimeout(drawTimer.current);},[]);
   const [selected,setSelected]=useState(null);
   const [standings,setStandings] = useVersionedState({
