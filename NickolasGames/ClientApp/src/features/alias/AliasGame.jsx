@@ -8,13 +8,6 @@ import { createHolmesTimerSound, HOLMES_TIME_UP } from '../../utils/holmesTimerS
 import { ALIAS_ALL, ALIAS_FORMATS, aliasActor, aliasCategories, aliasCategorySelection, aliasPool, aliasReducer, aliasSetupErrors, aliasWord, newAliasState, refreshAliasDeck, restoreAliasState, shuffleAlias, validAliasTarget } from './gameLogic.js';
 import './AliasGame.css';
 
-const dicePips = [[], [4], [0, 8], [0, 4, 8], [0, 2, 6, 8], [0, 2, 4, 6, 8], [0, 2, 3, 5, 6, 8]];
-
-function AliasDie({ value }) {
-  return <span className="alias-die" data-value={value}>{dicePips[value].map(position => <i className="alias-die-pip" key={position} style={{ gridRow: Math.floor(position / 3) + 1, gridColumn: position % 3 + 1 }} />)}</span>;
-}
-
-import { useAliasGame } from "./useAliasGame.js";
 export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
 
  const { copy, key, categories, state, dispatch, categorySelection, pool, availableCategories, selectedCategories, categorySummary, drafts, setDrafts, editingTeam, setEditingTeam, target, setTarget, attempt, setAttempt, storageOk, clock, setClock, drag, setDrag, gesture, feedback, readyPanel, previousPhase, sound, armed, previousAnswers, setup, drawing, team, actor, word, remaining, expired, last, playing, errors, result, lastAnswer, roundCorrect, roundSkipped, settings, selectCategories, updateTeam, addPlayer, start, roll, begin, answer, reset, stopGesture } = useAliasGame({ games, t, lang, startRequest });
@@ -122,10 +115,7 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
           </div>}
           {!setup && <button className="btn sm alias-reset" onClick={reset}><RotateCcw size={16} />{copy.newGame}</button>}
         </div>
-        {!setup && !drawing && <aside className="alias-scores" aria-label={copy.points}>
-          <h3>{copy.points}</h3><p>{copy.target}: {state.target}</p>
-          <table><thead><tr><th scope="col">{copy.team}</th><th scope="col">{copy.points}</th></tr></thead><tbody>{state.teams.map((item, index) => <tr key={item.id} aria-current={!setup && index === state.activeIndex ? 'true' : undefined}><th scope="row"><span>{item.name}</span><small>{item.players.map(player => player.name).join(', ')}</small></th><td>{item.points}</td></tr>)}</tbody></table>
-        </aside>}
+        {!setup && !drawing && <AliasScoreboard state={state} copy={copy} />}
       </div>
     </div>
   </section>;

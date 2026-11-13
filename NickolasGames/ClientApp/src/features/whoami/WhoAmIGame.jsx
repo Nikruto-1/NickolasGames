@@ -9,6 +9,7 @@ import { initialWhoami, restoreWhoamiCategory, validWhoami, WHOAMI_ALL, WHOAMI_D
 import './WhoAmIGame.css';
 
 import { useWhoAmIGame } from "./useWhoAmIGame.js";
+import { GameRules } from "../../components/GameRules.jsx";
 export function WhoAmIGame({games,t,lang,onGame,startRequest=0}) {
 
  const { copy, rules, pc, key, state, dispatch, name, setName, warning, setWarning, startAttempt, setStartAttempt, activeId, setActiveId, held, setHeld, manual, setManual, running, setRunning, storageOk, sound, previousLeft, dialog, active, pool, add, startErrors, deal, close, restart, answer, keyTrap, closeButton } = useWhoAmIGame({ games, t, lang, startRequest });
@@ -17,7 +18,7 @@ export function WhoAmIGame({games,t,lang,onGame,startRequest=0}) {
      <div className="whoami-heading"><div><h2>{copy.title}</h2><p className={state.phase==='setup'?'whoami-description':undefined}>{state.phase==='setup'?rules.description:state.phase==='summary'?copy.summary:copy.savedGame}</p></div>
        {state.phase==='game'&&<button className="btn sm" onClick={()=>{setRunning(false);dispatch({type:'finish'});}}>{copy.finish}</button>}
      </div>
-     <details className="whoami-rules"><summary>{rules.label}</summary><ol className="whoami-rule-sections">{rules.sections.map(section=><li key={section.title}><h3>{section.title}</h3><ul>{section.items.map(item=><li key={item}>{item}</li>)}</ul></li>)}</ol></details>
+     <GameRules className="whoami-rules" listClassName="whoami-rule-sections" label={rules.label} sections={rules.sections} />
      <div className="tabs" role="group" aria-label={t.gameLabel}>{['whoami','crocodile','alias','truth'].map(game=><button className="chip" key={game} aria-pressed={game==='whoami'} onClick={()=>onGame(game)}>{games[game].n}</button>)}</div>
      {state.phase==='setup'&&<div className="whoami-setup">
        <div className="players-panel">

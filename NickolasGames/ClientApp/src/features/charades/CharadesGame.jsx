@@ -13,6 +13,7 @@ import { readValue, writeValue } from '../../utils/progress.js';
 import { ALL_CHARADES_CATEGORIES, charadesGuesserMode, charadesReducer, createCharadesDeck, currentCharadesCard, hasCharadesCard, deckReady, newCharadesState, validCharadesState, restoreCharadesState, charadesPoints, canCompleteRound } from './gameLogic.js';
 
 import { useCharadesGame } from "./useCharadesGame.js";
+import { GameRules } from "../../components/GameRules.jsx";
 export function CharadesGame({ games, t, lang, onGame, startRequest=0 }) {
 
  const { copy, rules, modeCopy, key, state, dispatch, name, setName, warning, setWarning, targetDraft, setTargetDraft, startAttempt, setStartAttempt, storageOk, clock, setClock, sound, armedDeadline, roundPanel, previousPhase, setup, guesserMode, drawing, ruleSections, order, actor, card, exhausted, readingTime, remaining, award, roundPending, expired, startErrors, startGame, add, newGame, selectWord, markGuessed } = useCharadesGame({ games, t, lang, startRequest });
@@ -20,15 +21,7 @@ export function CharadesGame({ games, t, lang, onGame, startRequest=0 }) {
     <div className="wrap pvg">
       <div>
         <div className="head" style={{ margin: 0 }}><h2>{guesserMode ? modeCopy.title : copy.title}</h2><p className="charades-description">{guesserMode ? modeCopy.description : rules.description}</p></div>
-        <details className="charades-rules">
-          <summary>{rules.label}</summary>
-          <ol className="charades-rule-sections">
-            {ruleSections.map(section => <li key={section.title}>
-              <h3>{section.title}</h3>
-              <ul>{section.items.map(item => <li key={item}>{item}</li>)}</ul>
-            </li>)}
-          </ol>
-        </details>
+        <GameRules className="charades-rules" listClassName="charades-rule-sections" label={rules.label} sections={ruleSections} />
         <div className="tabs" role="group" aria-label={t.gameLabel}>
           {['whoami', 'crocodile', 'alias', 'truth'].map(game => <button key={game} className="chip" aria-pressed={game === 'crocodile'} onClick={() => onGame(game)}>{games[game].n}</button>)}
           <button className="chip" onClick={() => onGame('random')}>{t.random}</button>
