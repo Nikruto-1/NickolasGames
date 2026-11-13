@@ -292,6 +292,11 @@ export default {
     "finishText": "Baraja las cartas para empezar otra partida.",
     "noRepeats": "Sin cartas repetidas",
     "skipped": "Saltadas",
-    "comfort": "Jugad como os resulte cómodo"
+    "comfort": "Jugad como os resulte cómodo",
+    "cancel": "Cancelar",
+    "confirmTitle": "¿Empezar una partida nueva?",
+    "confirmText": "Al cambiar las categorías se reiniciarán las cartas y el progreso. ¿Quieres continuar?",
+    "confirmReset": "Cambiar categorías",
+    "saveError": "No se pudo guardar la partida en este dispositivo. Revisa el almacenamiento del navegador."
   }
 };
