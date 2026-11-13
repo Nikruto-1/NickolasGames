@@ -76,7 +76,7 @@ try {
     for(const game of ["whoami","crocodile","alias","truth","checkers"]){
       await page.goto(`${base}/uk/?game=${game}`,{waitUntil:"domcontentloaded"});
       try {
-        await page.locator(".game-screen-nav").waitFor({ timeout: 12000 });
+        await page.locator(game === "checkers" ? ".ck-board" : ".game-screen-nav").waitFor({ timeout: 12000 });
       } catch (error) {
         const message = await page.locator("main h1").first().textContent().catch(() => "(no heading)");
         throw new Error(`Game view failed: ${width}px ${game}; page errors: ${errors.join(" | ")}; heading: ${message}; ${error.message}`);
