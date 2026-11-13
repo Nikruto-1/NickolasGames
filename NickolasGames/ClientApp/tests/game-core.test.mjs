@@ -7,9 +7,10 @@ import * as browserAlias from "../src/features/alias/gameLogic.js";
 import * as browserCharades from "../src/features/charades/gameLogic.js";
 import * as browserWhoami from "../src/features/whoami/gameLogic.js";
 import * as browserTruth from "../src/features/truth-or-dare/session.js";
+import * as browserCheckers from "../src/features/checkers/gameLogic.js";
 
 test("shared game core exports all four platform-independent engines", () => {
-  for (const game of ["alias", "charades", "whoami", "truthOrDare"]) {
+  for (const game of ["alias", "charades", "whoami", "truthOrDare", "checkers"]) {
     assert.ok(core[game], game);
     assert.ok(Object.keys(core[game]).length > 2, game);
   }
@@ -17,13 +18,14 @@ test("shared game core exports all four platform-independent engines", () => {
   assert.equal(browserCharades.charadesReducer, core.charades.charadesReducer);
   assert.equal(browserWhoami.whoamiReducer, core.whoami.whoamiReducer);
   assert.equal(browserTruth.chooseTruthDare, core.truthOrDare.chooseTruthDare);
+  assert.equal(browserCheckers.applyCheckersMove, core.checkers.applyCheckersMove);
 });
 
 test("core files have no React imports or browser storage access", async () => {
   const sources = [
     "shared/difficulty.js", "shared/words.js", "shared/playerScores.js",
     "alias/rules.js", "charades/rules.js", "whoami/rules.js",
-    "truth-or-dare/session.js", "truth-or-dare/cards.uk.js"
+    "truth-or-dare/session.js", "truth-or-dare/cards.uk.js", "checkers/rules.js"
   ];
   for (const source of sources) {
     const file = fileURLToPath(new URL("../../../packages/game-core/" + source, import.meta.url));

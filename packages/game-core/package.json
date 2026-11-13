@@ -9,6 +9,7 @@
     "./charades": "./charades/rules.js",
     "./whoami": "./whoami/rules.js",
     "./truth-or-dare": "./truth-or-dare/session.js",
-    "./cards": "./truth-or-dare/cards.uk.js"
+    "./cards": "./truth-or-dare/cards.uk.js",
+    "./checkers": "./checkers/rules.js"
   }
 }
