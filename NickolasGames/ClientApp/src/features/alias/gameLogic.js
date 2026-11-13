@@ -1,5 +1,5 @@
-import { uniqueWords } from './words.js';
-import { DIFFICULTIES } from './difficulty.js';
+import { uniqueWords } from '../../utils/words.js';
+import { DIFFICULTIES } from '../../utils/difficulty.js';
 
 export const ALIAS_ALL = '__all__';
 export const ALIAS_SECONDS = 60;

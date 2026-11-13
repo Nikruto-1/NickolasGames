@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, ChevronDown, Dice5, Pencil, Plus, RotateCcw, Trophy, Trash2, UserPlus } from 'lucide-react';
-import { ALIAS_COPY } from '../locales/alias.js';
-import { ALIAS_WORDS } from '../data/alias.js';
-import { DIFFICULTIES } from '../utils/difficulty.js';
-import { readValue, writeValue } from '../utils/progress.js';
-import { createHolmesTimerSound, HOLMES_TIME_UP } from '../utils/holmesTimerSound.js';
-import { ALIAS_ALL, ALIAS_FORMATS, aliasActor, aliasCategories, aliasCategorySelection, aliasPool, aliasReducer, aliasSetupErrors, aliasWord, newAliasState, refreshAliasDeck, restoreAliasState, shuffleAlias, validAliasTarget } from '../utils/alias.js';
+import { ALIAS_COPY } from './translations.js';
+import { ALIAS_WORDS } from './words.js';
+import { DIFFICULTIES } from '../../utils/difficulty.js';
+import { readValue, writeValue } from '../../utils/progress.js';
+import { createHolmesTimerSound, HOLMES_TIME_UP } from '../../utils/holmesTimerSound.js';
+import { ALIAS_ALL, ALIAS_FORMATS, aliasActor, aliasCategories, aliasCategorySelection, aliasPool, aliasReducer, aliasSetupErrors, aliasWord, newAliasState, refreshAliasDeck, restoreAliasState, shuffleAlias, validAliasTarget } from './gameLogic.js';
 import './AliasGame.css';
 
 const dicePips = [[], [4], [0, 8], [0, 4, 8], [0, 2, 6, 8], [0, 2, 4, 6, 8], [0, 2, 3, 5, 6, 8]];
