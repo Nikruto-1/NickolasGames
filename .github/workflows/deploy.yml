@@ -45,6 +45,16 @@ jobs:
         working-directory: NickolasGames/ClientApp
         run: npm test
 
+      - name: Install Chromium for responsive tests
+        working-directory: NickolasGames/ClientApp
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium
+
+      - name: Test game screens in Chromium (mobile, tablet, desktop, zoom)
+        working-directory: NickolasGames/ClientApp
+        run: node scripts/browser-smoke.mjs
+
       - name: Keep previous assets for cached browser pages
         working-directory: NickolasGames/ClientApp
         run: node scripts/preserve-assets.mjs
