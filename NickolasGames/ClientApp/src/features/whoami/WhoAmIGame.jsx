@@ -1,15 +1,10 @@
 import { StartFeedback } from "../../components/StartFeedback";
-import { validateWhoamiStart } from "../../utils/startValidation";
-import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { createHolmesTimerSound } from '../../utils/holmesTimerSound.js';
-import { WHOAMI_UI, WHOAMI_RULES } from './translations.js';
-import { PLAYER_SETUP } from '../../locales/index.js';
-import { readValue, readProgress, writeValue } from '../../utils/progress.js';
-import { initialWhoami, restoreWhoamiCategory, validWhoami, WHOAMI_ALL, WHOAMI_DIFFICULTIES, whoamiPool, whoamiReducer } from './gameLogic.js';
+import { WHOAMI_ALL, WHOAMI_DIFFICULTIES, whoamiReducer } from './gameLogic.js';
+import { useWhoAmIGame } from "./useWhoAmIGame.js";
+import { WhoAmITimer } from "./WhoAmITimer.jsx";
+import { GameRules } from "../../components/GameRules.jsx";
 import './WhoAmIGame.css';
 
-import { useWhoAmIGame } from "./useWhoAmIGame.js";
-import { GameRules } from "../../components/GameRules.jsx";
 export function WhoAmIGame({games,t,lang,onGame,startRequest=0}) {
 
  const { copy, rules, pc, key, state, dispatch, name, setName, warning, setWarning, startAttempt, setStartAttempt, activeId, setActiveId, held, setHeld, manual, setManual, running, setRunning, storageOk, sound, previousLeft, dialog, active, pool, add, startErrors, deal, close, restart, answer, keyTrap, closeButton } = useWhoAmIGame({ games, t, lang, startRequest });
@@ -41,7 +36,10 @@ export function WhoAmIGame({games,t,lang,onGame,startRequest=0}) {
      </div>}
      {state.phase==='game'&&<>
        <p className="whoami-privacy">{copy.privacy}</p>
-       {state.timerEnabled&&<div className="timer"><b>{state.left}</b><div className="tbar"><i style={{transform:`scaleX(${state.left/state.duration})`}}/></div><button className="btn sm" disabled={!state.left} onClick={()=>{if(!running)sound.current.unlock(lang);setRunning(value=>!value);}}>{running?copy.pause:t.startTimer}</button><button className="btn sm" onClick={()=>{setRunning(false);dispatch({type:'resetTimer'});}}>{t.reset}</button></div>}
+       {state.timerEnabled&&<WhoAmITimer remaining={state.left} duration={state.duration}
+         running={running} copy={copy} t={t}
+         onToggle={()=>{if(!running)sound.current.unlock(lang);setRunning(value=>!value);}}
+         onReset={()=>{setRunning(false);dispatch({type:'resetTimer'});}} />}
        <div className="whoami-tiles">{state.players.map((player,index)=><button className="whoami-tile" key={player.id} onClick={()=>setActiveId(player.id)} aria-label={`${copy.open}: ${player.name}`}>
          <span className="whoami-avatar">{index+1}</span><strong>{player.name}</strong><span className="whoami-status">{!player.word?copy.empty:player.lastOutcome==='guessed'?pc.guessed:player.lastOutcome==='gaveUp'?pc.giveUp:copy.hidden}</span>
          <span className="whoami-tile-count">{t.guessed}: {player.guessed} · {t.skipped}: {player.skipped}</span><span className="whoami-open">{copy.open} →</span>
