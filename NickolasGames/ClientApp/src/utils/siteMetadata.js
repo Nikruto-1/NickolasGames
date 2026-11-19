@@ -8,8 +8,8 @@ export function initialLanguage() {
 export function updateSiteMetadata(lang, games, privacyTitle) {
   const privacy = location.pathname.endsWith('/privacy/');
   const path = LANGUAGE_PATHS[lang] + (privacy ? 'privacy/' : '');
-  const title = privacy ? privacyTitle + ' | NickolasGames' : 'NickolasGames | ' + ['whoami','crocodile','alias','truth'].map(key => games[key].n).join(', ');
-  const description = privacy ? privacyTitle + " · NickolasGames" : ['whoami','crocodile','alias','truth'].map(key => games[key].n + ': ' + games[key].d).join(' ').slice(0,240);
+  const title = privacy ? privacyTitle + ' | NickolasGames' : 'NickolasGames | ' + ['whoami','crocodile','alias','truth','checkers'].map(key => games[key].n).join(', ');
+  const description = privacy ? privacyTitle + " · NickolasGames" : ['whoami','crocodile','alias','truth','checkers'].map(key => games[key].n + ': ' + games[key].d).join(' ');
   for (const selector of ['meta[name="description"]','meta[property="og:description"]','meta[name="twitter:description"]']) document.querySelector(selector)?.setAttribute('content',description);
   document.title = title;
   document.documentElement.lang = lang;

@@ -1,3 +1,4 @@
+import { TIMER_RESUME_COPY } from "../../locales/round.js";
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, ChevronDown, Dice5, Pencil, Plus, RotateCcw, Trophy, Trash2, UserPlus } from 'lucide-react';
 import { ALIAS_COPY } from './translations.js';
@@ -13,7 +14,7 @@ import { AliasScoreboard } from "./AliasScoreboard.jsx";
 
 export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
 
- const { copy, key, categories, state, dispatch, categorySelection, pool, availableCategories, selectedCategories, categorySummary, drafts, setDrafts, editingTeam, setEditingTeam, target, setTarget, attempt, setAttempt, storageOk, clock, setClock, drag, setDrag, gesture, feedback, readyPanel, previousPhase, sound, armed, previousAnswers, setup, drawing, team, actor, word, remaining, expired, last, playing, errors, result, lastAnswer, roundCorrect, roundSkipped, settings, selectCategories, updateTeam, addPlayer, start, roll, begin, answer, reset, stopGesture } = useAliasGame({ games, t, lang, startRequest });
+ const { needsAudio, restoreAudio, copy, key, categories, state, dispatch, categorySelection, pool, availableCategories, selectedCategories, categorySummary, drafts, setDrafts, editingTeam, setEditingTeam, target, setTarget, attempt, setAttempt, storageOk, clock, setClock, drag, setDrag, gesture, feedback, readyPanel, previousPhase, sound, armed, previousAnswers, setup, drawing, team, actor, word, remaining, expired, last, playing, errors, result, lastAnswer, roundCorrect, roundSkipped, settings, selectCategories, updateTeam, addPlayer, start, roll, begin, answer, reset, stopGesture } = useAliasGame({ games, t, lang, startRequest });
   return <section className="s pv alias-game" id="preview">
     <div className="wrap">
       <div className="head"><h2>{copy.title}</h2><details className="alias-rules"><summary>{copy.rules}</summary><ol className="alias-rules-sections">{copy.rulesSections.map(section => <li key={section.title}><h3>{section.title}</h3><ul>{section.items.map(item => <li key={item}>{item}</li>)}</ul></li>)}</ol></details></div>
@@ -23,7 +24,9 @@ export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
       </div>
       {!storageOk && <p className="alias-warning" role="status">{copy.storage}</p>}
       <div className={'alias-layout' + (setup || drawing ? ' is-setup' : '')}>
+
         <div>
+          {needsAudio && <button type="button" className="btn sm" onClick={restoreAudio}>{TIMER_RESUME_COPY[lang] || TIMER_RESUME_COPY.en}</button>}
           {setup && <>
             <div className="alias-team-editors">
               {state.teams.map((item, index) => <article className="alias-team-editor" key={item.id}>

@@ -7,10 +7,18 @@ export function offlinePlugin() {
   return {name:'nickolasgames-offline',apply:'build',
     config(){return {define:{__APP_BUILD_ID__:JSON.stringify(buildId)}};},
     generateBundle(_,bundle) {
+      const startupChunks=new Set();
+      function includeChunk(name) {
+        const chunk=bundle[name];
+        if(startupChunks.has(name)||chunk?.type!=='chunk')return;
+        startupChunks.add(name);
+        chunk.imports.forEach(includeChunk);
+      }
+      for(const [name,item] of Object.entries(bundle))if(item.type==='chunk'&&item.isEntry)includeChunk(name);
       const files=[...new Set([
         'index.html',
         ...Object.entries(bundle).filter(([filename,item])=>
-          filename.endsWith('.css') || (item.type==='chunk' && item.isEntry)
+          filename.endsWith('.css') || startupChunks.has(filename)
         ).map(([filename])=>filename),
         'icons/holmes-192.png',
         'icons/holmes-512.png',
@@ -65,6 +73,13 @@ self.addEventListener('fetch',event=>{
       const cache=await caches.open(CACHE);
       const cached=await cache.match(request);
       if(cached)return cached;
+      if(isAsset(url) && typeof caches.keys==='function'){
+        for(const key of (await caches.keys()).reverse()){
+          if(key===CACHE||!key.startsWith('nickolasgames-'))continue;
+          const previous=await (await caches.open(key)).match(request);
+          if(previous)return previous;
+        }
+      }
       const response=await fetch(request);
       if(response.ok)await cache.put(request,response.clone()).catch(()=>{});
       return response;

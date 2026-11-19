@@ -5,3 +5,7 @@ export const ROUND_MESSAGES = {
   de: { exhausted: "Alle Wörter wurden verwendet. Wähle eine andere Kategorie oder starte ein neues Spiel.", pause: "Pause" },
   es: { exhausted: "Se han usado todas las palabras. Elige otra categoría o empieza una nueva partida.", pause: "Pausa" },
 };
+export const TIMER_RESUME_COPY = {
+ uk: 'Увімкнути звук таймера', en: 'Enable timer sound', sv: 'Aktivera timerljudet',
+ de: 'Timer-Ton aktivieren', es: 'Activar el sonido del temporizador'
+};

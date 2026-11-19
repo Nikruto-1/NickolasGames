@@ -3,16 +3,16 @@ import { readTruthDareSession, restoreTruthDareSession, createTruthDareSession, 
 import { TRUTH_DARE_CARDS, TRUTH_DARE_CATEGORIES } from "./truthOrDare.uk.js";
 import { getTruthDareLocale, localizeTruthDareCard, localizedCategory } from "./i18n.js";
 
-import { useVersionedState, restoreGameSession } from "../../utils/gameSession.js";
+import { useVersionedState, restoreGameSession, browserStorage } from "../../utils/gameSession.js";
 
 export function useTruthOrDareGame({ lang }) {
   const [session, setSession, storageOk] = useVersionedState({
     game: "truth-or-dare", lang: "shared", restore: restoreTruthDareSession,
-    initialize: () => readTruthDareSession(localStorage) || createTruthDareSession()
+    initialize: () => readTruthDareSession(browserStorage()) || createTruthDareSession()
   });
   const { categories, queue, index, chosen, skipped } = session;
   const [draftCategories, setDraftCategories] = useState(() => [...categories]);
-  const [settingsOpen, setSettingsOpen] = useState(() => !readTruthDareSession(localStorage) && !restoreGameSession(localStorage, "truth-or-dare", "shared", restoreTruthDareSession));
+  const [settingsOpen, setSettingsOpen] = useState(() => !readTruthDareSession(browserStorage()) && !restoreGameSession(browserStorage(), "truth-or-dare", "shared", restoreTruthDareSession));
   const [confirmOpen, setConfirmOpen] = useState(false);
   const confirmationRef = useRef(null);
   const cardsById = useMemo(() => new Map(TRUTH_DARE_CARDS.map(card => [card.id, card])), []);

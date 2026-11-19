@@ -15,10 +15,10 @@ const urls = [];
 for (const [lang,path] of Object.entries(LANGUAGE_PATHS)) {
  for (const privacy of [false,true]) {
   const policy = PRIVACY_COPY[lang];
-  const games = ['whoami','crocodile','alias','truth'].map(key=>COPY[lang].games[key]);
+  const games = ['whoami','crocodile','alias','truth','checkers'].map(key=>COPY[lang].games[key]);
   const url = SITE_ORIGIN + path + (privacy ? 'privacy/' : '');
   const title = privacy ? policy.title + ' | NickolasGames' : 'NickolasGames | ' + games.map(game=>game.n).join(', ');
-  const description = privacy ? policy.intro : games.map(game=>game.n+': '+game.d).join(' ').slice(0,240);
+  const description = privacy ? policy.intro : games.map(game=>game.n+': '+game.d).join(' ');
   let html = template.replace(/<html lang="[^"]*">/,'<html lang="'+lang+'">')
    .replace(/<title>.*?<\/title>/,'<title>'+escape(title)+'</title>')
    .replace(/<meta name="description"[^>]*>/,'<meta name="description" content="'+escape(description)+'" />')

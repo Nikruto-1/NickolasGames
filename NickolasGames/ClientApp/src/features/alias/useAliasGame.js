@@ -34,6 +34,9 @@ export function useAliasGame({ games, t, lang, startRequest = 0 }) {
   const previousPhase = useRef(state.phase);
   const sound = useRef(null);
   const armed = useRef(null);
+  const [audioRestored,setAudioRestored]=useState(false);
+  const needsAudio=state.phase==='acting'&&armed.current!==state.deadline&&!audioRestored&&clock<state.deadline;
+  const restoreAudio=()=>{sound.current.unlock(lang);armed.current=state.deadline;setAudioRestored(true);};
   const previousAnswers = useRef(state.answers?.length || 0);
   if (!sound.current) sound.current = createHolmesTimerSound();
   const setup = state.phase === 'setup';
@@ -122,5 +125,5 @@ export function useAliasGame({ games, t, lang, startRequest = 0 }) {
     if (Math.abs(x) >= 70 && Math.abs(x) > Math.abs(y) * 1.3) answer(x > 0 ? 'correct' : 'skip', current.index);
   };
 
- return { copy, key, categories, state, dispatch, categorySelection, pool, availableCategories, selectedCategories, categorySummary, drafts, setDrafts, editingTeam, setEditingTeam, target, setTarget, attempt, setAttempt, storageOk, clock, setClock, drag, setDrag, gesture, feedback, readyPanel, previousPhase, sound, armed, previousAnswers, setup, drawing, team, actor, word, remaining, expired, last, playing, errors, result, lastAnswer, roundCorrect, roundSkipped, settings, selectCategories, updateTeam, addPlayer, start, roll, begin, answer, reset, stopGesture };
+ return { needsAudio, restoreAudio, copy, key, categories, state, dispatch, categorySelection, pool, availableCategories, selectedCategories, categorySummary, drafts, setDrafts, editingTeam, setEditingTeam, target, setTarget, attempt, setAttempt, storageOk, clock, setClock, drag, setDrag, gesture, feedback, readyPanel, previousPhase, sound, armed, previousAnswers, setup, drawing, team, actor, word, remaining, expired, last, playing, errors, result, lastAnswer, roundCorrect, roundSkipped, settings, selectCategories, updateTeam, addPlayer, start, roll, begin, answer, reset, stopGesture };
 }

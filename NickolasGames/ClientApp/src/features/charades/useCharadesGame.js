@@ -34,6 +34,13 @@ export function useCharadesGame({ games, t, lang, startRequest = 0 }) {
   const sound=useRef(null);if(!sound.current)sound.current=createHolmesTimerSound();
   const armedDeadline=useRef(null);
   const roundPanel = useRef(null);
+  const [audioRestored,setAudioRestored]=useState(false);
+  const needsAudio=state.phase==='acting'&&state.timed&&armedDeadline.current!==state.deadline&&!audioRestored&&clock<state.deadline;
+  const restoreAudio=()=>{sound.current.unlock(lang);armedDeadline.current=state.deadline;setAudioRestored(true);};
+  useEffect(()=>{
+    if(['acting','confirming','choosing','handoff'].includes(state.phase))
+      roundPanel.current?.scrollIntoView({block:'start',behavior:'instant'});
+  },[]);
   const previousPhase = useRef(state.phase);
   useEffect(()=>()=>sound.current.dispose(),[]);
   useEffect(()=>{
@@ -107,5 +114,5 @@ export function useCharadesGame({ games, t, lang, startRequest = 0 }) {
     dispatch({ type: 'guess', now });
   };
 
- return { copy, rules, modeCopy, key, state, dispatch, name, setName, warning, setWarning, targetDraft, setTargetDraft, startAttempt, setStartAttempt, storageOk, clock, setClock, sound, armedDeadline, roundPanel, previousPhase, setup, guesserMode, drawing, ruleSections, order, actor, card, exhausted, readingTime, remaining, award, roundPending, expired, startErrors, startGame, add, newGame, selectWord, markGuessed };
+ return { needsAudio, restoreAudio, copy, rules, modeCopy, key, state, dispatch, name, setName, warning, setWarning, targetDraft, setTargetDraft, startAttempt, setStartAttempt, storageOk, clock, setClock, sound, armedDeadline, roundPanel, previousPhase, setup, guesserMode, drawing, ruleSections, order, actor, card, exhausted, readingTime, remaining, award, roundPending, expired, startErrors, startGame, add, newGame, selectWord, markGuessed };
 }

@@ -71,3 +71,22 @@ test('new worker caches dynamically loaded game chunks on demand, without precac
  listeners.fetch({request,respondWith:p=>work=p});
  assert.deepEqual((await work).body,payload);
 });
+
+test('fresh offline install includes the shared runtime; older cached game chunks stay usable',async()=>{
+ const output=new URL('../../wwwroot/',import.meta.url);
+ const sw=await readFile(new URL('sw.js',output),'utf8');
+ const html=await readFile(new URL('index.html',output),'utf8');
+ const scope='https://example.test/';
+ const runtime=html.match(/assets\/jsx-runtime-[\w-]+\.js/)[0];
+ const old=scope+'assets/old-game.js';
+ const listeners={},keys=['nickolasgames-previous'],installed=new Set();
+ const cache={addAll:async requests=>{for(const req of requests)installed.add(req.url);},
+  match:async req=>installed.has(req.url)?{body:'startup'}:undefined};
+ const fetch=async()=>{throw Error('offline');};
+ vm.runInNewContext(sw,{URL,Request,fetch,caches:{keys:async()=>keys,open:async key=>key===keys[0]?{match:async req=>req.url===old?{body:'previous'}:undefined}:cache},
+  self:{registration:{scope},location:{origin:'https://example.test'},skipWaiting(){},addEventListener:(key,fn)=>listeners[key]=fn}});
+ let work; listeners.install({waitUntil:p=>work=p});await work;
+ for(const [url,body] of [[scope+runtime,'startup'],[old,'previous']]){
+  listeners.fetch({request:new Request(url),respondWith:p=>work=p});assert.equal((await work).body,body);
+ }
+});

@@ -1,3 +1,4 @@
+import { TIMER_RESUME_COPY } from "../../locales/round.js";
 import { StartFeedback } from "../../components/StartFeedback";
 import { validateCharadesStart } from "../../utils/startValidation";
 import { createHolmesTimerSound, HOLMES_TIME_UP } from '../../utils/holmesTimerSound.js';
@@ -16,7 +17,7 @@ import { useCharadesGame } from "./useCharadesGame.js";
 import { GameRules } from "../../components/GameRules.jsx";
 export function CharadesGame({ games, t, lang, onGame, startRequest=0 }) {
 
- const { copy, rules, modeCopy, key, state, dispatch, name, setName, warning, setWarning, targetDraft, setTargetDraft, startAttempt, setStartAttempt, storageOk, clock, setClock, sound, armedDeadline, roundPanel, previousPhase, setup, guesserMode, drawing, ruleSections, order, actor, card, exhausted, readingTime, remaining, award, roundPending, expired, startErrors, startGame, add, newGame, selectWord, markGuessed } = useCharadesGame({ games, t, lang, startRequest });
+ const { needsAudio, restoreAudio, copy, rules, modeCopy, key, state, dispatch, name, setName, warning, setWarning, targetDraft, setTargetDraft, startAttempt, setStartAttempt, storageOk, clock, setClock, sound, armedDeadline, roundPanel, previousPhase, setup, guesserMode, drawing, ruleSections, order, actor, card, exhausted, readingTime, remaining, award, roundPending, expired, startErrors, startGame, add, newGame, selectWord, markGuessed } = useCharadesGame({ games, t, lang, startRequest });
   return <section className="s pv charades-game" id="preview">
     <div className="wrap pvg">
       <div>
@@ -26,7 +27,12 @@ export function CharadesGame({ games, t, lang, onGame, startRequest=0 }) {
           {['whoami', 'crocodile', 'alias', 'truth'].map(game => <button key={game} className="chip" aria-pressed={game === 'crocodile'} onClick={() => onGame(game)}>{games[game].n}</button>)}
           <button className="chip" onClick={() => onGame('random')}>{t.random}</button>
         </div>
-        <div className="players-panel">
+        {!setup && <details className="charades-settings"><summary>{copy.players}</summary>
+          <ul>{state.players.map(player=><li key={player.id}>{player.name}: {player.points} / {state.targetScore}</li>)}</ul>
+          <button className="btn sm" onClick={newGame}>{copy.newGame}</button>
+          <p className="players-note" role="status">{storageOk ? (state.timed ? copy.saved : copy.savedUntimed) : copy.failed}</p>
+        </details>}
+        {setup && <div className="players-panel">
           <h3>{copy.players}</h3>
           <fieldset className="charades-mode"><legend>{modeCopy.label}</legend>
             <div>{['ordered', 'guesser'].map(mode => <button type="button" key={mode} className="chip" disabled={!setup} aria-pressed={(state.turnMode || 'ordered') === mode} onClick={() => dispatch({ type: 'turnMode', value: mode })}>{modeCopy[mode]}</button>)}</div>
@@ -78,9 +84,10 @@ export function CharadesGame({ games, t, lang, onGame, startRequest=0 }) {
             <button className="btn sm" onClick={newGame}>{copy.newGame}</button>
           </div>
           <p className="players-note" role="status">{storageOk ? (state.timed ? copy.saved : copy.savedUntimed) : copy.failed}</p>
-        </div>
+        </div>}
       </div>
       <div className="charades-round" ref={roundPanel}>
+        {needsAudio && <button type="button" className="btn sm" onClick={restoreAudio}>{TIMER_RESUME_COPY[lang] || TIMER_RESUME_COPY.en}</button>}
         {drawing && <CharadesDraw state={state} copy={modeCopy} clock={clock} dispatch={dispatch} />}
         {actor && !drawing && <h3 className="current-player">{copy.active}: <b>{actor.name}</b></h3>}
         {roundPending && <p className="charades-result" role="status">{copy.roundPending}</p>}
