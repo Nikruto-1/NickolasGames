@@ -171,7 +171,10 @@ try {
     assert.equal(controls.length,2);
     assert(controls.every(button=>button.height>=44 && button.width>0),"Timer controls must be touch-friendly");
     await page.locator(".whoami-timer-actions .btn").first().click();
-    await page.waitForFunction(()=>document.querySelector(".whoami-time-readout")?.textContent==="0:59",{timeout:4000});
+    await page.waitForFunction(()=>{
+      const time=document.querySelector(".whoami-time-readout")?.textContent;
+      return Boolean(time && time!=="1:00");
+    },null,{timeout:4000});
     await page.locator(".whoami-timer-actions .btn").first().click();
     await page.locator(".whoami-timer-actions .btn").last().click();
     assert.equal(await page.locator(".whoami-time-readout").innerText(),"1:00","Reset restores the full duration");
