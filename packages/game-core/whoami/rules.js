@@ -66,7 +66,14 @@ export function whoamiReducer(s,a) {
       if(s.phase!=='game'||!target||!word||s.players.some(p=>p.id!==a.id&&p.word.toLocaleLowerCase()===word.toLocaleLowerCase())||target.usedWords.some(w=>w.toLocaleLowerCase()===word.toLocaleLowerCase())) return s;
       return {...s,players:s.players.map(p=>p.id===a.id?{...p,word,usedWords:[...p.usedWords,word],revision:p.revision+1,lastOutcome:'manual'}:p)};
     }
-    case 'tick': return s.phase==='game' && s.timerEnabled ? {...s,left:Math.max(0,s.left-1)}:s;
+    case 'tick': {
+      // A browser may throttle timers in background tabs. Charge all whole seconds
+      // elapsed since the preceding tick rather than assuming one callback = 1s.
+      const seconds = a.seconds === undefined ? 1 : a.seconds;
+      if (s.phase !== 'game' || !s.timerEnabled || s.left === 0 ||
+          !Number.isSafeInteger(seconds) || seconds <= 0) return s;
+      return {...s, left: Math.max(0, s.left - seconds)};
+    }
     case 'resetTimer': return {...s,left:s.duration};
     case 'finish': return s.phase==='game' ? {...s,phase:'summary'}:s;
     case 'resume': return s.phase==='summary' ? {...s,phase:'game'}:s;
