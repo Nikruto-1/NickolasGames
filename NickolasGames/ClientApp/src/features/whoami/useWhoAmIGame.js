@@ -39,15 +39,31 @@ export function useWhoAmIGame({ games, t, lang, startRequest = 0 }) {
  const [manual,setManual]=useState('');const [running,setRunning]=useState(false);
  const sound=useRef(null);if(!sound.current)sound.current=createHolmesTimerSound();
  const previousLeft=useRef(state.left);
+ const lastTimerTick=useRef(null);
  useEffect(()=>()=>sound.current.dispose(),[]);
  useEffect(()=>{if(running&&previousLeft.current>0&&state.left===0)sound.current.announce(copy.timeUp,lang);previousLeft.current=state.left;},[state.left,running,copy.timeUp,lang]);
  const dialog=useRef(null);const closeButton=useRef(null);
  const active=state.players.find(p=>p.id===activeId);
  const pool=useMemo(()=>whoamiPool(games.whoami.c,state.category,state.difficulty,state.customWords,state.customOnly),[games,state.category,state.difficulty,state.customWords,state.customOnly]);
  useEffect(()=>{
-   if(!running||state.phase!=='game'||state.left<=0){setRunning(false);return;}
-   const timer=setInterval(()=>dispatch({type:'tick'}),1000);return()=>clearInterval(timer);
- },[running,state.phase,state.left]);
+   if(!running||state.phase!=='game'||!state.timerEnabled||state.left<=0){
+     lastTimerTick.current=null;
+     return;
+   }
+   lastTimerTick.current=Date.now();
+   const tick=()=>{
+     const now=Date.now();
+     const elapsed=Math.floor((now-lastTimerTick.current)/1000);
+     if(elapsed>0){
+       lastTimerTick.current+=elapsed*1000;
+       dispatch({type:'tick',seconds:elapsed});
+     }
+   };
+   const timer=setInterval(tick,250);
+   document.addEventListener('visibilitychange',tick);
+   return()=>{clearInterval(timer);document.removeEventListener('visibilitychange',tick);};
+ },[running,state.phase,state.timerEnabled]);
+ useEffect(()=>{if(running&&state.left===0)setRunning(false);},[running,state.left]);
  useEffect(()=>{
    const hide=()=>setHeld(false);const hidden=()=>{if(document.hidden){hide();setRunning(false);}};
    document.addEventListener('pointerup',hide);document.addEventListener('pointercancel',hide);
