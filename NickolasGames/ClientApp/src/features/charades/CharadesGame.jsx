@@ -1,3 +1,4 @@
+import { GameTabs } from '../../components/GameTabs.jsx';
 import { TIMER_RESUME_COPY } from "../../locales/round.js";
 import { StartFeedback } from "../../components/StartFeedback";
 import { validateCharadesStart } from "../../utils/startValidation";
@@ -23,10 +24,7 @@ export function CharadesGame({ games, t, lang, onGame, startRequest=0 }) {
       <div>
         <div className="head" style={{ margin: 0 }}><h2>{guesserMode ? modeCopy.title : copy.title}</h2><p className="charades-description">{guesserMode ? modeCopy.description : rules.description}</p></div>
         <GameRules className="charades-rules" listClassName="charades-rule-sections" label={rules.label} sections={ruleSections} />
-        <div className="tabs" role="group" aria-label={t.gameLabel}>
-          {['whoami', 'crocodile', 'alias', 'truth'].map(game => <button key={game} className="chip" aria-pressed={game === 'crocodile'} onClick={() => onGame(game)}>{games[game].n}</button>)}
-          <button className="chip" onClick={() => onGame('random')}>{t.random}</button>
-        </div>
+        <GameTabs active="crocodile" games={games} t={t} onChoose={onGame} showRandom />
         {!setup && <details className="charades-settings"><summary>{copy.players}</summary>
           <ul>{state.players.map(player=><li key={player.id}>{player.name}: {player.points} / {state.targetScore}</li>)}</ul>
           <button className="btn sm" onClick={newGame}>{copy.newGame}</button>
