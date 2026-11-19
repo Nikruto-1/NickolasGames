@@ -1,3 +1,4 @@
+import { GameTabs } from '../../components/GameTabs.jsx';
 import { StartFeedback } from "../../components/StartFeedback";
 import { WHOAMI_ALL, WHOAMI_DIFFICULTIES, whoamiReducer } from './gameLogic.js';
 import { useWhoAmIGame } from "./useWhoAmIGame.js";
@@ -14,7 +15,7 @@ export function WhoAmIGame({games,t,lang,onGame,startRequest=0}) {
        {state.phase==='game'&&<button className="btn sm" onClick={()=>{setRunning(false);dispatch({type:'finish'});}}>{copy.finish}</button>}
      </div>
      <GameRules className="whoami-rules" listClassName="whoami-rule-sections" label={rules.label} sections={rules.sections} />
-     <div className="tabs" role="group" aria-label={t.gameLabel}>{['whoami','crocodile','alias','truth'].map(game=><button className="chip" key={game} aria-pressed={game==='whoami'} onClick={()=>onGame(game)}>{games[game].n}</button>)}</div>
+     <GameTabs active="whoami" games={games} t={t} onChoose={onGame} />
      {state.phase==='setup'&&<div className="whoami-setup">
        <div className="players-panel">
          <h3>{copy.players}</h3>
