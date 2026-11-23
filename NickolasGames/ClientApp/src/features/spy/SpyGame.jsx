@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import '../whoami/WhoAmIGame.css';
 import './SpyGame.css';
+import { locationsFor, SPY_LOCATIONS } from './locations.js';
 import { createHolmesTimerSound, HOLMES_TIME_UP } from '../../utils/holmesTimerSound.js';
 
 const words = {
@@ -23,13 +24,14 @@ function restore(){
  try {
  const s=JSON.parse(localStorage.getItem(storageKey));
  if(!s||!Array.isArray(s.players)||s.players.length>20||!s.players.every(p=>typeof p.id==='string'&&typeof p.name==='string')||!Array.isArray(s.votes)||!s.scores||![0,3,5,8,10].includes(s.duration)||!['discussion','vote','guess'].includes(s.phase))return {};
- if(s.round&&(!Number.isInteger(s.round.spy)||s.round.spy<0||s.round.spy>=s.players.length||!Number.isInteger(s.round.location)||s.round.location<9||s.round.location>13||!Number.isInteger(s.step)||s.step<0||s.step>s.players.length||s.votes.length>s.players.length))return {};
+ if(s.round&&(!Number.isInteger(s.round.spy)||s.round.spy<0||s.round.spy>=s.players.length||!Number.isInteger(s.round.location)||s.round.location<9||s.round.location>=9+SPY_LOCATIONS.length||!Number.isInteger(s.step)||s.step<0||s.step>s.players.length||s.votes.length>s.players.length))return {};
  return s;
  }catch{return {};}
 }
 export function SpyGame({lang}) {
  const [saved]=useState(restore);
  const w=words[lang]||words.en;
+ const locations=locationsFor(lang);
  const [players,setPlayers]=useState(saved.players??[]);
  const [name,setName]=useState('');
  const [round,setRound]=useState(saved.round??null);
@@ -81,7 +83,7 @@ export function SpyGame({lang}) {
  const clean=name.trim();
  const duplicate=players.some(p=>p.name.toLocaleLowerCase()===clean.toLocaleLowerCase());
  function add(e){e.preventDefault();if(!clean||duplicate||players.length>=20)return;setPlayers(old=>old.length>=20||old.some(p=>p.name.toLocaleLowerCase()===clean.toLocaleLowerCase())?old:[...old,{id:crypto.randomUUID(),name:clean}]);setName('');}
- function start(){if(players.length<3||clean)return;setRound({spy:Math.floor(Math.random()*players.length),location:9+Math.floor(Math.random()*5)});setStep(0);setShown(false);setFinished(false);setDeadline(null);setPhase('discussion');setVotes([]);setChoice('');setWinner(null);}
+ function start(){if(players.length<3||clean)return;setRound({spy:Math.floor(Math.random()*players.length),location:9+Math.floor(Math.random()*locations.length)});setStep(0);setShown(false);setFinished(false);setDeadline(null);setPhase('discussion');setVotes([]);setChoice('');setWinner(null);}
  return <section className="s pv whoami-game spy-game"><div className="wrap">
  <div className="whoami-heading"><h2>{w[0]}</h2></div>
  {!round?<div className="whoami-setup"><div className="players-panel"><h3>{w[1]} · {players.length}</h3>
@@ -89,8 +91,8 @@ export function SpyGame({lang}) {
  <ul className="player-score-list">{players.map(p=><li key={p.id}><span className="player-name">{p.name}</span><button className="player-remove" aria-label={w[17]+': '+p.name} onClick={()=>setPlayers(old=>old.filter(x=>x.id!==p.id))}>×</button></li>)}</ul></div>
  <div className="players-panel"><label className="players-label" htmlFor="spy-time">{x[0]}</label><select id="spy-time" className="charades-category" value={duration} onChange={e=>setDuration(Number(e.target.value))}>{[0,3,5,8,10].map(n=><option key={n} value={n}>{n?n+" min":x[1]}</option>)}</select></div><div className="whoami-start"><button className="btn pri" disabled={players.length<3||!!clean} onClick={start}>{w[4]} · {players.length}/3+</button></div></div>
  :<div className="players-panel">
- {step<players.length?<><h3>{players[step].name} · {step+1}/{players.length}</h3><div className="whoami-big-word">{shown?(step===round.spy?w[7]:w[8]+': '+w[round.location]):'•••'}</div>
+ {step<players.length?<><h3>{players[step].name} · {step+1}/{players.length}</h3><div className="whoami-big-word">{shown?(step===round.spy?w[7]:w[8]+': '+locations[round.location-9]):'•••'}</div>
  {!shown?<button className="btn pri" onClick={()=>setShown(true)}>{w[5]}</button>:<button className="btn pri" onClick={()=>{if(guard.current)return;guard.current=true;setShown(false);setStep(i=>i+1);if(step===players.length-1&&duration){sound.current.unlock(lang);const now=Date.now();setClock(now);setDeadline(now+duration*60000);}}}>{w[6]}</button>}</>
- :finished?<><h3>{winner?x[5]:x[6]}</h3><h3>{w[8]}: {w[round.location]}</h3><p>{w[0]}: {players[round.spy].name}</p><ul className="player-score-list">{players.map(p=><li key={p.id}>{p.name}: {scores[p.id]||0} {x[9]}</li>)}</ul><button className="btn pri" onClick={start}>{w[16]}</button><button className="btn" onClick={()=>{setRound(null);setScores({});}}>{w[1]}</button></>:phase==='vote'?<><h3>{x[2]} · {players[votes.length]?.name}</h3><label htmlFor="spy-vote">{x[3]}</label><select id="spy-vote" className="charades-category" value={choice} onChange={e=>setChoice(e.target.value)}><option value="">—</option>{players.filter((p,i)=>i!==votes.length).map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select><button className="btn pri" disabled={!choice} onClick={vote}>{x[4]}</button></>:phase==='guess'?<><h3>{x[8]}</h3>{w.slice(9,14).map((location,i)=><button className="btn" key={location} onClick={()=>end(i+9===round.location)}>{location}</button>)}</>:<><h3>{w[14]}</h3>{deadline&&<div className="timer"><b>{Math.floor(Math.max(0,Math.ceil((deadline-clock)/1000))/60)}:{String(Math.max(0,Math.ceil((deadline-clock)/1000))%60).padStart(2,'0')}</b></div>}<button className="btn pri" onClick={()=>{setChoice('');setPhase('vote');}}>{x[2]}</button><button className="btn" onClick={()=>setPhase('guess')}>{x[7]}</button></>}
+ :finished?<><h3>{winner?x[5]:x[6]}</h3><h3>{w[8]}: {locations[round.location-9]}</h3><p>{w[0]}: {players[round.spy].name}</p><ul className="player-score-list">{players.map(p=><li key={p.id}>{p.name}: {scores[p.id]||0} {x[9]}</li>)}</ul><button className="btn pri" onClick={start}>{w[16]}</button><button className="btn" onClick={()=>{setRound(null);setScores({});}}>{w[1]}</button></>:phase==='vote'?<><h3>{x[2]} · {players[votes.length]?.name}</h3><label htmlFor="spy-vote">{x[3]}</label><select id="spy-vote" className="charades-category" value={choice} onChange={e=>setChoice(e.target.value)}><option value="">—</option>{players.filter((p,i)=>i!==votes.length).map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select><button className="btn pri" disabled={!choice} onClick={vote}>{x[4]}</button></>:phase==='guess'?<><h3>{x[8]}</h3>{<select className="charades-category" aria-label={x[8]} value={choice} onChange={e=>setChoice(e.target.value)}><option value="">—</option>{locations.map((location,i)=>({location,i})).sort((a,b)=>a.location.localeCompare(b.location,lang)).map(({location,i})=><option key={i} value={i}>{location}</option>)}</select><button className="btn pri" disabled={choice===''} onClick={()=>end(Number(choice)+9===round.location)}>{x[7]}</button>}</>:<><h3>{w[14]}</h3>{deadline&&<div className="timer"><b>{Math.floor(Math.max(0,Math.ceil((deadline-clock)/1000))/60)}:{String(Math.max(0,Math.ceil((deadline-clock)/1000))%60).padStart(2,'0')}</b></div>}<button className="btn pri" onClick={()=>{setChoice('');setPhase('vote');}}>{x[2]}</button><button className="btn" onClick={()=>{setChoice('');setPhase('guess');}}>{x[7]}</button></>}
  </div>}</div></section>;
 }
