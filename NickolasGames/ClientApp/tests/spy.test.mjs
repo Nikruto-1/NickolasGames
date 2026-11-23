@@ -44,3 +44,19 @@ test('category draw preserves history from other categories',()=>{
  assert.ok(pool.includes(draw.index));
  assert.notEqual(draw.index,pool.at(-1));
 });
+
+import { validateSpySession } from '../src/features/spy/session.js';
+const snapshot={players:[{id:'a',name:'A'},{id:'b',name:'B'},{id:'c',name:'C'}],round:{spy:1,location:9},step:3,duration:5,phase:'discussion',votes:[],scores:{a:2,b:0,c:1},finished:false,deadline:12345};
+test('restore older active game, migrate round number and location history',()=>{
+ const s=validateSpySession(snapshot);
+ assert.equal(s.roundNumber,1);assert.equal(s.deadline,12345);assert.deepEqual(s.locationHistory,[0]);
+});
+test('reject malformed rounds, invalid votes and duplicate players',()=>{
+ assert.deepEqual(validateSpySession({...snapshot,round:{spy:3,location:9}}),{});
+ assert.deepEqual(validateSpySession({...snapshot,votes:['a']}),{});
+ assert.deepEqual(validateSpySession({...snapshot,players:[snapshot.players[0],snapshot.players[0],snapshot.players[2]]}),{});
+});
+test('restore completed game without restarting timer',()=>{
+ const s=validateSpySession({...snapshot,finished:true,winner:true,roundLimit:1,roundNumber:1});
+ assert.equal(s.deadline,null);assert.equal(s.roundNumber,1);assert.equal(s.winner,true);
+});
