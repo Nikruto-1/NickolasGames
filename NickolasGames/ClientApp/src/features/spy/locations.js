@@ -5,3 +5,17 @@ const groups=[[0,20,21,22,32,33,34,35,59,60,61,70,71,123,153,154,155,156,157,158
 export function categoryOf(index){const g=groups.findIndex(list=>list.includes(index));return [3,2,4,5,6][g]||1;}
 export function locationPool(category=0){return SPY_LOCATIONS.map((_,i)=>i).filter(i=>!category||categoryOf(i)===category);}
 export function drawLocation(pool,history=[],random=Math.random){if(!pool.length)throw new Error('Empty location pool');const used=new Set(history);let available=pool.filter(i=>!used.has(i));let next=history;if(!available.length){const set=new Set(pool);next=history.filter(i=>!set.has(i));available=pool.filter(i=>i!==history.at(-1));if(!available.length)available=pool;}const index=available[Math.floor(random()*available.length)];return {index,history:[...next,index]};}
+
+export function guessOptions(correct,pool,random=Math.random){
+ const alternatives=[...new Set(pool)].filter(i=>i!==correct);
+ if(alternatives.length<3)throw new Error('At least four locations required');
+ const shuffle=items=>{const list=[...items];for(let i=list.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[list[i],list[j]]=[list[j],list[i]];}return list;};
+ return shuffle([correct,...shuffle(alternatives).slice(0,3)]);
+}
+export function normalizeGuess(value){
+ return String(value??'').normalize('NFKC').toLowerCase().replace(/[’‘ʼ`´]/g,"'").replace(/\s*[-‐‑–—]\s*/g,'-').replace(/\s+/g,' ').trim().replace(/[.!?]+$/g,'').trim();
+}
+export function matchesLocationGuess(value,index,lang){
+ const expected=locationsFor(lang)[index];
+ return typeof expected==='string'&&normalizeGuess(value)!==''&&normalizeGuess(value)===normalizeGuess(expected);
+}
