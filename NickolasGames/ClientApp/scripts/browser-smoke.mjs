@@ -201,6 +201,51 @@ try {
     checks+=10;
     await page.close();
   }
+  // Free Spy: discussion without votes, expiry stays in discussion, fresh deal and reveal.
+  {
+    const page=await browser.newPage({viewport:{width:320,height:780},serviceWorkers:"block"});
+    const errors=[];page.on("pageerror",e=>errors.push(e.message));
+    await page.goto(base+"/uk/?game=spy");
+    const root=page.locator(".spy-game");
+    const state=()=>page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames.spy.v1")));
+    await root.locator(".spy-setup").waitFor();
+    for(const name of ["Анна","Богдан","Віра"]){
+      await root.locator("#spy-name").fill(name);await root.locator("form button").click();
+    }
+    await root.getByRole("button",{name:/Вільна гра/}).click();
+    await root.getByRole("button",{name:"Без часу",exact:true}).click();
+    await root.locator(".spy-start").click();
+    async function deal(){
+      for(let i=0;i<3;i++){
+        await root.locator(".spy-secret.is-hidden").waitFor();
+        await root.locator(".spy-wide").click();
+        await root.locator(".spy-secret:not(.is-hidden)").waitFor();
+        await root.locator(".spy-wide").click();
+      }
+      await root.locator(".spy-discussion").waitFor();
+    }
+    await deal();
+    const first=await state();
+    assert.equal(first.mode,"free");
+    assert.equal(await root.locator(".spy-clock").innerText(),"∞");
+    assert.equal(await root.getByRole("button",{name:"Голосування",exact:true}).count(),0);
+    await check(page,"320px spy free discussion");
+    await root.getByRole("button",{name:"Наступний раунд",exact:true}).click();
+    await root.locator(".spy-secret.is-hidden").waitFor();
+    await page.waitForFunction(()=>JSON.parse(localStorage.getItem("nickolasgames.spy.v1")).roundNumber===2);
+    assert.notEqual((await state()).round.location,first.round.location);
+    await deal();
+    await page.evaluate(()=>{const key="nickolasgames.spy.v1";const s=JSON.parse(localStorage.getItem(key));s.duration=3;s.deadline=Date.now()-1000;localStorage.setItem(key,JSON.stringify(s));});
+    await page.reload();
+    await root.getByText("Час вийшов — можете продовжити обговорення").waitFor();
+    await root.getByRole("button",{name:"Показати шпигуна",exact:true}).click();
+    await root.locator(".spy-result").waitFor();
+    assert.equal(await root.locator(".spy-roster").count(),0);
+    await root.locator(".spy-wide").click();
+    await root.locator(".spy-secret.is-hidden").waitFor();
+    assert.deepEqual(errors,[],"Free Spy browser runtime errors");
+    checks+=8;await page.close();
+  }
   // Complete real winning move: result dialog, ranking, undo, replay and safe restart.
   {
     const page=await browser.newPage({viewport:{width:1024,height:850},serviceWorkers:"block"});
