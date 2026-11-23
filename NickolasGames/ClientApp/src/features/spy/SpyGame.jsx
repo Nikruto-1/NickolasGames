@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import '../whoami/WhoAmIGame.css';
 import './SpyGame.css';
+import { spyWinsVote, spyScores } from './rules.js';
 import { locationsFor, SPY_LOCATIONS } from './locations.js';
 import { createHolmesTimerSound, HOLMES_TIME_UP } from '../../utils/holmesTimerSound.js';
 
@@ -68,15 +69,13 @@ export function SpyGame({lang}) {
  function end(spyWins){
    if(guard.current)return;guard.current=true;
    setWinner(spyWins);setFinished(true);setDeadline(null);
-   setScores(old=>Object.fromEntries(players.map((p,i)=>[p.id,(old[p.id]||0)+Number(spyWins?i===round.spy:i!==round.spy)])));
+   setScores(old=>spyScores(players,old,round.spy,spyWins));
  }
  function vote(){
    if(!choice||guard.current)return;guard.current=true;
    const next=[...votes,choice];setVotes(next);setChoice('');
    if(next.length===players.length){
-     const counts=players.map(p=>next.filter(v=>v===p.id).length);
-     const max=Math.max(...counts);const leaders=counts.map((n,i)=>n===max?i:-1).filter(i=>i>=0);
-     guard.current=false;end(leaders.length!==1||leaders[0]!==round.spy);
+     guard.current=false;end(spyWinsVote(players,next,round.spy));
    }
  }
  useEffect(()=>{guard.current=false;},[step,shown,votes.length,phase,round]);
