@@ -246,6 +246,54 @@ try {
     assert.deepEqual(errors,[],"Free Spy browser runtime errors");
     checks+=8;await page.close();
   }
+  // Both Spy guessing methods, correct and incorrect answers, and reload stability.
+  for(const method of ["choices","typed"]){
+    for(const correct of [true,false]){
+      const page=await browser.newPage({viewport:{width:375,height:812},serviceWorkers:"block"});
+      const errors=[];page.on("pageerror",e=>errors.push(e.message));
+      await page.goto(base+"/uk/?game=spy");
+      const root=page.locator(".spy-game");
+      await root.locator(".spy-setup").waitFor();
+      for(const name of ["Анна","Богдан","Віра"]){
+        await root.locator("#spy-name").fill(name);await root.locator("form button").click();
+      }
+      await root.getByRole("button",{name:method==="typed"?"Ввести назву":"4 варіанти",exact:true}).click();
+      await root.getByRole("button",{name:"Без часу",exact:true}).click();
+      await root.locator(".spy-start").click();
+      let answer="";
+      for(let i=0;i<3;i++){
+        await root.locator(".spy-secret.is-hidden").waitFor();
+        await root.locator(".spy-wide").click();
+        await root.locator(".spy-secret:not(.is-hidden)").waitFor();
+        if(await root.locator(".spy-secret.is-civilian").count())answer=await root.locator(".spy-secret h3").innerText();
+        await root.locator(".spy-wide").click();
+      }
+      await root.locator(".spy-discussion").waitFor();
+      assert.ok(answer);
+      await root.getByRole("button",{name:"Вгадати локацію",exact:true}).click();
+      const form=root.locator(".spy-guess-form");
+      await form.waitFor();
+      assert.equal(await form.locator('button[type="submit"]').isDisabled(),true);
+      if(method==="choices"){
+        const before=await form.locator(".spy-candidate").allTextContents();
+        assert.equal(before.length,4);assert.equal(new Set(before).size,4);assert.ok(before.includes(answer));
+        await page.reload();await form.waitFor();
+        assert.deepEqual(await form.locator(".spy-candidate").allTextContents(),before);
+        await form.getByRole("button",{name:correct?answer:before.find(v=>v!==answer),exact:true}).click();
+      }else{
+        assert.equal(await form.locator(".spy-candidate").count(),0);
+        await form.locator("#spy-guess").fill(correct?"  "+answer.toUpperCase()+"! ":"неправильна відповідь 123");
+      }
+      await form.locator('button[type="submit"]').click();
+      await root.locator(".spy-result").waitFor();
+      await page.waitForFunction(()=>JSON.parse(localStorage.getItem("nickolasgames.spy.v1")).finished);
+      const s=await page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames.spy.v1")));
+      assert.equal(s.guessResult,correct);assert.equal(s.winner,correct);
+      await page.reload();await root.locator(".spy-result").waitFor();
+      assert.equal(await form.count(),0);
+      assert.deepEqual(errors,[]);checks+=8;await page.close();
+    }
+  }
   // Complete real winning move: result dialog, ranking, undo, replay and safe restart.
   {
     const page=await browser.newPage({viewport:{width:1024,height:850},serviceWorkers:"block"});
