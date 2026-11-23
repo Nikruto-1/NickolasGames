@@ -17,6 +17,7 @@ import { COPY } from "./locales";
 import "./nickolasgames.css";
 import "./product.css";
 
+const SpyGame=lazy(()=>import("./features/spy/SpyGame.jsx").then(m=>({default:m.SpyGame})));
 const AliasGame=lazy(()=>import("./features/alias/AliasGame.jsx").then(m=>({default:m.AliasGame})));
 
 const TruthOrDareGame=lazy(()=>import("./features/truth-or-dare/TruthOrDareGame.jsx").then(m=>({default:m.TruthOrDareGame})));
@@ -66,6 +67,8 @@ export default function NickolasGames() {
             ? <AliasGame key={`${lang}-alias`} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={choose} />
           : screenGame === "checkers"
             ? <CheckersGame key={`${lang}-checkers`} lang={lang} />
+          : screenGame === "spy"
+            ? <SpyGame key={`${lang}-spy`} lang={lang} />
           : screenGame === "truth"
             ? <TruthOrDareGame key={`${lang}-truth`} games={t.games} t={t} lang={lang} onGame={choose} />
           : null}
