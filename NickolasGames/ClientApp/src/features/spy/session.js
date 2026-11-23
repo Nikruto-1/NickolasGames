@@ -8,6 +8,6 @@ export function validateSpySession(s){
  }
  const scores=Object.fromEntries(s.players.map(p=>[p.id,Number.isSafeInteger(s.scores[p.id])&&s.scores[p.id]>=0?s.scores[p.id]:0]));
  const roundLimit=[1,3,5,10].includes(s.roundLimit)?s.roundLimit:5;
- return {...s,scores,roundLimit,roundNumber:s.round?Math.min(roundLimit,Math.max(1,Number.isSafeInteger(s.roundNumber)?s.roundNumber:1)):0,deadline:s.round&&!s.finished&&s.step===s.players.length&&Number.isFinite(s.deadline)&&s.deadline>0?s.deadline:null,locationHistory:Array.isArray(s.locationHistory)?[...new Set(s.locationHistory.filter(i=>Number.isInteger(i)&&i>=0&&i<SPY_LOCATIONS.length))]:s.round?[s.round.location-9]:[]};
+ return {...s,scores,roundLimit,roundNumber:s.round?Math.min(s.mode==='free'?Number.MAX_SAFE_INTEGER:roundLimit,Math.max(1,Number.isSafeInteger(s.roundNumber)?s.roundNumber:1)):0,deadline:s.round&&!s.finished&&s.step===s.players.length&&Number.isFinite(s.deadline)&&s.deadline>0?s.deadline:null,locationHistory:Array.isArray(s.locationHistory)?[...new Set(s.locationHistory.filter(i=>Number.isInteger(i)&&i>=0&&i<SPY_LOCATIONS.length))]:s.round?[s.round.location-9]:[]};
 }
 export function restoreSpySession(){try{return validateSpySession(JSON.parse(localStorage.getItem(SPY_STORAGE_KEY)));}catch{return {};}}
