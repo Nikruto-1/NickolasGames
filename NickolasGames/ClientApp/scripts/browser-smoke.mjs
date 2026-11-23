@@ -73,10 +73,10 @@ try {
     const errors=[];
     page.on("pageerror",error=>errors.push(error.message));
     page.on("console",message=>{ if(message.type()==="error" && message.text().includes("NickolasGames UI error")) errors.push(message.text().slice(0,500)); });
-    for(const game of ["whoami","crocodile","alias","truth","checkers"]){
+    for(const game of ["whoami","crocodile","alias","truth","checkers","spy"]){
       await page.goto(`${base}/uk/?game=${game}`,{waitUntil:"domcontentloaded"});
       try {
-        await page.locator(game === "checkers" ? ".ck-board" : ".game-screen-nav").waitFor({ timeout: 12000 });
+        await page.locator(game === "checkers" ? ".ck-board" : game === "spy" ? ".spy-setup" : ".game-screen-nav").waitFor({ timeout: 12000 });
       } catch (error) {
         const message = await page.locator("main h1").first().textContent().catch(() => "(no heading)");
         throw new Error(`Game view failed: ${width}px ${game}; page errors: ${errors.join(" | ")}; heading: ${message}; ${error.message}`);
@@ -152,6 +152,53 @@ try {
       }
     }
     assert.deepEqual(errors,[],`${width}px runtime errors`);
+    await page.close();
+  }
+  // Spy: private handoff, reload, voting, scores, next round and timer expiry.
+  {
+    const page=await browser.newPage({viewport:{width:375,height:812},serviceWorkers:"block"});
+    const errors=[];page.on("pageerror",e=>errors.push(e.message));
+    await page.goto(base+"/uk/?game=spy");
+    const root=page.locator(".spy-game");
+    const state=()=>page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames.spy.v1")));
+    await root.locator(".spy-setup").waitFor();
+    assert.equal(await root.locator(".spy-start").isDisabled(),true);
+    for(const name of ["Анна","Богдан","Віра"]){
+      await root.locator("#spy-name").fill(name);
+      await root.locator("form button").click();
+    }
+    await root.getByRole("button",{name:"Без часу",exact:true}).click();
+    await root.locator(".spy-start").click();
+    await root.locator(".spy-secret.is-hidden").waitFor();
+    await root.locator(".spy-wide").click();
+    await root.locator(".spy-secret:not(.is-hidden)").waitFor();
+    await page.reload();
+    await root.locator(".spy-secret.is-hidden").waitFor();
+    for(let i=0;i<3;i++){
+      await root.locator(".spy-wide").click();
+      await root.locator(".spy-secret:not(.is-hidden)").waitFor();
+      await root.locator(".spy-wide").click();
+    }
+    await root.locator(".spy-discussion").waitFor();
+    const s=await state();
+    await root.getByRole("button",{name:"Голосування",exact:true}).click();
+    for(let i=0;i<3;i++){
+      const target=i===s.round.spy?(i+1)%3:s.round.spy;
+      await root.locator(".spy-candidate").filter({hasText:s.players[target].name}).click();
+      await root.locator(".spy-wide").click();
+    }
+    await root.locator(".spy-result").waitFor();
+    await page.waitForFunction(()=>JSON.parse(localStorage.getItem("nickolasgames.spy.v1")).finished);
+    assert.equal((await state()).winner,false);
+    assert.equal(Object.values((await state()).scores).reduce((a,b)=>a+b,0),2);
+    await page.reload();await root.locator(".spy-result").waitFor();
+    await root.locator(".spy-wide").click();
+    await root.locator(".spy-secret.is-hidden").waitFor();
+    await page.waitForFunction(()=>!JSON.parse(localStorage.getItem("nickolasgames.spy.v1")).finished);
+    await page.evaluate(()=>{const key="nickolasgames.spy.v1";const s=JSON.parse(localStorage.getItem(key));s.step=s.players.length;s.duration=3;s.deadline=Date.now()-1000;localStorage.setItem(key,JSON.stringify(s));});
+    await page.reload();await root.locator(".spy-candidates").waitFor();
+    assert.deepEqual(errors,[],"Spy browser runtime errors");
+    checks+=10;
     await page.close();
   }
   // Complete real winning move: result dialog, ranking, undo, replay and safe restart.
