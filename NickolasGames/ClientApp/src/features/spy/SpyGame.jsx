@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import '../whoami/WhoAmIGame.css';
 import './SpyGame.css';
+import { SPY_STORAGE_KEY as storageKey, restoreSpySession as restore } from './session.js';
 import { spyWinsVote, spyScores } from './rules.js';
 import { locationsFor, SPY_LOCATIONS, categoryOf, locationPool, drawLocation } from './locations.js';
 import { createHolmesTimerSound, HOLMES_TIME_UP } from '../../utils/holmesTimerSound.js';
@@ -23,15 +24,7 @@ export const SPY_CATALOG = Object.fromEntries(Object.entries(words).map(([lang,w
 const designCopy={"uk":["Секретна місія","Знайдіть шпигуна серед друзів.","Правила гри","Усі, крім шпигуна, знають спільну локацію. Ставте запитання, не називаючи її. Проголосуйте за підозрюваного; шпигун може спробувати вгадати місце. За перемогу — 1 бал.","Додайте щонайменше 3 гравців","Налаштування","Секретна картка","Тільки для тебе. Не показуй іншим.","Мирний гравець","Запам’ятай місце й не називай його.","Вивідай місце, не видаючи себе.","Передайте телефон наступному гравцю","Ставте запитання по черзі","Результати раунду","Завершити гру","Повернутися до налаштувань? Поточний раунд буде втрачено.","Першим запитує","Голосування таємне. Передайте телефон.","Гра збережена на цьому пристрої","Не вдалося зберегти гру","Ім’я вже використовується"],"en":["Secret mission","Find the spy among your friends.","How to play","Everyone except the spy knows the same location. Ask questions without naming it. Vote for a suspect; the spy can try guessing the place. Winners earn 1 point.","Add at least 3 players","Settings","Secret card","For your eyes only. Keep it secret.","Civilian","Remember the place and do not name it.","Discover the place without giving yourself away.","Pass the phone to the next player","Take turns asking questions","Round results","End game","Return to settings? The current round will be lost.","First to ask","Voting is secret. Pass the phone.","Game saved on this device","Could not save the game","Name already used"],"sv":["Hemligt uppdrag","Hitta spionen bland vännerna.","Spelregler","Alla utom spionen känner till samma plats. Ställ frågor utan att nämna platsen. Rösta på en misstänkt; spionen kan gissa platsen. Vinnarna får 1 poäng.","Lägg till minst 3 spelare","Inställningar","Hemligt kort","Bara för dig. Visa inte andra.","Civil spelare","Kom ihåg platsen utan att avslöja den.","Lista ut platsen utan att avslöja dig.","Lämna telefonen till nästa spelare","Turas om att ställa frågor","Rundans resultat","Avsluta spelet","Tillbaka till inställningarna? Rundan försvinner.","Frågar först","Omröstningen är hemlig. Lämna över telefonen.","Spelet sparas på enheten","Kunde inte spara spelet","Namnet används redan"],"de":["Geheime Mission","Finde den Spion unter Freunden.","Spielregeln","Alle außer dem Spion kennen denselben Ort. Stellt Fragen, ohne ihn zu nennen. Stimmt über einen Verdächtigen ab; der Spion kann den Ort erraten. Gewinner erhalten 1 Punkt.","Mindestens 3 Spieler hinzufügen","Einstellungen","Geheime Karte","Nur für dich. Zeige sie niemandem.","Mitspieler","Merke dir den Ort und verrate ihn nicht.","Finde den Ort heraus, ohne dich zu verraten.","Gib das Handy weiter","Stellt abwechselnd Fragen","Rundenergebnis","Spiel beenden","Zurück zu den Einstellungen? Die Runde geht verloren.","Beginnt mit einer Frage","Die Abstimmung ist geheim. Gib das Handy weiter.","Spiel auf diesem Gerät gespeichert","Spiel konnte nicht gespeichert werden","Name bereits vergeben"],"es":["Misión secreta","Encuentra al espía entre tus amigos.","Reglas","Todos salvo el espía conocen el mismo lugar. Haced preguntas sin nombrarlo. Votad por un sospechoso; el espía puede adivinar el lugar. Los ganadores reciben 1 punto.","Añade al menos 3 jugadores","Ajustes","Carta secreta","Solo para ti. No la enseñes.","Civil","Recuerda el lugar sin nombrarlo.","Descubre el lugar sin delatarte.","Pasa el teléfono al siguiente jugador","Haced preguntas por turnos","Resultados de la ronda","Terminar partida","¿Volver a ajustes? Se perderá la ronda actual.","Pregunta primero","El voto es secreto. Pasa el teléfono.","Partida guardada en este dispositivo","No se pudo guardar la partida","Nombre ya utilizado"]};
 const setupCopy={"uk":["Серед вас хтось приховує правду","Кількість гравців","Кількість шпигунів","Тривалість раунду","Категорія локацій","Усі категорії","Кількість раундів","Мирні гравці","Шпигуни","Раунди","Гру завершено","Нова гра","Місто та послуги","Природа","Транспорт","Робота й навчання","Дозвілля","Фантастика"],"en":["Someone among you is hiding the truth","Number of players","Number of spies","Round duration","Location category","All categories","Number of rounds","Civilians","Spies","Rounds","Game finished","New game","City and services","Nature","Transport","Work and education","Leisure","Fantasy"],"sv":["Någon bland er döljer sanningen","Antal spelare","Antal spioner","Rundans längd","Platskategori","Alla kategorier","Antal rundor","Civila","Spioner","Rundor","Spelet är slut","Nytt spel","Stad och service","Natur","Transport","Arbete och utbildning","Fritid","Fantasi"],"de":["Jemand unter euch verbirgt die Wahrheit","Spieleranzahl","Anzahl der Spione","Rundendauer","Ortskategorie","Alle Kategorien","Anzahl der Runden","Mitspieler","Spione","Runden","Spiel beendet","Neues Spiel","Stadt und Dienste","Natur","Verkehr","Arbeit und Bildung","Freizeit","Fantasie"],"es":["Alguien entre vosotros oculta la verdad","Número de jugadores","Número de espías","Duración de la ronda","Categoría de lugares","Todas las categorías","Número de rondas","Civiles","Espías","Rondas","Partida terminada","Nueva partida","Ciudad y servicios","Naturaleza","Transporte","Trabajo y educación","Ocio","Fantasía"]};
 const optionCopy={"uk":["Підказка для шпигуна","Унікальна роль для кожного гравця","Підказка","Роль","Спостерігач","Новачок","Постійний відвідувач","Експерт","Гість","Організатор","Дослідник","Помічник","Працівник","Фотограф","Журналіст","Інспектор","Волонтер","Керівник","Консультант","Стажер","Мандрівник","Координатор","Репортер"],"en":["Hint for the spy","Unique role for each player","Hint","Role","Observer","Newcomer","Regular visitor","Expert","Guest","Organizer","Researcher","Assistant","Employee","Photographer","Journalist","Inspector","Volunteer","Manager","Consultant","Intern","Traveller","Coordinator","Reporter"],"sv":["Ledtråd för spionen","Unik roll för varje spelare","Ledtråd","Roll","Observatör","Nykomling","Stamgäst","Expert","Gäst","Organisatör","Forskare","Assistent","Anställd","Fotograf","Journalist","Inspektör","Volontär","Chef","Rådgivare","Praktikant","Resenär","Samordnare","Reporter"],"de":["Hinweis für den Spion","Einzigartige Rolle für jeden Spieler","Hinweis","Rolle","Beobachter","Neuling","Stammgast","Experte","Gast","Organisator","Forscher","Assistent","Mitarbeiter","Fotograf","Journalist","Inspektor","Freiwilliger","Leiter","Berater","Praktikant","Reisender","Koordinator","Reporter"],"es":["Pista para el espía","Rol único para cada jugador","Pista","Rol","Observador","Recién llegado","Visitante habitual","Experto","Invitado","Organizador","Investigador","Asistente","Empleado","Fotógrafo","Periodista","Inspector","Voluntario","Gerente","Consultor","Becario","Viajero","Coordinador","Reportero"]};
-const storageKey='nickolasgames.spy.v1';
-function restore(){
- try {
- const s=JSON.parse(localStorage.getItem(storageKey));
- if(!s||!Array.isArray(s.players)||s.players.length>20||!s.players.every(p=>typeof p.id==='string'&&typeof p.name==='string')||!Array.isArray(s.votes)||!s.scores||![0,3,5,8,10].includes(s.duration)||!['discussion','vote','guess'].includes(s.phase))return {};
- if(s.round&&(!Number.isInteger(s.round.spy)||s.round.spy<0||s.round.spy>=s.players.length||!Number.isInteger(s.round.location)||s.round.location<9||s.round.location>=9+SPY_LOCATIONS.length||!Number.isInteger(s.step)||s.step<0||s.step>s.players.length||s.votes.length>s.players.length))return {};
- return s;
- }catch{return {};}
-}
+
 export function SpyGame({lang}) {
  const [saved]=useState(restore);
  const w=words[lang]||words.en;
@@ -63,7 +56,7 @@ export function SpyGame({lang}) {
  const [winner,setWinner]=useState(saved.winner??null);
  const [scores,setScores]=useState(saved.scores??{});
  useEffect(()=>{
- try{localStorage.setItem(storageKey,JSON.stringify({players,round,step,finished,duration,deadline,phase,votes,winner,scores,roundLimit,roundNumber,category,hint,roles,locationHistory}));;setStorageOk(true);}catch{setStorageOk(false);}
+ try{localStorage.setItem(storageKey,JSON.stringify({players,round,step,finished,duration,deadline,phase,votes,winner,scores,roundLimit,roundNumber,category,hint,roles,locationHistory}));setStorageOk(true);}catch{setStorageOk(false);}
  },[players,round,step,finished,duration,deadline,phase,votes,winner,scores,roundLimit,roundNumber,category,hint,roles,locationHistory]);
  const guard=useRef(false);
  const sound=useRef(null);
@@ -81,22 +74,23 @@ export function SpyGame({lang}) {
    }
  },[deadline,clock,phase,finished,lang]);
  function end(spyWins){
-   if(guard.current)return;guard.current=true;
+   if(guard.current||finished||!round)return;guard.current=true;
    setWinner(spyWins);setFinished(true);setDeadline(null);
    setScores(old=>spyScores(players,old,round.spy,spyWins));
  }
  function vote(){
-   if(!choice||guard.current)return;guard.current=true;
+   if(!choice||guard.current||finished||phase!=='vote'||votes.length>=players.length||!players.some((p,i)=>p.id===choice&&i!==votes.length))return;guard.current=true;
    const next=[...votes,choice];setVotes(next);setChoice('');
    if(next.length===players.length){
      guard.current=false;end(spyWinsVote(players,next,round.spy));
    }
  }
- useEffect(()=>{guard.current=false;},[step,shown,votes.length,phase,round]);
+ useEffect(()=>{guard.current=false;},[step,shown,votes.length,phase,round,finished]);
+ useEffect(()=>{const hide=()=>{if(document.hidden)setShown(false);};document.addEventListener('visibilitychange',hide);return()=>document.removeEventListener('visibilitychange',hide);},[]);
  const clean=name.trim();
  const duplicate=players.some(p=>p.name.toLocaleLowerCase()===clean.toLocaleLowerCase());
  function add(e){e.preventDefault();if(!clean||duplicate||players.length>=20)return;setPlayers(old=>old.length>=20||old.some(p=>p.name.toLocaleLowerCase()===clean.toLocaleLowerCase())?old:[...old,{id:crypto.randomUUID(),name:clean}]);setName('');}
- function start(){if(players.length<3||clean||guard.current)return;guard.current=true;setRoundNumber(n=>n+1);const drawn=drawLocation(pool,locationHistory);setLocationHistory(drawn.history);const roleOrder=Array.from({length:19},(_,i)=>i);for(let i=roleOrder.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[roleOrder[i],roleOrder[j]]=[roleOrder[j],roleOrder[i]];}const spy=Math.floor(Math.random()*players.length);setRound({spy,location:9+drawn.index,first:Math.floor(Math.random()*players.length),roles:players.map((_,i)=>i===spy?null:roleOrder[i-(i>spy?1:0)])});setStep(0);setShown(false);setFinished(false);setDeadline(null);setPhase('discussion');setVotes([]);setChoice('');setWinner(null);}
+ function start(){if(players.length<3||clean||guard.current||(round&&(!finished||roundNumber>=roundLimit)))return;guard.current=true;setRoundNumber(n=>n+1);const drawn=drawLocation(pool,locationHistory);setLocationHistory(drawn.history);const roleOrder=Array.from({length:19},(_,i)=>i);for(let i=roleOrder.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[roleOrder[i],roleOrder[j]]=[roleOrder[j],roleOrder[i]];}const spy=Math.floor(Math.random()*players.length);setRound({spy,location:9+drawn.index,first:Math.floor(Math.random()*players.length),roles:players.map((_,i)=>i===spy?null:roleOrder[i-(i>spy?1:0)])});setStep(0);setShown(false);setFinished(false);setDeadline(null);setPhase('discussion');setVotes([]);setChoice('');setWinner(null);}
  const stage=!round?0:step<players.length?1:finished?4:phase==='discussion'?2:3;
  const remaining=deadline?Math.max(0,Math.ceil((deadline-clock)/1000)):0;
  function advanceCard(){
