@@ -17,7 +17,7 @@ export function restoreGameTimeline(state,validate,makeId=()=>null) {
   if (!validate(state)) return null;
   const id=typeof state.matchId==="string" && state.matchId.length>0 && state.matchId.length<=100
     ? state.matchId : makeId();
-  return {...state,matchId:id,history:normalizeGameHistory(state.history,validate),flipped:Boolean(state.flipped)};
+  return {...state,matchId:id,history:normalizeGameHistory(state.history,validate).filter(entry=>!entry.matchId||entry.matchId===id).filter(entry=>entry.moveNumber===undefined||state.moveNumber===undefined||entry.moveNumber<=state.moveNumber),flipped:Boolean(state.flipped)};
 }
 export function appendGameHistory(previous,next,validate) {
   const history=normalizeGameHistory(previous.history,validate);
