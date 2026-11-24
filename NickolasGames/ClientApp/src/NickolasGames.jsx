@@ -1,5 +1,8 @@
+import { CustomLibrary } from './components/CustomLibrary.jsx';
+import { readLibrary,saveLibrary,gamesWithLibrary } from './utils/customLibrary.js';
+import './styles/custom-library.css';
 import { readTheme, saveTheme } from './utils/themePreference.js';
-import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { PrivacyPanel } from "./components/PrivacyPanel.jsx";
 
 
@@ -41,6 +44,9 @@ export default function NickolasGames() {
   const finishIntro = useCallback(() => setShowIntro(false), []);
   const { screenGame, lang, setLang, game, navigate } = useGameRouting();
   const t = COPY[lang] || COPY.en;
+  const [library,setLibrary]=useState(readLibrary);
+  const libraryGames=useMemo(()=>gamesWithLibrary(t.games,library,lang),[t.games,library,lang]);
+  const updateLibrary=items=>{if(!saveLibrary(items))return false;setLibrary(items);return true;};
   const choose = (requested) => { setStartRequest(0); navigate(requested); };
   const requestStart = () => choose(game);
   useEffect(() => {
@@ -57,23 +63,24 @@ export default function NickolasGames() {
       {screenGame === null ? <>
         <Hero t={t} onStart={requestStart} />
         <GamesGrid games={t.games} t={t} onPlay={choose} />
+        <CustomLibrary key={lang} items={library} onSave={updateLibrary} lang={lang} t={t} />
         <HowItWorks t={t} />
         <FinalCta t={t} onStart={requestStart} />
       </> : <GameScreen game={screenGame} games={t.games} lang={lang}
         onBack={() => navigate(null)} onChoose={choose}>
         <Suspense fallback={<div role="status" className="game-loading" aria-live="polite" aria-busy="true">{LOADING_GAME[lang]||LOADING_GAME.en}</div>}>
         {screenGame === "crocodile"
-          ? <CharadesGame key={`${lang}-crocodile`} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={choose} />
+          ? <CharadesGame key={`${lang}-crocodile`} games={libraryGames} t={t} lang={lang} startRequest={startRequest} onGame={choose} />
           : screenGame === "whoami"
-            ? <WhoAmIGame key={`${lang}-whoami`} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={choose} />
+            ? <WhoAmIGame key={`${lang}-whoami`} games={libraryGames} t={t} lang={lang} startRequest={startRequest} onGame={choose} />
           : screenGame === "alias"
-            ? <AliasGame key={`${lang}-alias`} games={t.games} t={t} lang={lang} startRequest={startRequest} onGame={choose} />
+            ? <AliasGame key={`${lang}-alias`} games={libraryGames} t={t} lang={lang} startRequest={startRequest} onGame={choose} />
           : screenGame === "checkers"
             ? <CheckersGame key={`${lang}-checkers`} lang={lang} />
           : screenGame === "spy"
             ? <SpyGame key={`${lang}-spy`} lang={lang} />
           : screenGame === "truth"
-            ? <TruthOrDareGame key={`${lang}-truth`} games={t.games} t={t} lang={lang} onGame={choose} />
+            ? <TruthOrDareGame key={`${lang}-truth`} games={libraryGames} t={t} lang={lang} onGame={choose} />
           : null}
         </Suspense>
       </GameScreen>}
