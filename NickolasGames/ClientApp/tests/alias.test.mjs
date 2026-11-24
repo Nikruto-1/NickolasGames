@@ -297,7 +297,8 @@ for (const [lang, copy] of Object.entries(COPY)) test(`${lang}: single-word pool
   const oldSingleWords = aliasPool(aliasCategories(copy.games.alias.c, copy.games.crocodile.c));
   assert(aliasPool(categories).length >= oldSingleWords.length + 100);
   const curated = Object.values(ALIAS_WORDS[lang]).flatMap(levels => Object.values(levels).flat());
-  assert.equal(curated.length, 220);
+  assert(curated.length >= 232, 'curated vocabulary must not shrink');
+  assert.equal(curated.length, Object.values(ALIAS_WORDS.en).flatMap(levels => Object.values(levels).flat()).length);
   assert(curated.every(isAliasWord));
   assert.equal(new Set(curated).size, curated.length);
   for (const category of Object.values(copy.games.alias.c)) for (const words of Object.values(category)) for (const word of words.filter(isAliasWord)) assert(aliasPool(categories).includes(word));
