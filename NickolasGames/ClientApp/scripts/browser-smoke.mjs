@@ -82,6 +82,12 @@ try {
         throw new Error(`Game view failed: ${width}px ${game}; page errors: ${errors.join(" | ")}; heading: ${message}; ${error.message}`);
       }
       await check(page,`${width}px ${game}`);
+      if(width===375 && game!=="checkers"){
+        const tooSmall=await page.evaluate(()=>[...document.querySelectorAll(".game-screen .btn,.game-screen .chip,.game-screen .player-remove")].filter(el=>el.getClientRects().length&&getComputedStyle(el).visibility!=="hidden"&&el.getBoundingClientRect().height<43.5).map(el=>el.textContent.trim().slice(0,60)));
+        assert.deepEqual(tooSmall,[],game+": visible controls should have at least 44px touch targets");
+        checks++;
+      }
+
       if (game === "checkers") {
         assert.equal(await page.locator(".ck-cell").count(),64,"Checkers board needs 64 squares");
         assert.equal(await page.locator(".ck-board .ck-piece").count(),24,"Checkers has 24 board pieces");
