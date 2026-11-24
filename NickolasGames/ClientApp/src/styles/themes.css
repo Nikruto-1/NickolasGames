@@ -1,0 +1,29 @@
+.site-nav-controls{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px;min-width:0}
+.theme-toggle{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;border:1px solid var(--line);border-radius:50%;background:var(--bg2);color:var(--fg)}
+@media(max-width:560px){.site-nav-controls{max-width:100%}.hero .wrap{padding-top:150px}}
+:root[data-theme=dark]{color-scheme:dark;--bg:#25221f;--bg2:#302b26;--fg:#f4e9d7;--mut:#d0bfab;--acc:#dfb578;--line:#796958;--dark-surface:#39322c;--dark-green:#a3d4ac;--dark-red:#f2aca0}
+:root[data-theme=dark] .hero{background:radial-gradient(ellipse at 50% 30%,#514235,var(--bg) 75%)}
+:root[data-theme=dark] .hero::after{background:linear-gradient(transparent,var(--bg))}
+:root[data-theme=dark] :is(.hero p,.meta,.game-screen-heading>div>p:last-child){color:var(--mut)}
+:root[data-theme=dark] :is(.gc,.players-panel,.charades-card,.winner-banner,.charades-result,.assigned-card,.card,.timer-options input,.player-add input,.players-panel textarea,.manual-word input,.charades-category,.charades-option,.whoami-input){background:var(--bg2);color:var(--fg);border-color:var(--line)}
+:root[data-theme=dark] :is(.btn.pri,.chip[aria-pressed=true],.lang-btn[aria-pressed=true],.player-score-list .player-name.is-active,.assigned-word.visible){color:#292724}
+:root[data-theme=dark] .lang-btn:not([aria-pressed=true]){background:var(--bg2);border-color:var(--line)}
+:root[data-theme=dark] .game-screen-tab{background:var(--bg2);border-color:var(--line)}
+:root[data-theme=dark] .game-screen-tab.is-active{background:var(--acc);color:#292724}
+:root[data-theme=dark] :is(.game-screen-kicker,.spy-summary strong,.td-eyebrow){color:var(--acc)}
+:root[data-theme=dark] .spy-steps li:not(.is-active){color:var(--mut)}
+:root[data-theme=dark] .spy-steps li[aria-current=step] span{outline-color:var(--acc)}
+:root[data-theme=dark] :is(.spy-avatar,.spy-candidate[aria-pressed=true],.spy-secret.is-civilian,.spy-result){color:#292724}
+:root[data-theme=dark] .td-root{--td-ink:var(--fg);--td-muted:var(--mut);--td-line:var(--line);--td-paper:var(--dark-surface);--td-accent:var(--acc);background:var(--bg2)}
+:root[data-theme=dark] :is(.td-settings,.td-choice-button,.td-card-challenge,.td-confirm-panel,.td-save-warning){background:var(--dark-surface);color:var(--fg);border-color:var(--line)}
+:root[data-theme=dark] :is(.td-card-kicker,.td-card-category,.td-category-index,.td-category-count,.td-check,.td-inline-settings,.td-language-note,.td-card-challenge strong){color:var(--acc)}
+:root[data-theme=dark] :is(.td-card-bottom,.td-footnote,.td-choice-button small,.td-card-challenge p,.td-confirm-panel p){color:var(--mut)}
+:root[data-theme=dark] :is(.td-settings-btn,.td-category,.td-choice-button):hover{background:#493c30}
+:root[data-theme=dark] :is(.alias-warning,.alias-dice-team.is-winner,.charades-draw-player.is-winner){background:var(--dark-surface);color:var(--fg)}
+:root[data-theme=dark] :is(.alias-winners,.alias-dice-result,.alias-dice-team-heading>svg,.alias-dice-team.is-winner .alias-dice-score>strong,.alias-result-points,.charades-draw-winner){color:var(--dark-green)}
+:root[data-theme=dark] :is(.alias-timer.is-low,.alias-word-card>span,.alias-result-points.is-negative){color:var(--dark-red)}
+:root[data-theme=dark] .ck-page{background:var(--bg2);--ck-ink:var(--fg)}
+:root[data-theme=dark] :is(.ck-player,.ck-rule-box,.ck-leaderboard,.ck-rank-item,.ck-recent li,.ck-opponent-panel,.ck-action,.ck-opponent-choices button,.ck-start-buttons button,.ck-bot-difficulty select,.ck-draw-outcome){background:var(--dark-surface);color:var(--fg);border-color:var(--line)}
+:root[data-theme=dark] :is(.ck-help,.ck-player small,.ck-rule-box p,.ck-rank-name small,.ck-recent>p,.ck-opponent-label,.ck-bot-difficulty,.ck-rank-num,.ck-leaderboard-title h3,.ck-recent-num){color:var(--mut)}
+:root[data-theme=dark] :is(.ck-opponent-choices button.is-active,.ck-start-buttons button.is-active,.ck-new){background:var(--acc);color:#292724}
+:root[data-theme=dark] .ck-action:hover:not(:disabled){background:#514235;color:var(--fg)}
