@@ -18,9 +18,9 @@ export function DisplaySettings({lang}){
  const update=next=>{if(saveDisplay(next)){setPrefs(next);setError(false);}else setError(true);};
  const audioUpdate=next=>{if(setGameAudioEnabled(next)){setAudio(next);setError(false);}else setError(true);};
  const close=()=>{dialog.current?.close();trigger.current?.focus();};
- return <><button ref={trigger} type="button" className="theme-toggle" aria-label={c[0]} title={c[0]} onClick={()=>{setAudio(gameAudioEnabled());setError(false);dialog.current?.showModal();}}><Settings size={19}/></button>
+ return <><button ref={trigger} type="button" className="display-settings-trigger" aria-label={c[0]} title={c[0]} onClick={()=>{setAudio(gameAudioEnabled());setError(false);dialog.current?.showModal();}}><Settings size={19}/></button>
  <dialog ref={dialog} className="display-settings" aria-labelledby="display-settings-title" onCancel={e=>{e.preventDefault();close();}}>
- <header><h2 id="display-settings-title">{c[0]}</h2><button type="button" className="theme-toggle" aria-label={c[1]} onClick={close}><X size={20}/></button></header>
+ <header><h2 id="display-settings-title">{c[0]}</h2><button type="button" className="display-settings-close" aria-label={c[1]} onClick={close}><X size={20}/></button></header>
  <label><input type="checkbox" checked={audio} onChange={e=>audioUpdate(e.target.checked)}/>{c[2]}</label>
  <label>{c[3]}<select value={prefs.motion} onChange={e=>update({...prefs,motion:e.target.value})}><option value="system">{c[4]}</option><option value="reduced">{c[5]}</option></select></label>
  <label><input type="checkbox" checked={prefs.largeText} onChange={e=>update({...prefs,largeText:e.target.checked})}/>{c[6]}</label>
