@@ -1,3 +1,4 @@
+import { readTheme, saveTheme } from './utils/themePreference.js';
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { PrivacyPanel } from "./components/PrivacyPanel.jsx";
 
@@ -33,6 +34,8 @@ const HolmesIntro=lazy(()=>import("./components/HolmesIntro.jsx").then(m=>({defa
 const LOADING_GAME={uk:"Завантаження гри…",en:"Loading game…",sv:"Laddar spel…",de:"Spiel wird geladen…",es:"Cargando juego…"};
 
 export default function NickolasGames() {
+  const [theme,setTheme]=useState(readTheme);
+  useEffect(()=>{document.documentElement.dataset.theme=theme;saveTheme(theme);},[theme]);
   const [showIntro, setShowIntro] = useState(false);
   const [startRequest,setStartRequest] = useState(0);
   const finishIntro = useCallback(() => setShowIntro(false), []);
@@ -48,7 +51,7 @@ export default function NickolasGames() {
     <>
       {showIntro && <Suspense fallback={<div role="status" aria-live="polite">{LOADING_GAME[lang]||LOADING_GAME.en}</div>}><HolmesIntro lang={lang} onComplete={finishIntro}/></Suspense>}
       <div className={"app-shell" + (screenGame ? " is-playing" : "")} inert={showIntro ? true : undefined}>
-      <SiteNavigation lang={lang} setLang={setLang} label={t.language} onHome={() => navigate(null)} />
+      <SiteNavigation theme={theme} onTheme={()=>setTheme(v=>v==="dark"?"light":"dark")} lang={lang} setLang={setLang} label={t.language} onHome={() => navigate(null)} />
       {screenGame !== "checkers" && <AppStatus lang={lang} />}
       <main id="main">
       {screenGame === null ? <>
