@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect,useState } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
 import { gameAudioEnabled, setGameAudioEnabled } from '../utils/gameAudioPreference.js';
 import "./GameScreen.css";
@@ -17,6 +17,7 @@ const GAME_KEYS = ["whoami", "crocodile", "alias", "truth", "checkers", "spy"];
 export function GameScreen({ game, games, lang, onBack, onChoose, children }) {
   const copy = COPY[lang] || COPY.en;
   const [audio,setAudio]=useState(gameAudioEnabled);
+  useEffect(()=>{const sync=()=>setAudio(gameAudioEnabled());window.addEventListener('nickolasgames-audio-change',sync);window.addEventListener('storage',sync);return()=>{window.removeEventListener('nickolasgames-audio-change',sync);window.removeEventListener('storage',sync);};},[]);
   const labels=AUDIO_COPY[lang]||AUDIO_COPY.en;
   return (
     <div className="game-screen" data-game={game}>
