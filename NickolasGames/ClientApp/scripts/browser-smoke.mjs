@@ -321,6 +321,41 @@ try {
     checks+=4;
     await page.close();
   }
+  // Verbal Spy: no answer list or field, result confirmed once.
+  for(const correct of [true,false]){
+    const page=await browser.newPage({viewport:{width:375,height:812},serviceWorkers:"block"});
+    const errors=[];page.on("pageerror",e=>errors.push(e.message));
+    await page.goto(base+"/uk/?game=spy");
+    const root=page.locator(".spy-game");
+    await root.locator(".spy-setup").waitFor();
+    assert.equal(await root.getByRole("button",{name:"Усно (основний)",exact:true}).getAttribute("aria-pressed"),"true");
+    for(const name of ["Анна","Богдан","Віра"]){
+      await root.locator("#spy-name").fill(name);await root.locator("form button").click();
+    }
+    await root.getByRole("button",{name:"Без часу",exact:true}).click();
+    await root.locator(".spy-start").click();
+    for(let i=0;i<3;i++){
+      await root.locator(".spy-secret.is-hidden").waitFor();
+      await root.locator(".spy-wide").click();
+      await root.locator(".spy-secret:not(.is-hidden)").waitFor();
+      await root.locator(".spy-wide").click();
+    }
+    await root.locator(".spy-discussion").waitFor();
+    await root.getByRole("button",{name:"Вгадати локацію",exact:true}).click();
+    assert.equal(await root.locator(".spy-guess-form").count(),0);
+    assert.equal(await root.locator(".spy-candidate").count(),0);
+    const button=root.getByRole("button",{name:correct?"Вгадав":"Не вгадав",exact:true});
+    await button.click();
+    await root.locator(".spy-result").waitFor();
+    await page.waitForFunction(()=>JSON.parse(localStorage.getItem("nickolasgames.spy.v1")).finished);
+    const s=await page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames.spy.v1")));
+    assert.equal(s.guessResult,correct);
+    assert.equal(s.winner,correct);
+    assert.equal(Object.values(s.scores).reduce((a,b)=>a+b,0),correct?1:2);
+    await page.reload();await root.locator(".spy-result").waitFor();
+    assert.equal(await root.getByRole("button",{name:"Вгадав",exact:true}).count(),0);
+    assert.deepEqual(errors,[]);checks+=7;await page.close();
+  }
   // Complete real winning move: result dialog, ranking, undo, replay and safe restart.
   {
     const page=await browser.newPage({viewport:{width:1024,height:850},serviceWorkers:"block"});
