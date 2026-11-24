@@ -60,3 +60,29 @@ test('restore completed game without restarting timer',()=>{
  const s=validateSpySession({...snapshot,finished:true,winner:true,roundLimit:1,roundNumber:1});
  assert.equal(s.deadline,null);assert.equal(s.roundNumber,1);assert.equal(s.winner,true);
 });
+
+import { guessOptions, matchesLocationGuess } from '../src/features/spy/locations.js';
+test('four guesses contain the answer exactly once, with three distinct distractors from the selected pool',()=>{
+ for(const category of [0,1,2,3,4,5,6]){
+ const pool=locationPool(category);
+ for(const correct of pool){
+ const options=guessOptions(correct,pool,()=>0.38);
+ assert.equal(options.length,4);
+ assert.equal(new Set(options).size,4);
+ assert.ok(options.includes(correct));
+ assert.ok(options.every(i=>pool.includes(i)));
+ }
+ }
+});
+test('the correct option does not occupy a fixed position',()=>{
+ const pool=locationPool(0);
+ assert.notEqual(guessOptions(pool[0],pool,()=>0).indexOf(pool[0]),guessOptions(pool[0],pool,()=>0.999).indexOf(pool[0]));
+});
+test('typed guesses tolerate casing, whitespace and punctuation but reject wrong or empty answers',()=>{
+ for(const lang of ['uk','en','sv','de','es']){
+ const name=locationsFor(lang)[0];
+ assert.equal(matchesLocationGuess('  '+name.toUpperCase()+' ! ',0,lang),true);
+ assert.equal(matchesLocationGuess(locationsFor(lang)[1],0,lang),false);
+ assert.equal(matchesLocationGuess('',0,lang),false);
+ }
+});
