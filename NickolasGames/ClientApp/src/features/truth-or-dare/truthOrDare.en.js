@@ -32,6 +32,10 @@ export default {
     "detective": [
       "The Tease Detective",
       "Suspicious clues and funny explanations"
+    ],
+    "family": [
+      "Family adventures",
+      "Kind questions and creative challenges"
     ]
   },
   "twists": {
@@ -55,7 +59,7 @@ export default {
     "title1": "Truth",
     "title2": "or",
     "title3": "Dare",
-    "subtitle": "Choose, answer, perform. 800 cards for a fun night with friends.",
+    "subtitle": "Choose, answer, perform. 900 cards for a fun night with friends.",
     "settings": "Categories & rules",
     "close": "Close settings",
     "chooseCats": "Choose categories",
@@ -249,6 +253,26 @@ export default {
     "detective-dare-7": "Read out an interrogation report from a fridge after midnight.",
     "detective-dare-8": "Invent the headline of a shocking investigation about your friend group.",
     "detective-dare-9": "Describe an imaginary criminal using their habits, walk and catchphrases, but no physical features.",
-    "detective-dare-10": "Convince the group that an ordinary pen is the key evidence in a secret conspiracy."
+    "detective-dare-10": "Convince the group that an ordinary pen is the key evidence in a secret conspiracy.",
+    "family-truth-1": "What imaginary animal would you like as a pet?",
+    "family-truth-2": "What smell reminds you of a lovely day?",
+    "family-truth-3": "What dish would you name after yourself?",
+    "family-truth-4": "What new tradition would you suggest for the group?",
+    "family-truth-5": "What skill would you like to master in one day?",
+    "family-truth-6": "If your mood were a color, which would it be?",
+    "family-truth-7": "What object would you take to an imaginary planet?",
+    "family-truth-8": "What sound always makes you laugh?",
+    "family-truth-9": "What title would you give today?",
+    "family-truth-10": "What small gesture can brighten someone's day?",
+    "family-dare-1": "Act like a robot cat learning to dance.",
+    "family-dare-2": "Invent an advertisement for an invisible umbrella.",
+    "family-dare-3": "Show your favorite season with three gestures.",
+    "family-dare-4": "Invent a name and motto for a team of cats.",
+    "family-dare-5": "Tell a three-sentence tale about a lost sock.",
+    "family-dare-6": "Make the sounds of an imaginary space kitchen.",
+    "family-dare-7": "Present an ordinary spoon as a museum exhibit.",
+    "family-dare-8": "Draw an animal in the air for others to guess.",
+    "family-dare-9": "Invent a friendly greeting for an alien.",
+    "family-dare-10": "Give a weather forecast for a land of sweets."
   }
 };
