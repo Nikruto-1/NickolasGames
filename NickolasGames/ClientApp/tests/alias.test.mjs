@@ -464,3 +464,18 @@ test('malformed answer history is rejected but older completed summaries are ret
   assert.equal(restoreAliasState(old).phase, 'summary');
   assert.deepEqual(restoreAliasState(old).teams, old.teams);
 });
+
+test('invalid clock events and duplicate answers cannot mutate a live round',()=>{
+ const s=acting();
+ assert.equal(reduce(s,{type:'expire',now:Infinity}),s);
+ assert.equal(reduce(s,{type:'expire',now:NaN}),s);
+ assert.equal(reduce(s,{type:'answer',index:s.index,outcome:'correct',now:NOW-1}),s);
+ const action={type:'answer',index:s.index,outcome:'correct',now:NOW+1};
+ const next=reduce(s,action);
+ assert.equal(reduce(next,action),next);
+ assert.equal(next.teams[next.activeIndex].points,s.teams[s.activeIndex].points+1);
+ const restored=restoreAliasState(JSON.parse(JSON.stringify(next)),next.deadline);
+ assert.equal(restored.phase,'last');
+ assert.equal(restored.index,next.index);
+ assert.deepEqual(restored.teams,next.teams);
+});
