@@ -1,5 +1,6 @@
 import { validateWhoamiStart } from "../../utils/startValidation";
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { elapsedWholeSeconds } from '../../utils/timerMath.js';
 import { createHolmesTimerSound } from '../../utils/holmesTimerSound.js';
 import { WHOAMI_UI, WHOAMI_RULES } from './translations.js';
 import { PLAYER_SETUP } from '../../locales/index.js';
@@ -45,9 +46,15 @@ export function useWhoAmIGame({ games, t, lang, startRequest = 0 }) {
  const active=state.players.find(p=>p.id===activeId);
  const pool=useMemo(()=>whoamiPool(games.whoami.c,state.category,state.difficulty,state.customWords,state.customOnly),[games,state.category,state.difficulty,state.customWords,state.customOnly]);
  useEffect(()=>{
-   if(!running||state.phase!=='game'||state.left<=0){setRunning(false);return;}
-   const timer=setInterval(()=>dispatch({type:'tick'}),1000);return()=>clearInterval(timer);
- },[running,state.phase,state.left]);
+   if(!running||state.phase!=='game'||!state.timerEnabled||state.left<=0)return;
+   const startedAt=Date.now();let accounted=0;
+   const tick=()=>{const elapsed=elapsedWholeSeconds(startedAt,Date.now());const due=elapsed-accounted;if(due>0){accounted=elapsed;dispatch({type:'tick',seconds:due});}};
+   const timer=setInterval(tick,250);
+   const onVisibility=()=>{if(document.hidden)tick();};
+   document.addEventListener('visibilitychange',onVisibility);
+   return()=>{clearInterval(timer);document.removeEventListener('visibilitychange',onVisibility);};
+ },[running,state.phase,state.timerEnabled]);
+ useEffect(()=>{if(running&&(state.phase!=='game'||!state.timerEnabled||state.left<=0))setRunning(false);},[running,state.phase,state.timerEnabled,state.left]);
  useEffect(()=>{
    const hide=()=>setHeld(false);const hidden=()=>{if(document.hidden){hide();setRunning(false);}};
    document.addEventListener('pointerup',hide);document.addEventListener('pointercancel',hide);
