@@ -1,4 +1,5 @@
 import {LANGUAGE_PATHS,GAMES,contentPath} from './siteRoutes.js';
+import {gameSearchCopy} from '../locales/gameSearchCopy.js';
 import {pathLanguage} from '../app/routeParsing.js';
 export {LANGUAGE_PATHS};
 export const SITE_ORIGIN='https://games.nickolasspace.com';
@@ -17,8 +18,9 @@ export function initialLanguage(){
 export function getPageMetadata(lang,games,privacyTitle,privacyIntro,game=null,privacy=false){
  const c=SEO[lang]||SEO.en;
  const selected=GAMES.includes(game)?games[game]:null;
- const title=privacy?privacyTitle+' | NickolasGames':selected?selected.n+' — '+c.play+' | NickolasGames':c.home+' | NickolasGames';
- const description=privacy?privacyIntro:selected?selected.n+': '+selected.d+' '+c.extra:GAMES.map(key=>games[key].n).join(', ')+'. '+c.extra;
+ const search=selected?gameSearchCopy(lang,game):null;
+ const title=privacy?privacyTitle+' | NickolasGames':selected?(search?.[0]||selected.n+' — '+c.play)+' | NickolasGames':c.home+' | NickolasGames';
+ const description=privacy?privacyIntro:selected?(search?.[1]||selected.n+': '+selected.d+' '+c.extra):GAMES.map(key=>games[key].n).join(', ')+'. '+c.extra;
  const url=SITE_ORIGIN+contentPath(lang,game,privacy);
  const alternates=Object.fromEntries(Object.keys(LANGUAGE_PATHS).map(code=>[code,SITE_ORIGIN+contentPath(code,game,privacy)]));
  alternates['x-default']=alternates.en;
