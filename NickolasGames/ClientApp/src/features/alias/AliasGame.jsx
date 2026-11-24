@@ -11,7 +11,7 @@ import { AliasScoreboard } from "./AliasScoreboard.jsx";
 
 export function AliasGame({ games, t, lang, onGame, startRequest = 0 }) {
 
- const { needsAudio, restoreAudio, copy, key, categories, state, dispatch, categorySelection, pool, availableCategories, selectedCategories, categorySummary, drafts, setDrafts, editingTeam, setEditingTeam, target, setTarget, attempt, setAttempt, storageOk, clock, setClock, drag, setDrag, gesture, feedback, readyPanel, previousPhase, sound, armed, previousAnswers, setup, drawing, team, actor, word, remaining, expired, last, playing, errors, result, lastAnswer, roundCorrect, roundSkipped, settings, selectCategories, updateTeam, addPlayer, start, roll, begin, answer, reset, stopGesture } = useAliasGame({ games, t, lang, startRequest });
+ const { needsAudio, restoreAudio, copy, key, state, dispatch, categorySelection, availableCategories, selectedCategories, categorySummary, drafts, setDrafts, editingTeam, setEditingTeam, target, setTarget, attempt, storageOk, clock, drag, setDrag, gesture, feedback, readyPanel, setup, drawing, team, actor, word, remaining, last, playing, errors, result, lastAnswer, roundCorrect, roundSkipped, settings, selectCategories, updateTeam, addPlayer, start, roll, begin, answer, reset, stopGesture } = useAliasGame({ games, t, lang, startRequest });
   return <section className="s pv alias-game" id="preview">
     <div className="wrap">
       <div className="head"><h2>{copy.title}</h2><details className="alias-rules"><summary>{copy.rules}</summary><ol className="alias-rules-sections">{copy.rulesSections.map(section => <li key={section.title}><h3>{section.title}</h3><ul>{section.items.map(item => <li key={item}>{item}</li>)}</ul></li>)}</ol></details></div>
