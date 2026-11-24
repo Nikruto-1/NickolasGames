@@ -689,6 +689,53 @@ try {
     assert.equal(await results.locator("li").count(),0);
     assert.deepEqual(errors,[]);checks+=5;await page.close();
   }
+  // Real service worker: download once, then open each lazy game with networking disabled.
+  {
+    const context=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:"allow"});
+    const page=await context.newPage();
+    try {
+      await page.goto(base+"/uk/");
+      const install=page.locator(".app-status-more");
+      for(const width of [320,390,768]){
+        await page.setViewportSize({width,height:844});
+        const nav=await page.locator(".app-shell > nav").boundingBox();
+        const status=await page.locator(".app-status").boundingBox();
+        assert.ok(nav && status && status.y>=nav.y+nav.height-1,`Installation panel must not overlap navigation at ${width}px`);
+        await install.click();
+        assert.ok((await page.locator("#app-install-details").innerText()).includes("Safari"));
+        await install.click();
+        checks+=2;
+      }
+      await page.setViewportSize({width:390,height:844});
+      await page.waitForFunction(()=>Boolean(navigator.serviceWorker.controller),null,{timeout:30000});
+      const download=page.locator("#offline-download");
+      const button=download.locator("button");
+      await page.waitForFunction(()=>{
+        const button=document.querySelector("#offline-download button");
+        return button&&(!button.disabled||button.textContent==="Усі ресурси ігор збережено");
+      },null,{timeout:30000});
+      if(await button.isEnabled())await button.click();
+      await page.waitForFunction(()=>{
+        const section=document.querySelector("#offline-download");
+        return section?.querySelector("button")?.textContent==="Усі ресурси ігор збережено"||section?.querySelector("[data-offline-error]");
+      },null,{timeout:90000});
+      const failure=await download.locator("[data-offline-error]").evaluateAll(nodes=>nodes.map(node=>({reason:node.dataset.offlineError,file:node.dataset.offlineFile})));
+      assert.deepEqual(failure,[],"Offline download failed: "+JSON.stringify(failure));
+      await download.getByRole("button",{name:"Усі ресурси ігор збережено",exact:true}).waitFor();
+      await context.setOffline(true);
+      for(const game of ["whoami","crocodile","alias","truth","checkers","spy"]){
+        await page.goto(base+"/uk/?game="+game);
+        await page.locator(game==="checkers"?".ck-board":game==="spy"?".spy-setup":".game-screen-nav").waitFor({timeout:15000});
+        await check(page,"390px offline "+game);
+      }
+      await page.goto(base+"/uk/?game=truth");
+      await page.locator(".td-choice-truth").click();
+      const card=await page.locator(".td-card-center h3").innerText();
+      await page.reload();
+      assert.equal(await page.locator(".td-card-center h3").innerText(),card,"Offline reload preserves opened card");
+      checks+=3;
+    } finally {await context.close();}
+  }
   const zoom=await browser.newPage({viewport:{width:390,height:844},serviceWorkers:"block"});
   await zoom.goto(base+"/de/?game=truth",{waitUntil:"domcontentloaded"});
   await zoom.locator(".game-screen-nav").waitFor();

@@ -1,35 +1,16 @@
-import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
 
 // Shell-first PWA: install a small core, then cache game chunks and images on use.
 export function offlinePlugin() {
   const buildId=Date.now().toString(36);
   return {name:'nickolasgames-offline',apply:'build',
     config(){return {define:{__APP_BUILD_ID__:JSON.stringify(buildId)}};},
-    generateBundle(_,bundle) {
-      const startupChunks=new Set();
-      function includeChunk(name) {
-        const chunk=bundle[name];
-        if(startupChunks.has(name)||chunk?.type!=='chunk')return;
-        startupChunks.add(name);
-        chunk.imports.forEach(includeChunk);
-      }
-      for(const [name,item] of Object.entries(bundle))if(item.type==='chunk'&&item.isEntry)includeChunk(name);
-      const files=[...new Set([
-        'index.html',
-        ...Object.entries(bundle).filter(([filename,item])=>
-          filename.endsWith('.css') || startupChunks.has(filename)
-        ).map(([filename])=>filename),
-        'icons/holmes-192.png',
-        'icons/holmes-512.png',
-        'icons/holmes-apple-touch.png',
-        'manifest.webmanifest'
-      ])];
-      const offlineFiles=[...new Set([...files,...Object.keys(bundle).filter(name=>name.startsWith('assets/'))])];
-      const version=createHash('sha256')
-        .update(readFileSync(new URL('./index.html',import.meta.url)))
-        .update(Object.values(bundle).map(file=>file.code || file.source || '').join(''))
-        .digest('hex').slice(0,16);
+    generateBundle() {
+      // Names emitted here can still change in later Vite/Rolldown hooks.
+      // finalizeOfflineBuild reads the actual output after Vite has finished.
+      const version='0000000000000000';
+      const files=[];
+      const offlineFiles=[];
+      this.emitFile({type:'asset',fileName:'offline-assets.json',source:JSON.stringify({cache:'nickolasgames-'+version,buildId,files:offlineFiles})});
       this.emitFile({type:'asset',fileName:'sw.js',source:`
 const CACHE='nickolasgames-${version}';
 const BUILD_ID=${JSON.stringify(buildId)};

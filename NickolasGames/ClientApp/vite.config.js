@@ -16,7 +16,8 @@ export default defineConfig({
   },
   build: {
     outDir: "../wwwroot",
-    emptyOutDir: true
+    emptyOutDir: true,
+    manifest: true
   },
   server: {
     port: 5173,
