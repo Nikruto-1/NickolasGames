@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import { TRUTH_DARE_CARDS, TRUTH_DARE_CATEGORIES, TRUTH_DARE_DEFINITIONS, buildTruthDareCards } from "../src/features/truth-or-dare/truthOrDare.uk.js";
 import { getTruthDareLocale, localizedCategory, localizeTruthDareCard, baseTruthDareCardId } from "../src/features/truth-or-dare/i18n.js";
 
-test("all 800 truth/dare IDs are unique", () => {
-  assert.equal(TRUTH_DARE_CARDS.length, 800);
-  assert.equal(new Set(TRUTH_DARE_CARDS.map((c) => c.id)).size, 800);
-  assert.equal(TRUTH_DARE_CATEGORIES.length, 8);
+test("all 900 truth/dare IDs are unique", () => {
+  assert.equal(TRUTH_DARE_CARDS.length, 900);
+  assert.equal(new Set(TRUTH_DARE_CARDS.map((c) => c.id)).size, 900);
+  assert.equal(TRUTH_DARE_CATEGORIES.length, 9);
 });
 
 for (const lang of ["uk", "en", "sv", "de", "es"]) {
@@ -45,7 +45,7 @@ test("stable translation IDs survive unrelated order changes and preserve existi
   assert.deepEqual(shuffled.map(c => c.id).sort(), stableIds.sort());
   for(const lang of ["en","sv","de","es"]){
     const pack=getTruthDareLocale(lang);
-    assert.equal(Object.keys(pack.cardTextById).length, 160);
+    assert.equal(Object.keys(pack.cardTextById).length, 180);
     for(const card of shuffled){
       const base=baseTruthDareCardId(card.id);
       assert.equal(localizeTruthDareCard(card,lang).text,pack.cardTextById[base]);
