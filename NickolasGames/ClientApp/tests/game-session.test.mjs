@@ -74,3 +74,25 @@ test("explicit schema migration upgrades older version before validation", () =>
     {0:old=>old.legacyState});
   assert.deepEqual(restored,state);
 });
+
+import { SPY_STORAGE_KEY, restoreSpySession, persistSpySession } from '../src/features/spy/session.js';
+test('Spy migrates legacy sessions and restores versioned progress across languages',()=>{
+ const db=memoryStorage();
+ const legacy={players:[{id:'a',name:'A'},{id:'b',name:'B'},{id:'c',name:'C'}],round:{spy:1,location:9},step:3,duration:5,phase:'discussion',votes:[],scores:{},finished:false,deadline:12345,locationHistory:[0,1]};
+ db.setItem(SPY_STORAGE_KEY,JSON.stringify(legacy));
+ const restored=restoreSpySession(db);
+ assert.equal(restored.round.spy,1);
+ assert.deepEqual(restored.locationHistory,[0,1]);
+ assert.equal(persistSpySession({...restored,locationHistory:[0,1,2]},db),true);
+ assert.equal(JSON.parse(db.getItem(gameSessionKey('spy','shared'))).schemaVersion,GAME_SESSION_VERSION);
+ assert.deepEqual(restoreSpySession(db).locationHistory,[0,1,2]);
+ assert.equal(restoreSpySession(db).deadline,12345);
+});
+test('invalid Spy saves and denied storage fail safely',()=>{
+ const db=memoryStorage();
+ db.setItem(SPY_STORAGE_KEY,'not-json');
+ assert.deepEqual(restoreSpySession(db),{});
+ const denied={getItem(){throw Error('blocked')},setItem(){throw Error('quota')}};
+ assert.deepEqual(restoreSpySession(denied),{});
+ assert.equal(persistSpySession({},denied),false);
+});
