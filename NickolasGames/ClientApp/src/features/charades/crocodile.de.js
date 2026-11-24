@@ -20,7 +20,11 @@ export const CROCODILE_DE = {
       "Huhn",
       "Ente",
       "Fisch",
-      "Schmetterling"
+      "Schmetterling",
+      "Truthahn",
+      "Hamster",
+      "Esel",
+      "Gans"
     ],
     "medium": [
       "Oktopus",
@@ -42,7 +46,11 @@ export const CROCODILE_DE = {
       "Specht",
       "Nashorn",
       "Walross",
-      "Biber"
+      "Biber",
+      "Hyäne",
+      "Faultier",
+      "Tukan",
+      "Seelöwe"
     ],
     "hard": [
       "Capybara",
@@ -63,7 +71,11 @@ export const CROCODILE_DE = {
       "Erdmännchen",
       "Waschbär",
       "Raupe",
-      "Kalmar"
+      "Kalmar",
+      "Schuppentier",
+      "Axolotl",
+      "Narwal",
+      "Hammerhai"
     ]
   },
   "Berufe": {
