@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import { Volume2, VolumeX } from 'lucide-react';
+import { gameAudioEnabled, setGameAudioEnabled } from '../utils/gameAudioPreference.js';
 import "./GameScreen.css";
 
 const COPY = {
@@ -8,10 +11,13 @@ const COPY = {
   es: { back: "Todos los juegos", label: "Elige un juego", intro: "Jugad a vuestro ritmo. Los ajustes y el progreso se guardan en este dispositivo." }
 };
 
+const AUDIO_COPY={uk:['Звуки гри','Увімкнено','Вимкнено'],en:['Game sounds','On','Off'],sv:['Spelljud','På','Av'],de:['Spielklänge','An','Aus'],es:['Sonidos del juego','Activados','Desactivados']};
 const GAME_KEYS = ["whoami", "crocodile", "alias", "truth", "checkers", "spy"];
 
 export function GameScreen({ game, games, lang, onBack, onChoose, children }) {
   const copy = COPY[lang] || COPY.en;
+  const [audio,setAudio]=useState(gameAudioEnabled);
+  const labels=AUDIO_COPY[lang]||AUDIO_COPY.en;
   return (
     <div className="game-screen" data-game={game}>
       <header className="game-screen-header">
@@ -19,6 +25,7 @@ export function GameScreen({ game, games, lang, onBack, onChoose, children }) {
           <button type="button" className="game-back" onClick={onBack}>
             <span aria-hidden="true">←</span> {copy.back}
           </button>
+          <button type="button" className="game-audio-toggle" aria-pressed={audio} aria-label={labels[0]} onClick={()=>{const next=!audio;if(setGameAudioEnabled(next))setAudio(next);}}>{audio?<Volume2 size={19} aria-hidden="true"/>:<VolumeX size={19} aria-hidden="true"/>}<span>{labels[1+Number(!audio)]}</span></button>
           <div className="game-screen-heading">
             <div>
               <p className="game-screen-kicker">NICKOLASGAMES</p>
