@@ -3,3 +3,5 @@
 @import "./styles/game-layout.css";
 @import "./styles/landing.css";
 @import "./styles/theme.css";
+
+@import "./styles/game-ux.css";
