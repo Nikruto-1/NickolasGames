@@ -1,3 +1,4 @@
+import { subscribeGameClock, remainingSeconds } from '../../utils/gameClock.js';
 import { useEffect, useRef, useState } from 'react';
 import '../whoami/WhoAmIGame.css';
 import './SpyGame.css';
@@ -66,9 +67,7 @@ export function SpyGame({lang}) {
  useEffect(()=>()=>sound.current.dispose(),[]);
  useEffect(()=>{
    if(!deadline||phase!=='discussion'||finished)return;
-   const tick=()=>setClock(Date.now());tick();
-   const id=setInterval(tick,250);document.addEventListener('visibilitychange',tick);
-   return()=>{clearInterval(id);document.removeEventListener('visibilitychange',tick);};
+   return subscribeGameClock(setClock);
  },[deadline,phase,finished]);
  useEffect(()=>{
    if(deadline&&clock>=deadline&&phase==='discussion'&&!finished){
@@ -107,7 +106,7 @@ export function SpyGame({lang}) {
  function add(e){e.preventDefault();if(!clean||duplicate||players.length>=20)return;setPlayers(old=>old.length>=20||old.some(p=>p.name.toLocaleLowerCase()===clean.toLocaleLowerCase())?old:[...old,{id:crypto.randomUUID(),name:clean}]);setName('');}
  function start(skip=false){if(players.length<3||clean||guard.current||(round&&((!finished&&!(free&&skip===true))||(!free&&roundNumber>=roundLimit))))return;guard.current=true;setRoundNumber(n=>n+1);setTimeUp(false);setAudioReady(false);armedDeadline.current=null;announcedDeadline.current=null;const drawn=drawLocation(pool,locationHistory);setLocationHistory(drawn.history);const roleOrder=Array.from({length:19},(_,i)=>i);for(let i=roleOrder.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[roleOrder[i],roleOrder[j]]=[roleOrder[j],roleOrder[i]];}const spy=Math.floor(Math.random()*players.length);setRound({spy,location:9+drawn.index,guessOptions:guessOptions(drawn.index,pool),first:Math.floor(Math.random()*players.length),roles:players.map((_,i)=>i===spy?null:roleOrder[i-(i>spy?1:0)])});setStep(0);setShown(false);setFinished(false);setDeadline(null);setPhase('discussion');setVotes([]);setChoice('');setGuessResult(null);setWinner(null);}
  const stage=!round?0:step<players.length?1:finished?4:phase==='discussion'?2:3;
- const remaining=deadline?Math.max(0,Math.ceil((deadline-clock)/1000)):0;
+ const remaining=remainingSeconds(deadline,clock);
  function advanceCard(){
  if(guard.current||!shown||step>=players.length)return;guard.current=true;setShown(false);setStep(i=>i+1);
  if(step===players.length-1&&duration){sound.current.unlock(lang);const now=Date.now();setClock(now);armedDeadline.current=now+duration*60000;setAudioReady(true);setDeadline(armedDeadline.current);}
