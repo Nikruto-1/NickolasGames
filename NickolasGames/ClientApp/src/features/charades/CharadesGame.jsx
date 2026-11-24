@@ -12,7 +12,7 @@ import { useCharadesGame } from "./useCharadesGame.js";
 import { GameRules } from "../../components/GameRules.jsx";
 export function CharadesGame({ games, t, lang, onGame, startRequest=0 }) {
 
- const { needsAudio, restoreAudio, copy, rules, modeCopy, key, state, dispatch, name, setName, warning, setWarning, targetDraft, setTargetDraft, startAttempt, setStartAttempt, storageOk, clock, setClock, sound, armedDeadline, roundPanel, previousPhase, setup, guesserMode, drawing, ruleSections, order, actor, card, exhausted, readingTime, remaining, award, roundPending, expired, startErrors, startGame, add, newGame, selectWord, markGuessed } = useCharadesGame({ games, t, lang, startRequest });
+ const { needsAudio, restoreAudio, copy, rules, modeCopy, key, state, dispatch, name, setName, warning, setWarning, targetDraft, setTargetDraft, startAttempt, storageOk, clock, roundPanel, setup, guesserMode, drawing, ruleSections, order, actor, card, exhausted, remaining, award, roundPending, expired, startErrors, startGame, add, newGame, selectWord, markGuessed } = useCharadesGame({ games, t, lang, startRequest });
   return <section className="s pv charades-game" id="preview">
     <div className="wrap pvg">
       <div>
