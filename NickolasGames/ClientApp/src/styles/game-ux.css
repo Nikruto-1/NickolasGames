@@ -1,0 +1,51 @@
+/* Shared Holmes interaction tokens. Preserve game-specific card artwork. */
+:root {
+  --game-touch-target:44px;
+  --game-control-radius:12px;
+  --game-panel-radius:18px;
+  --game-space:12px;
+  --game-focus-ring:var(--fg);
+}
+.game-screen :is(.btn,.chip,.player-remove,.alias-icon,.spy-candidate,.td-settings-btn,.td-inline-settings) {
+  min-height:var(--game-touch-target);
+  touch-action:manipulation;
+}
+.game-screen :is(.btn,.chip,.spy-candidate) {
+  overflow-wrap:anywhere;
+  max-width:100%;
+}
+.game-screen :is(.player-add input,.players-panel textarea,.charades-category,.whoami-input,.spy-guess-input,.alias-player-form input,.alias-editor-heading input) {
+  min-height:var(--game-touch-target);
+  min-width:0;
+  max-width:100%;
+  border-radius:var(--game-control-radius);
+  font-size:max(16px,1em);
+}
+.game-screen :is(button,input,select,textarea,summary):focus-visible {
+  outline:2px solid var(--game-focus-ring);
+  outline-offset:3px;
+}
+.game-screen button:disabled {
+  cursor:not-allowed;
+}
+.game-screen :is(.players-panel,.alias-team-editor) {
+  min-width:0;
+  border-radius:var(--game-panel-radius);
+}
+.game-screen :is(.player-add,.players-actions,.spy-actions) {
+  gap:var(--game-space);
+}
+.game-screen .player-remove {min-width:var(--game-touch-target);}
+@media(max-width:480px) {
+  .game-screen :is(.players-panel,.alias-team-editor) {padding:16px;}
+  .game-screen .player-add input {flex:1 1 120px;}
+  .game-screen .players-actions>.btn {flex:1 1 auto;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .game-screen *, .game-screen *::before, .game-screen *::after {
+    animation-duration:0.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:0.01ms!important;
+    scroll-behavior:auto!important;
+  }
+}
