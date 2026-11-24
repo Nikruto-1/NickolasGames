@@ -150,12 +150,12 @@ export function aliasReducer(state, action) {
     case 'confirmDice':
       return state.phase === 'diceResult' ? { ...state, phase: 'ready' } : state;
     case 'begin':
-      if (state.phase !== 'ready' || !aliasWord(state) || !Number.isFinite(action.now)) return state;
+      if (state.phase !== 'ready' || !aliasWord(state) || !Number.isFinite(action.now) || action.now < 0) return state;
       return { ...state, phase: 'acting', deadline: action.now + ALIAS_SECONDS * 1000, correct: 0, skipped: 0, answers: [], historyComplete: true, result: null };
     case 'expire':
-      return state.phase === 'acting' && action.now >= state.deadline ? { ...state, phase: 'last' } : state;
+      return state.phase === 'acting' && Number.isFinite(action.now) && action.now >= state.deadline ? { ...state, phase: 'last' } : state;
     case 'answer': {
-      if (state.phase !== 'acting' || action.index !== state.index || !['correct', 'skip'].includes(action.outcome) || !Number.isFinite(action.now)) return state;
+      if (state.phase !== 'acting' || action.index !== state.index || !['correct', 'skip'].includes(action.outcome) || !Number.isFinite(action.now) || action.now < state.deadline - ALIAS_SECONDS * 1000) return state;
       if (action.now >= state.deadline) return { ...state, phase: 'last' };
       const correct = action.outcome === 'correct';
       const next = { ...state, index: state.index + 1, correct: state.correct + Number(correct), skipped: state.skipped + Number(!correct),
