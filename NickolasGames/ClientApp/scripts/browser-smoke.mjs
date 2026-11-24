@@ -160,7 +160,7 @@ try {
     const errors=[];page.on("pageerror",e=>errors.push(e.message));
     await page.goto(base+"/uk/?game=spy");
     const root=page.locator(".spy-game");
-    const state=()=>page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames.spy.v1")));
+    const state=()=>page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames-session-spy-shared")).state);
     await root.locator(".spy-setup").waitFor();
     assert.equal(await root.locator(".spy-start").isDisabled(),true);
     for(const name of ["Анна","Богдан","Віра"]){
@@ -188,14 +188,14 @@ try {
       await root.locator(".spy-wide").click();
     }
     await root.locator(".spy-result").waitFor();
-    await page.waitForFunction(()=>JSON.parse(localStorage.getItem("nickolasgames.spy.v1")).finished);
+    await page.waitForFunction(()=>JSON.parse(localStorage.getItem("nickolasgames-session-spy-shared")).state.finished);
     assert.equal((await state()).winner,false);
     assert.equal(Object.values((await state()).scores).reduce((a,b)=>a+b,0),2);
     await page.reload();await root.locator(".spy-result").waitFor();
     await root.locator(".spy-wide").click();
     await root.locator(".spy-secret.is-hidden").waitFor();
-    await page.waitForFunction(()=>!JSON.parse(localStorage.getItem("nickolasgames.spy.v1")).finished);
-    await page.evaluate(()=>{const key="nickolasgames.spy.v1";const s=JSON.parse(localStorage.getItem(key));s.step=s.players.length;s.duration=3;s.deadline=Date.now()-1000;localStorage.setItem(key,JSON.stringify(s));});
+    await page.waitForFunction(()=>!JSON.parse(localStorage.getItem("nickolasgames-session-spy-shared")).state.finished);
+    await page.evaluate(()=>{const key="nickolasgames-session-spy-shared";const envelope=JSON.parse(localStorage.getItem(key));const s=envelope.state;s.step=s.players.length;s.duration=3;s.deadline=Date.now()-1000;localStorage.setItem(key,JSON.stringify(envelope));});
     await page.reload();await root.locator(".spy-candidates").waitFor();
     assert.deepEqual(errors,[],"Spy browser runtime errors");
     checks+=10;
@@ -207,7 +207,7 @@ try {
     const errors=[];page.on("pageerror",e=>errors.push(e.message));
     await page.goto(base+"/uk/?game=spy");
     const root=page.locator(".spy-game");
-    const state=()=>page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames.spy.v1")));
+    const state=()=>page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames-session-spy-shared")).state);
     await root.locator(".spy-setup").waitFor();
     for(const name of ["Анна","Богдан","Віра"]){
       await root.locator("#spy-name").fill(name);await root.locator("form button").click();
@@ -232,10 +232,10 @@ try {
     await check(page,"320px spy free discussion");
     await root.getByRole("button",{name:"Наступний раунд",exact:true}).click();
     await root.locator(".spy-secret.is-hidden").waitFor();
-    await page.waitForFunction(()=>JSON.parse(localStorage.getItem("nickolasgames.spy.v1")).roundNumber===2);
+    await page.waitForFunction(()=>JSON.parse(localStorage.getItem("nickolasgames-session-spy-shared")).state.roundNumber===2);
     assert.notEqual((await state()).round.location,first.round.location);
     await deal();
-    await page.evaluate(()=>{const key="nickolasgames.spy.v1";const s=JSON.parse(localStorage.getItem(key));s.duration=3;s.deadline=Date.now()-1000;localStorage.setItem(key,JSON.stringify(s));});
+    await page.evaluate(()=>{const key="nickolasgames-session-spy-shared";const envelope=JSON.parse(localStorage.getItem(key));const s=envelope.state;s.duration=3;s.deadline=Date.now()-1000;localStorage.setItem(key,JSON.stringify(envelope));});
     await page.reload();
     await root.getByText("Час вийшов — можете продовжити обговорення").waitFor();
     await root.getByRole("button",{name:"Показати шпигуна",exact:true}).click();
@@ -286,8 +286,8 @@ try {
       }
       await form.locator('button[type="submit"]').click();
       await root.locator(".spy-result").waitFor();
-      await page.waitForFunction(()=>JSON.parse(localStorage.getItem("nickolasgames.spy.v1")).finished);
-      const s=await page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames.spy.v1")));
+      await page.waitForFunction(()=>JSON.parse(localStorage.getItem("nickolasgames-session-spy-shared")).state.finished);
+      const s=await page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames-session-spy-shared")).state);
       assert.equal(s.guessResult,correct);assert.equal(s.winner,correct);
       await page.reload();await root.locator(".spy-result").waitFor();
       assert.equal(await form.count(),0);
@@ -347,8 +347,8 @@ try {
     const button=root.getByRole("button",{name:correct?"Вгадав":"Не вгадав",exact:true});
     await button.click();
     await root.locator(".spy-result").waitFor();
-    await page.waitForFunction(()=>JSON.parse(localStorage.getItem("nickolasgames.spy.v1")).finished);
-    const s=await page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames.spy.v1")));
+    await page.waitForFunction(()=>JSON.parse(localStorage.getItem("nickolasgames-session-spy-shared")).state.finished);
+    const s=await page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames-session-spy-shared")).state);
     assert.equal(s.guessResult,correct);
     assert.equal(s.winner,correct);
     assert.equal(Object.values(s.scores).reduce((a,b)=>a+b,0),correct?1:2);

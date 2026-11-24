@@ -1,3 +1,4 @@
+import { browserStorage, restoreGameSession, persistGameSession } from '../../utils/gameSession.js';
 import { SPY_LOCATIONS, locationPool } from './locations.js';
 export const SPY_STORAGE_KEY='nickolasgames.spy.v1';
 export function validateSpySession(s){
@@ -13,4 +14,13 @@ export function validateSpySession(s){
  const roundLimit=[1,3,5,10].includes(s.roundLimit)?s.roundLimit:5;
  return {...s,round,category:safeCategory,mode:s.mode==='free'?'free':'classic',guessMethod:['choices','typed'].includes(s.guessMethod)?s.guessMethod:'manual',guessResult:typeof s.guessResult==='boolean'?s.guessResult:null,timeUp:s.timeUp===true,finished:s.finished===true,scores,roundLimit,roundNumber:s.round?Math.min(s.mode==='free'?Number.MAX_SAFE_INTEGER:roundLimit,Math.max(1,Number.isSafeInteger(s.roundNumber)?s.roundNumber:1)):0,deadline:s.round&&!s.finished&&s.phase==='discussion'&&s.duration>0&&s.step===s.players.length&&Number.isFinite(s.deadline)&&s.deadline>0?s.deadline:null,locationHistory:Array.isArray(s.locationHistory)?[...new Set(s.locationHistory.filter(i=>Number.isInteger(i)&&i>=0&&i<SPY_LOCATIONS.length))]:s.round?[s.round.location-9]:[]};
 }
-export function restoreSpySession(){try{return validateSpySession(JSON.parse(localStorage.getItem(SPY_STORAGE_KEY)));}catch{return {};}}
+const validSnapshot=value=>{const s=validateSpySession(value);return Array.isArray(s.players)?s:null;};
+export function restoreSpySession(storage=browserStorage()){
+ const current=restoreGameSession(storage,'spy','shared',validSnapshot);
+ if(current)return current;
+ try{return validSnapshot(JSON.parse(storage.getItem(SPY_STORAGE_KEY)))??{};}catch{return {};}
+}
+export function persistSpySession(state,storage=browserStorage()){
+ return persistGameSession(storage,'spy','shared',state);
+}
+
