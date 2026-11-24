@@ -97,3 +97,21 @@ test('restore invalid category safely and clear deadline outside timed discussio
  assert.equal(validateSpySession({...snapshot,phase:'guess'}).deadline,null);
  assert.equal(validateSpySession({...snapshot,duration:0}).deadline,null);
 });
+
+import {drawRotatingSpy} from '../src/features/spy/rules.js';
+test('rotation gives every player a turn before repeating, including across reloads',()=>{
+ let history=[],last;
+ for(let cycle=0;cycle<10;cycle++){
+  const seen=new Set();
+  for(let i=0;i<players.length;i++){
+   const next=drawRotatingSpy(players,JSON.parse(JSON.stringify(history)),()=>0);
+   assert.ok(!seen.has(next.spy));if(i===0&&last!==undefined)assert.notEqual(next.spy,last);
+   seen.add(next.spy);history=next.history;last=next.spy;
+  }
+ }
+});
+test('rotation restores valid player history and old modes stay compatible',()=>{
+ const restored=validateSpySession({...snapshot,mode:'rotation',spyHistory:['a','a','unknown','b']});
+ assert.equal(restored.mode,'rotation');assert.deepEqual(restored.spyHistory,['a','b']);
+ assert.equal(validateSpySession(snapshot).mode,'classic');
+});
