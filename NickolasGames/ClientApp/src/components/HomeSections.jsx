@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { gamePath } from "../utils/siteRoutes.js";
 import { HolmesFloor } from "./HolmesFloor";
 import { reducedMotion, scrollToSection } from "../utils/pageNavigation.js";
 
@@ -18,7 +19,7 @@ export function Hero({ t, onStart }) {
   );
 }
 
-export function GamesGrid({ games, t, onPlay }) {
+export function GamesGrid({ games, t, lang, onPlay }) {
   const ref = useRef(null);
   const [seen, setSeen] = useState(false);
   useEffect(() => {
@@ -35,7 +36,7 @@ export function GamesGrid({ games, t, onPlay }) {
             <article className="gc" key={k}>
               <h3>{g.n}</h3><p>{g.d}</p>
               <div className="meta"><span>{g.p}</span><span>{g.t}</span></div>
-              <button className="btn sm" onClick={() => onPlay(k)} aria-label={`${t.play} ${g.n}`}>{t.play}</button>
+              <a className="btn sm" href={gamePath(lang,k)} onClick={event=>{if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;event.preventDefault();onPlay(k);}} aria-label={`${t.play} ${g.n}`}>{t.play}</a>
             </article>
           ))}
         </div>

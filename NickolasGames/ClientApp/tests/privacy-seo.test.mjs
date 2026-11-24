@@ -39,3 +39,24 @@ test('privacy palette and restored Holmes text/action colors meet normal-text AA
   assert((values[0]+0.05)/(values[1]+0.05)>=4.5);
  }
 });
+
+test('all 30 game pages are independently indexable, linked and localized',async()=>{
+ const root=new URL('../../wwwroot/',import.meta.url);
+ const {GAMES,gamePath}=await import('../src/utils/siteRoutes.js');
+ const {COPY}=await import('../src/locales/index.js');
+ const sitemap=await readFile(new URL('sitemap.xml',root),'utf8');
+ assert.equal((sitemap.match(/<loc>/g)||[]).length,40);
+ for(const lang of ['en','uk','sv','de','es']){
+  const home=await readFile(new URL(gamePath(lang,null).slice(1)+'index.html',root),'utf8');
+  for(const game of GAMES){
+   const path=gamePath(lang,game),url='https://games.nickolasspace.com'+path;
+   const html=await readFile(new URL(path.slice(1)+'index.html',root),'utf8');
+   assert.ok(home.includes('href="'+path+'"'));
+   assert.ok(html.includes('<link rel="canonical" href="'+url+'"'));
+   assert.ok(html.includes('<h1>'+COPY[lang].games[game].n.replaceAll('&','&amp;').replaceAll("'","&#39;")+'</h1>'));
+   assert.ok(sitemap.includes('<loc>'+url+'</loc>'));
+   for(const other of ['en','uk','sv','de','es'])assert.ok(html.includes('hreflang="'+other+'" href="https://games.nickolasspace.com'+gamePath(other,game)+'"'));
+   assert.ok(html.includes('Content-Security-Policy'));
+  }
+ }
+});

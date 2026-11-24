@@ -5,41 +5,45 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { COPY } from '../src/locales/index.js';
 import { PRIVACY_COPY } from '../src/locales/privacy.js';
-import { LANGUAGE_PATHS, SITE_ORIGIN } from '../src/utils/siteMetadata.js';
+import { LANGUAGE_PATHS, SITE_ORIGIN, getPageMetadata } from '../src/utils/siteMetadata.js';
+import { GAMES, contentPath, gamePath } from '../src/utils/siteRoutes.js';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../../wwwroot');
 const template = readFileSync(resolve(root, 'index.html'), 'utf8').replace(/\r\n?/g, '\n');
 const escape = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const json = value => JSON.stringify(value).replace(/</g, '\\u003c');
 const image = SITE_ORIGIN + '/icons/holmes-512.png';
-const alternates = Object.entries(LANGUAGE_PATHS).map(([lang,path]) => '<link rel="alternate" hreflang="'+lang+'" href="'+SITE_ORIGIN+path+'" />').join('\n');
 const urls = [];
 for (const [lang,path] of Object.entries(LANGUAGE_PATHS)) {
- for (const privacy of [false,true]) {
-  const policy = PRIVACY_COPY[lang];
-  const games = ['whoami','crocodile','alias','truth','checkers'].map(key=>COPY[lang].games[key]);
-  const url = SITE_ORIGIN + path + (privacy ? 'privacy/' : '');
-  const title = privacy ? policy.title + ' | NickolasGames' : 'NickolasGames | ' + games.map(game=>game.n).join(', ');
-  const description = privacy ? policy.intro : games.map(game=>game.n+': '+game.d).join(' ');
+ for (const page of [null,...GAMES,'privacy']) {
+  const privacy=page==='privacy';
+  const game=privacy?null:page;
+  const policy=PRIVACY_COPY[lang];
+  const games=COPY[lang].games;
+  const {url,title,description,locale,alternates}=getPageMetadata(lang,games,policy.title,policy.intro,game,privacy);
+  const pagePath=contentPath(lang,game,privacy);
+  const alternateLinks=Object.entries(alternates).map(([code,href])=>'<link rel="alternate" hreflang="'+code+'" href="'+href+'" />').join('\n');
   let html = template.replace(/<html lang="[^"]*">/,'<html lang="'+lang+'">')
    .replace(/<title>.*?<\/title>/,'<title>'+escape(title)+'</title>')
    .replace(/<meta name="description"[^>]*>/,'<meta name="description" content="'+escape(description)+'" />')
    .replace(/<link rel="canonical"[^>]*>/,'<link rel="canonical" href="'+url+'" />')
-   .replace(/<meta property="og:(title|description|url|locale)"[^>]*>/g,(_,key)=>'<meta property="og:'+key+'" content="'+escape({title,description,url,locale:{uk:'uk_UA',en:'en_US',sv:'sv_SE',de:'de_DE',es:'es_ES'}[lang]}[key])+'" />')
+   .replace(/<meta property="og:(title|description|url|locale)"[^>]*>/g,(_,key)=>'<meta property="og:'+key+'" content="'+escape({title,description,url,locale}[key])+'" />')
    .replace(/<meta name="twitter:(title|description|card)"[^>]*>/g,(_,key)=>'<meta name="twitter:'+key+'" content="'+escape({title,description,card:'summary'}[key])+'" />')
    .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g,'');
-  const content = privacy
+  const listing=GAMES.map(key=>'<section><h2><a href="'+gamePath(lang,key)+'">'+escape(games[key].n)+'</a></h2><p>'+escape(games[key].d)+'</p></section>').join('');
+  const content=privacy
    ? '<p>'+escape(policy.intro)+'</p>'+policy.sections.map(([heading,text])=>'<section><h2>'+escape(heading)+'</h2><p>'+escape(text)+'</p></section>').join('')
-   : '<p>'+escape(COPY[lang].heroText)+'</p>'+games.map(game=>'<section><h2>'+escape(game.n)+'</h2><p>'+escape(game.d)+'</p></section>').join('');
-  html = html.replace(/<div class="seo-content">[\s\S]*?<\/div>/,'<div class="seo-content">'+content+'<p><a href="'+path+'privacy/">'+escape(policy.title)+'</a></p></div>');
-  const structured = privacy ? { '@context':'https://schema.org','@type':'WebPage',name:title,url,description,inLanguage:lang } :
-   { '@context':'https://schema.org','@type':'WebApplication',name:'NickolasGames',url,applicationCategory:'GameApplication',operatingSystem:'Web browser',isAccessibleForFree:true,inLanguage:lang,description };
-  html = html.replace('</head>',(privacy ? '' : alternates+'\n<link rel="alternate" hreflang="x-default" href="'+SITE_ORIGIN+'/" />\n')+
-   '<meta property="og:image" content="'+image+'" />\n<meta property="og:image:alt" content="NickolasGames" />\n<script type="application/ld+json">'+json(structured)+'</script>\n</head>');
+   : game?'<p>'+escape(description)+'</p><p>'+escape(games[game].p)+' · '+escape(games[game].t)+'</p>'+listing
+   : '<p>'+escape(COPY[lang].heroText)+'</p>'+listing;
+  html=html.replace('<h1>NickolasGames</h1>','<h1>'+escape(privacy?policy.title:game?games[game].n:title.split(' | ')[0])+'</h1>');
+  html=html.replace(/<div class="seo-content">[\s\S]*?<\/div>/,'<div class="seo-content">'+content+'<p><a href="'+path+'">NickolasGames</a> · <a href="'+path+'privacy/">'+escape(policy.title)+'</a></p></div>');
+  const application={'@type':'WebApplication',name:game?games[game].n:'NickolasGames',url,applicationCategory:'GameApplication',operatingSystem:'Web browser',isAccessibleForFree:true,inLanguage:lang,description};
+  const structured=privacy?{'@context':'https://schema.org','@type':'WebPage',name:title,url,description,inLanguage:lang}:game?{'@context':'https://schema.org',...application}:{'@context':'https://schema.org','@graph':[application,{'@type':'ItemList',itemListElement:GAMES.map((key,index)=>({'@type':'ListItem',position:index+1,url:SITE_ORIGIN+gamePath(lang,key),name:games[key].n}))}]};
+  html=html.replace('</head>',alternateLinks+'\n<meta property="og:image" content="'+image+'" />\n<meta property="og:image:alt" content="NickolasGames" />\n<script type="application/ld+json">'+json(structured)+'</script>\n</head>');
   const hashes = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)]
    .map(match=>"'sha256-"+createHash('sha256').update(match[1]).digest('base64')+"'");
   const csp = "default-src 'self'; script-src 'self' "+hashes.join(' ')+"; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; media-src 'self' blob:; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'";
   html = html.replace('<head>','<head>\n<meta http-equiv="Content-Security-Policy" content="'+escape(csp)+'" />');
-  const destination = resolve(root, '.'+path+(privacy ? 'privacy/' : ''), 'index.html');
+  const destination = resolve(root, '.'+pagePath, 'index.html');
   mkdirSync(dirname(destination),{recursive:true});
   writeFileSync(destination,html);
   urls.push(url);
