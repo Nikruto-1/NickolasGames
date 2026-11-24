@@ -137,7 +137,7 @@ export function charadesReducer(state, action) {
       return state.phase === 'setup' ? { ...state, category: action.category, deck: action.deck, cardIndex: 0 } : state;
     case 'start':
       return state.phase === 'setup' && state.players.length >= 2 && deckReady(state.deck) && canCompleteRound(state)
-        ? { ...state, phase: charadesGuesserMode(state) ? 'dice' : 'handoff', resultId:action.resultId, activeId: state.players[0].id,
+        ? { ...state, phase: charadesGuesserMode(state) ? 'dice' : 'handoff', ...(action.resultId?{resultId:action.resultId}:{}), activeId: state.players[0].id,
           draw: charadesGuesserMode(state) ? { contenders: state.players.map(player => player.id), results: [], pending: [], until: null, lastIds: [] } : null } : state;
     case 'roll': {
       if (state.phase !== 'dice' || !Number.isFinite(action.now) || !validRolls(action.rolls, state.draw.contenders) ||
