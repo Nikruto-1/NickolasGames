@@ -1,3 +1,4 @@
+import {saveResult,resultId} from '../../utils/sharedResults.js';
 import {truthCatalog,sessionCatalog,snapshotDecks} from './customCatalog.js';
 import {normalizeLibrary} from '../../utils/customLibrary.js';
 export function restoreCustomTruthSession(raw){
@@ -7,9 +8,9 @@ export function restoreCustomTruthSession(raw){
   if(!valid||!['uk','en','sv','de','es'].includes(raw.customLang)||valid.some(x=>x.game!=='truth'||x.lang!==raw.customLang))return null;
   const catalog=sessionCatalog({...raw,customDecks:valid});
   const restored=restoreTruthDareSession(raw,catalog.cards,new Set(catalog.categories.map(c=>c.id)));
-  return restored?{...restored,customDecks:valid,customLang:raw.customLang}:null;
+  return restored?{...restored,customDecks:valid,customLang:raw.customLang,resultId:raw.resultId}:null;
  }
- return restoreTruthDareSession(raw);
+ const restored=restoreTruthDareSession(raw);return restored?{...restored,resultId:raw.resultId}:null;
 }
 import { rememberContent, nextContent } from '../../utils/contentHistory.js';
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -22,7 +23,7 @@ import { useVersionedState, restoreGameSession, browserStorage } from "../../uti
 export function useTruthOrDareGame({ lang, library=[] }) {
   const [session, setSession, storageOk] = useVersionedState({
     game: "truth-or-dare", lang: "shared", restore: restoreCustomTruthSession,
-    initialize: () => readTruthDareSession(browserStorage()) || createTruthDareSession()
+    initialize: () => readTruthDareSession(browserStorage()) || {...createTruthDareSession(),resultId:resultId()}
   });
   const { categories, queue, index, chosen, skipped } = session;
   useEffect(()=>{rememberContent('truth-or-dare','shared',queue.slice(0,index+Number(chosen)));},[queue,index,chosen]);
@@ -37,7 +38,7 @@ export function useTruthOrDareGame({ lang, library=[] }) {
     const catalog=truthCatalog(customDecks,lang);
     const next=createTruthDareSession(valid,Math.random,catalog.cards);
     const queue=nextContent('truth-or-dare','shared',next.queue);
-    return {...next,queue,historyCycle:true,customDecks,customLang:lang};
+    return {...next,queue,resultId:resultId(),historyCycle:true,customDecks,customLang:lang};
   };
   const [draftCategories, setDraftCategories] = useState(() => [...categories]);
   const [settingsOpen, setSettingsOpen] = useState(() => !readTruthDareSession(browserStorage()) && !restoreGameSession(browserStorage(), "truth-or-dare", "shared", restoreCustomTruthSession));
@@ -53,6 +54,7 @@ export function useTruthOrDareGame({ lang, library=[] }) {
   const all = selectableIds.every(id=>draftCategories.includes(id));
   const changed = draftCategories.length !== categories.length || draftCategories.some(id => !categories.includes(id));
   const completed = index >= queue.length;
+  useEffect(()=>{if(completed&&session.resultId)saveResult({id:session.resultId,game:'truth',outcome:'finished',rows:[{name:'@played',score:index},{name:'@skipped',score:skipped}]});},[completed,session.resultId,index,skipped]);
 
   useEffect(() => {
     if (!confirmOpen) return;

@@ -1,3 +1,4 @@
+import {saveResult,resultId} from '../../utils/sharedResults.js';
 import { subscribeGameClock, remainingSeconds } from '../../utils/gameClock.js';
 import { rememberContent, nextContent, readHistory, contentKey } from '../../utils/contentHistory.js';
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
@@ -37,6 +38,7 @@ export function useAliasGame({ games, t, lang, startRequest = 0 }) {
   const availableCategories = useMemo(() => Object.keys(categories), [categories]);
   const selectedCategories = categorySelection === ALIAS_ALL ? availableCategories : Array.isArray(categorySelection) ? categorySelection : [categorySelection];
   const categorySummary = categorySelection === ALIAS_ALL ? t.allCategories : !selectedCategories.length ? copy.chooseCategories : selectedCategories.length <= 2 ? selectedCategories.join(' · ') : copy.selectedCategories + ': ' + selectedCategories.length;
+ useEffect(()=>{if(state.resultId&&['finished','exhausted'].includes(state.phase))saveResult({id:state.resultId,game:'alias',outcome:state.phase,rows:state.teams.map(p=>({name:p.name,score:p.points,winner:state.winners.includes(p.id)}))});},[state]);
   const [drafts, setDrafts] = useState({});
   const [editingTeam, setEditingTeam] = useState(null);
   const [target, setTarget] = useState(String(state.target));
@@ -112,7 +114,7 @@ export function useAliasGame({ games, t, lang, startRequest = 0 }) {
     setAttempt(value => value + 1);
     if (errors.length) return;
     settings({ target: Number(target), teams: state.teams.map(item => ({ ...item, name: item.name.trim() })) });
-    dispatch({ type: 'start', deck: nextContent('alias',lang,pool) });
+    dispatch({ type: 'start', resultId:resultId(), deck: nextContent('alias',lang,pool) });
   };
   const roll = () => dispatch({ type: 'roll', now: Date.now(), rolls: state.contenders.map(id => ({ id, values: [1 + Math.floor(Math.random() * 6), 1 + Math.floor(Math.random() * 6)] })) });
   const begin = () => {

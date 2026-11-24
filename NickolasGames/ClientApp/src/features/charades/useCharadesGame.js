@@ -1,3 +1,4 @@
+import {saveResult,resultId} from '../../utils/sharedResults.js';
 import { subscribeGameClock, remainingSeconds } from '../../utils/gameClock.js';
 import { rememberContent, nextContent } from '../../utils/contentHistory.js';
 import { validateCharadesStart } from "../../utils/startValidation";
@@ -36,6 +37,7 @@ export function useCharadesGame({ games, t, lang, startRequest = 0 }) {
     const deck=createCharadesDeck(games.crocodile.c,category);
     return Object.fromEntries(DIFFICULTIES.map(level=>[level,nextContent('charades-'+level,lang,deck[level],Math.max(1,state.players.length))]));
   };
+ useEffect(()=>{if(state.resultId&&['finished','exhausted'].includes(state.phase))saveResult({id:state.resultId,game:'crocodile',outcome:state.phase,rows:state.players.map(p=>({name:p.name,score:p.points,winner:state.winners.includes(p.id)}))});},[state]);
   const [name, setName] = useState('');
   const [warning, setWarning] = useState('');
   const [targetDraft, setTargetDraft] = useState(String(state.targetScore));
@@ -93,7 +95,7 @@ export function useCharadesGame({ games, t, lang, startRequest = 0 }) {
     if(validateCharadesStart({state,targetDraft,pendingName:name}).length)return;
     dispatch({type:'category',category:state.category,deck:freshDeck(state.category)});
     dispatch({type:'target',value:Number(targetDraft)});
-    dispatch({type:'start'});setWarning('');
+    dispatch({type:'start',resultId:resultId()});setWarning('');
   };
   const add = event => {
     event.preventDefault();
