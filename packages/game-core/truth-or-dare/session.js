@@ -24,13 +24,13 @@ export function restoreTruthDareSession(raw) {
   if (!categories.length || new Set(categories).size !== categories.length ||
       !categories.every(c => validCategoryIds.has(c))) return null;
   const available = new Set(TRUTH_DARE_CARDS.filter(c => categories.includes(c.category)).map(c => c.id));
-  if (raw.queue.length !== available.size || new Set(raw.queue).size !== available.size ||
+  if (!raw.queue.length || (raw.historyCycle !== true && raw.queue.length !== available.size) || new Set(raw.queue).size !== raw.queue.length ||
       !raw.queue.every(id => available.has(id))) return null;
   if (!Number.isInteger(raw.index) || raw.index < 0 || raw.index > raw.queue.length) return null;
   if (!Number.isInteger(raw.skipped) || raw.skipped < 0 || raw.skipped > raw.index) return null;
   // Existing v2 saves did not include chosen. Keep their progress and start the next choice.
   const chosen = raw.chosen === true && raw.index < raw.queue.length;
-  return { categories: [...categories], queue: [...raw.queue], index: raw.index, skipped: raw.skipped, chosen };
+  return { categories: [...categories], queue: [...raw.queue], index: raw.index, skipped: raw.skipped, chosen, ...(raw.historyCycle === true ? {historyCycle:true} : {}) };
 }
 
 export function createTruthDareSession(categories = ALL_TRUTH_DARE_CATEGORIES, random = Math.random) {

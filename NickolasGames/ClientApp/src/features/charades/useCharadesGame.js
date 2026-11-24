@@ -1,3 +1,4 @@
+import { rememberContent, nextContent } from '../../utils/contentHistory.js';
 import { validateCharadesStart } from "../../utils/startValidation";
 import { createHolmesTimerSound, HOLMES_TIME_UP } from '../../utils/holmesTimerSound.js';
 import { useEffect, useReducer, useRef, useState } from 'react';
@@ -25,6 +26,15 @@ export function useCharadesGame({ games, t, lang, startRequest = 0 }) {
       return validCharadesState(saved) ? restoreCharadesState(saved) : newCharadesState(games.crocodile.c, readValue(`nickolasgames-progress-v1-${lang}-crocodile`));
     }
   });
+  useEffect(()=>{
+    if(state.phase==='setup')return;
+    const count=state.cardIndex+Number(['choosing','acting','confirming'].includes(state.phase));
+    for(const level of DIFFICULTIES)rememberContent('charades-'+level,lang,state.deck[level].slice(0,count));
+  },[state.deck,state.cardIndex,state.phase,lang]);
+  const freshDeck=category=>{
+    const deck=createCharadesDeck(games.crocodile.c,category);
+    return Object.fromEntries(DIFFICULTIES.map(level=>[level,nextContent('charades-'+level,lang,deck[level],Math.max(1,state.players.length))]));
+  };
   const [name, setName] = useState('');
   const [warning, setWarning] = useState('');
   const [targetDraft, setTargetDraft] = useState(String(state.targetScore));
@@ -88,6 +98,7 @@ export function useCharadesGame({ games, t, lang, startRequest = 0 }) {
   const startGame=()=>{
     setStartAttempt(value=>value+1);
     if(validateCharadesStart({state,targetDraft,pendingName:name}).length)return;
+    dispatch({type:'category',category:state.category,deck:freshDeck(state.category)});
     dispatch({type:'target',value:Number(targetDraft)});
     dispatch({type:'start'});setWarning('');
   };
@@ -102,7 +113,7 @@ export function useCharadesGame({ games, t, lang, startRequest = 0 }) {
   const newGame = () => {
     if (!window.confirm(copy.confirm)) return;
     setStartAttempt(0);
-    dispatch({ type: 'new', deck: createCharadesDeck(games.crocodile.c, state.category) });
+    dispatch({ type: 'new', deck: freshDeck(state.category) });
   };
   const selectWord = level => {
     const now = Date.now(); setClock(now);

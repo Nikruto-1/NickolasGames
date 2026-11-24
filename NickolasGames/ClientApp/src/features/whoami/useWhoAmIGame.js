@@ -1,3 +1,4 @@
+import { rememberContent, nextContent } from '../../utils/contentHistory.js';
 import { validateWhoamiStart } from "../../utils/startValidation";
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { elapsedWholeSeconds } from '../../utils/timerMath.js';
@@ -33,6 +34,7 @@ export function useWhoAmIGame({ games, t, lang, startRequest = 0 }) {
      return migrated;
    }
  });
+ useEffect(()=>{if(state.phase!=='setup')rememberContent('whoami',lang,state.players.flatMap(p=>[p.word,...p.usedWords]));},[state.players,state.phase,lang]);
  const [name,setName]=useState('');const [warning,setWarning]=useState('');
  const [startAttempt,setStartAttempt]=useState(0);
  useEffect(()=>{if(startRequest>0)setStartAttempt(value=>value+1);},[startRequest]);
@@ -72,12 +74,12 @@ export function useWhoAmIGame({ games, t, lang, startRequest = 0 }) {
    if(state.players.some(p=>p.name.toLocaleLowerCase()===clean.toLocaleLowerCase())){setWarning(copy.duplicate);return;}
    dispatch({type:'add',id:crypto.randomUUID(),name:clean});setName('');setWarning('');};
  const startErrors=state.phase==='setup'&&startAttempt?validateWhoamiStart({players:state.players,pool,pendingName:name}):[];
- const deal=()=>{setStartAttempt(value=>value+1);if(validateWhoamiStart({players:state.players,pool,pendingName:name}).length)return;dispatch({type:'deal',pool});setWarning('');};
+ const deal=()=>{setStartAttempt(value=>value+1);if(validateWhoamiStart({players:state.players,pool,pendingName:name}).length)return;dispatch({type:'deal',pool:nextContent('whoami',lang,pool,state.players.length)});setWarning('');};
  const close=()=>{setHeld(false);setActiveId(null);};
  const restart=(changeSettings=false)=>{
    if(state.phase==='game'&&!window.confirm(copy.confirm))return;
    setStartAttempt(0);setRunning(false);close();dispatch({type:'setup',clearPlayers:changeSettings});setWarning('');
-   if(!changeSettings&&pool.length>=state.players.length)dispatch({type:'deal',pool});
+   if(!changeSettings&&pool.length>=state.players.length)dispatch({type:'deal',pool:nextContent('whoami',lang,pool,state.players.length)});
  };
  const answer=outcome=>{setHeld(false);dispatch({type:'answer',id:active.id,revision:active.revision,outcome});close();};
  const keyTrap=event=>{

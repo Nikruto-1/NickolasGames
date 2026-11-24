@@ -1,3 +1,4 @@
+import { rememberContent, nextContent } from '../../utils/contentHistory.js';
 import { useEffect, useMemo, useRef, useState } from "react";
 import { readTruthDareSession, restoreTruthDareSession, createTruthDareSession, chooseTruthDare, advanceTruthDare, ALL_TRUTH_DARE_CATEGORIES } from "./session.js";
 import { TRUTH_DARE_CARDS, TRUTH_DARE_CATEGORIES } from "./truthOrDare.uk.js";
@@ -11,6 +12,12 @@ export function useTruthOrDareGame({ lang }) {
     initialize: () => readTruthDareSession(browserStorage()) || createTruthDareSession()
   });
   const { categories, queue, index, chosen, skipped } = session;
+  useEffect(()=>{rememberContent('truth-or-dare','shared',queue.slice(0,index+Number(chosen)));},[queue,index,chosen]);
+  const freshSession=categories=>{
+    const next=createTruthDareSession(categories);
+    const queue=nextContent('truth-or-dare','shared',next.queue);
+    return {...next,queue,historyCycle:true};
+  };
   const [draftCategories, setDraftCategories] = useState(() => [...categories]);
   const [settingsOpen, setSettingsOpen] = useState(() => !readTruthDareSession(browserStorage()) && !restoreGameSession(browserStorage(), "truth-or-dare", "shared", restoreTruthDareSession));
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -64,16 +71,16 @@ export function useTruthOrDareGame({ lang }) {
   const applyCategories = () => {
     if (!changed) { setSettingsOpen(false); return; }
     if (index > 0 || chosen) { setConfirmOpen(true); return; }
-    setSession(createTruthDareSession(draftCategories));
+    setSession(freshSession(draftCategories));
     setSettingsOpen(false);
   };
   const confirmCategories = () => {
-    setSession(createTruthDareSession(draftCategories));
+    setSession(freshSession(draftCategories));
     setConfirmOpen(false);
     setSettingsOpen(false);
   };
   const reset = () => {
-    setSession(createTruthDareSession(categories));
+    setSession(freshSession(categories));
     setDraftCategories([...categories]);
   };
   return { session, setSession, categories, queue, index, chosen, skipped, draftCategories, setDraftCategories, settingsOpen, setSettingsOpen, confirmOpen, setConfirmOpen, confirmationRef, storageOk, cardsById, i18n, current, activeCategory, translatedCategory, available, remainingTypes, all, changed, completed, chooseType, advance, toggleCategory, closeSettings, toggleSettings, applyCategories, confirmCategories, reset };

@@ -356,6 +356,33 @@ try {
     assert.equal(await root.getByRole("button",{name:"Вгадав",exact:true}).count(),0);
     assert.deepEqual(errors,[]);checks+=7;await page.close();
   }
+  // Truth or dare: revealed cards survive category changes and reload without repeats.
+  {
+    const page=await browser.newPage({viewport:{width:375,height:812},serviceWorkers:"block"});
+    const errors=[];page.on("pageerror",e=>errors.push(e.message));
+    await page.goto(base+"/uk/?game=truth");
+    const root=page.locator(".td-root");
+    await root.locator(".td-apply").click();
+    await root.locator(".td-choice-truth").click();
+    const key="nickolasgames-session-truth-or-dare-shared";
+    await page.waitForFunction(k=>JSON.parse(localStorage.getItem(k))?.state.chosen,key);
+    const first=await page.evaluate(k=>{const s=JSON.parse(localStorage.getItem(k)).state;return s.queue[s.index];},key);
+    await page.reload();
+    await root.locator(".td-card.is-revealed").waitFor();
+    assert.equal(await page.evaluate(k=>{const s=JSON.parse(localStorage.getItem(k)).state;return s.queue[s.index];},key),first);
+    await root.locator(".td-primary").click();
+    await root.locator(".td-settings-btn").click();
+    await root.locator(".td-category").last().click();
+    await root.locator(".td-apply").click();
+    await root.locator(".td-confirm-actions .pri").click();
+    await page.waitForFunction(k=>JSON.parse(localStorage.getItem(k))?.state.historyCycle===true,key);
+    const fresh=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)).state,key);
+    assert.ok(!fresh.queue.includes(first));
+    await page.reload();
+    await root.locator(".td-choice-truth").waitFor();
+    assert.deepEqual(await page.evaluate(k=>JSON.parse(localStorage.getItem(k)).state.queue,key),fresh.queue);
+    assert.deepEqual(errors,[]);checks+=4;await page.close();
+  }
   // Complete real winning move: result dialog, ranking, undo, replay and safe restart.
   {
     const page=await browser.newPage({viewport:{width:1024,height:850},serviceWorkers:"block"});
