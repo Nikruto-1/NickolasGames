@@ -4,6 +4,8 @@ const names = ['Словник', 'Word bank', 'Ordbank', 'Wortschatz', 'Vocabula
 // Aligned translations keep every language's new vocabulary at the same difficulty.
 const vocabulary = {
   easy: [
+    ["Наперсток","Thimble","Fingerborg","Fingerhut","Dedal"],
+    ["Друшляк","Colander","Durkslag","Sieb","Colador"],
     ['Абрикос', 'Apricot', 'Aprikos', 'Aprikose', 'Albaricoque'],
     ['Ананас', 'Pineapple', 'Ananas', 'Ananas', 'Piña'],
     ['Авокадо', 'Avocado', 'Avokado', 'Avocado', 'Aguacate'],
@@ -86,6 +88,8 @@ const vocabulary = {
     ['Черевик', 'Boot', 'Känga', 'Stiefel', 'Bota'],
   ],
   medium: [
+    ["Звукоізоляція","Soundproofing","Ljudisolering","Schalldämmung","Insonorización"],
+    ["Реставратор","Restorer","Konservator","Restaurator","Restaurador"],
     ['Акваріум', 'Aquarium', 'Akvarium', 'Aquarium', 'Acuario'],
     ['Амулет', 'Amulet', 'Amulett', 'Amulett', 'Amuleto'],
     ['Балкон', 'Balcony', 'Balkong', 'Balkon', 'Balcón'],
@@ -158,6 +162,14 @@ const vocabulary = {
     ['Якір', 'Anchor', 'Ankare', 'Anker', 'Ancla'],
   ],
   hard: [
+    ["Самоорганізація","Self-organization","Självorganisering","Selbstorganisation","Autoorganización"],
+    ["Диверсифікація","Diversification","Diversifiering","Diversifizierung","Diversificación"],
+    ["Ретроспектива","Retrospective","Retrospektiv","Retrospektive","Retrospectiva"],
+    ["Екстраполяція","Extrapolation","Extrapolering","Extrapolation","Extrapolación"],
+    ["Асиміляція","Assimilation","Assimilering","Assimilation","Asimilación"],
+    ["Невизначеність","Uncertainty","Osäkerhet","Ungewissheit","Incertidumbre"],
+    ["Верифікація","Verification","Verifiering","Verifizierung","Verificación"],
+    ["Децентралізація","Decentralization","Decentralisering","Dezentralisierung","Descentralización"],
     ['Абстракція', 'Abstraction', 'Abstraktion', 'Abstraktion', 'Abstracción'],
     ['Адаптація', 'Adaptation', 'Anpassning', 'Anpassung', 'Adaptación'],
     ['Алегорія', 'Allegory', 'Allegori', 'Allegorie', 'Alegoría'],
