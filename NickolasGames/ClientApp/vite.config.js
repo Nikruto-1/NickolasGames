@@ -3,11 +3,12 @@ import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
 
+import { optimizedMediaPlugin } from "./media-plugin.js";
 import { offlinePlugin } from "./pwa-plugin.js";
 
 export default defineConfig({
   base: "./",
-  plugins: [react(), tailwindcss(), offlinePlugin()],
+  plugins: [optimizedMediaPlugin(), react(), tailwindcss(), offlinePlugin()],
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url))
