@@ -696,12 +696,24 @@ try {
     try {
       await page.goto(base+"/uk/");
       const install=page.locator(".app-status-more");
-      await install.click();
-      assert.ok((await page.locator("#app-install-details").innerText()).includes("Safari"));
-      await install.click();
+      for(const width of [320,390,768]){
+        await page.setViewportSize({width,height:844});
+        const nav=await page.locator(".app-shell > nav").boundingBox();
+        const status=await page.locator(".app-status").boundingBox();
+        assert.ok(nav && status && status.y>=nav.y+nav.height-1,`Installation panel must not overlap navigation at ${width}px`);
+        await install.click();
+        assert.ok((await page.locator("#app-install-details").innerText()).includes("Safari"));
+        await install.click();
+        checks+=2;
+      }
+      await page.setViewportSize({width:390,height:844});
       await page.waitForFunction(()=>Boolean(navigator.serviceWorker.controller),null,{timeout:30000});
       const download=page.locator("#offline-download");
       const button=download.locator("button");
+      await page.waitForFunction(()=>{
+        const button=document.querySelector("#offline-download button");
+        return button&&(!button.disabled||button.textContent==="Усі ресурси ігор збережено");
+      },null,{timeout:30000});
       if(await button.isEnabled())await button.click();
       await download.getByRole("button",{name:"Усі ресурси ігор збережено",exact:true}).waitFor({timeout:125000});
       await context.setOffline(true);
