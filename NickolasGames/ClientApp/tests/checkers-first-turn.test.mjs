@@ -29,3 +29,5 @@ test("black can legally make the first move when selected",()=>{
   assert.equal(next.moveNumber,2);
   assert.equal(start.turn,"black");
 });
+
+test("hard bot difficulty survives settings normalization",()=>{assert.equal(normalizeCheckersSettings({mode:"bot",level:"hard"}).level,"hard");});
