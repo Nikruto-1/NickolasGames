@@ -1,7 +1,8 @@
+import { gameAudioEnabled } from '../../utils/gameAudioPreference.js';
 // Short original victory fanfare synthesized in the browser.
 // Called synchronously from the user's winning move to respect autoplay policy.
 export function playCheckersVictory() {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || !gameAudioEnabled()) return;
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextClass) return;
   let context;
