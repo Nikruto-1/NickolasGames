@@ -1,7 +1,8 @@
 import {contentKey} from './contentHistory.js';
 export const LIBRARY_KEY='nickolasgames-custom-library-v1';
-export const LIBRARY_GAMES=['whoami','crocodile','alias'];
+export const LIBRARY_GAMES=['whoami','crocodile','alias','truth'];
 export const LEVELS=['easy','medium','hard'];
+export const deckFields=game=>game==='truth'?['truth','dare']:LEVELS;
 export function normalizeLibrary(raw){
  if(!Array.isArray(raw)||raw.length>50)return null;
  const ids=new Set(),names=new Set(),result=[];
@@ -11,7 +12,7 @@ export function normalizeLibrary(raw){
   if(names.has(key))return null;
   ids.add(item.id);names.add(key);
   const levels={},seen=new Set();
-  for(const level of LEVELS){
+  for(const level of deckFields(item.game)){
    const words=item.levels?.[level];if(!Array.isArray(words)||words.length>200)return null;
    levels[level]=[];
    for(const value of words){
@@ -35,5 +36,5 @@ export function libraryCategories(items,game,lang,builtIn={}){
  return result;
 }
 export function gamesWithLibrary(games,items,lang){
- return {...games,...Object.fromEntries(LIBRARY_GAMES.map(game=>[game,{...games[game],c:libraryCategories(items,game,lang,games[game].c)}]))};
+ return {...games,...Object.fromEntries(LIBRARY_GAMES.filter(game=>game!=='truth').map(game=>[game,{...games[game],c:libraryCategories(items,game,lang,games[game].c)}]))};
 }

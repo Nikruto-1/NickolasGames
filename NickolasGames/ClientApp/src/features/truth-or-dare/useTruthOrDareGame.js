@@ -1,3 +1,16 @@
+import {truthCatalog,sessionCatalog,snapshotDecks} from './customCatalog.js';
+import {normalizeLibrary} from '../../utils/customLibrary.js';
+export function restoreCustomTruthSession(raw){
+ if(!raw)return null;
+ if(raw.customDecks!==undefined){
+  const valid=normalizeLibrary(raw.customDecks);
+  if(!valid||!['uk','en','sv','de','es'].includes(raw.customLang)||valid.some(x=>x.game!=='truth'||x.lang!==raw.customLang))return null;
+  const catalog=sessionCatalog({...raw,customDecks:valid});
+  const restored=restoreTruthDareSession(raw,catalog.cards,new Set(catalog.categories.map(c=>c.id)));
+  return restored?{...restored,customDecks:valid,customLang:raw.customLang}:null;
+ }
+ return restoreTruthDareSession(raw);
+}
 import { rememberContent, nextContent } from '../../utils/contentHistory.js';
 import { useEffect, useMemo, useRef, useState } from "react";
 import { readTruthDareSession, restoreTruthDareSession, createTruthDareSession, chooseTruthDare, advanceTruthDare, ALL_TRUTH_DARE_CATEGORIES } from "./session.js";
@@ -6,30 +19,38 @@ import { getTruthDareLocale, localizeTruthDareCard, localizedCategory } from "./
 
 import { useVersionedState, restoreGameSession, browserStorage } from "../../utils/gameSession.js";
 
-export function useTruthOrDareGame({ lang }) {
+export function useTruthOrDareGame({ lang, library=[] }) {
   const [session, setSession, storageOk] = useVersionedState({
-    game: "truth-or-dare", lang: "shared", restore: restoreTruthDareSession,
+    game: "truth-or-dare", lang: "shared", restore: restoreCustomTruthSession,
     initialize: () => readTruthDareSession(browserStorage()) || createTruthDareSession()
   });
   const { categories, queue, index, chosen, skipped } = session;
   useEffect(()=>{rememberContent('truth-or-dare','shared',queue.slice(0,index+Number(chosen)));},[queue,index,chosen]);
+  const liveCatalog=useMemo(()=>truthCatalog(library,lang),[library,lang]);
+  const activeCatalog=useMemo(()=>sessionCatalog(session),[session.customDecks,session.customLang]);
+  const catalogCategories=useMemo(()=>[...new Map([...activeCatalog.categories,...liveCatalog.categories].map(c=>[c.id,c])).values()],[activeCatalog,liveCatalog]);
+  const selectableIds=liveCatalog.categories.map(c=>c.id);
   const freshSession=categories=>{
-    const next=createTruthDareSession(categories);
+    const selected=categories.filter(id=>selectableIds.includes(id));
+    const valid=selected.length?selected:ALL_TRUTH_DARE_CATEGORIES;
+    const customDecks=snapshotDecks(library,lang,valid);
+    const catalog=truthCatalog(customDecks,lang);
+    const next=createTruthDareSession(valid,Math.random,catalog.cards);
     const queue=nextContent('truth-or-dare','shared',next.queue);
-    return {...next,queue,historyCycle:true};
+    return {...next,queue,historyCycle:true,customDecks,customLang:lang};
   };
   const [draftCategories, setDraftCategories] = useState(() => [...categories]);
-  const [settingsOpen, setSettingsOpen] = useState(() => !readTruthDareSession(browserStorage()) && !restoreGameSession(browserStorage(), "truth-or-dare", "shared", restoreTruthDareSession));
+  const [settingsOpen, setSettingsOpen] = useState(() => !readTruthDareSession(browserStorage()) && !restoreGameSession(browserStorage(), "truth-or-dare", "shared", restoreCustomTruthSession));
   const [confirmOpen, setConfirmOpen] = useState(false);
   const confirmationRef = useRef(null);
-  const cardsById = useMemo(() => new Map(TRUTH_DARE_CARDS.map(card => [card.id, card])), []);
+  const cardsById = useMemo(() => new Map(activeCatalog.cards.map(card => [card.id, card])), [activeCatalog]);
   const i18n = getTruthDareLocale(lang).ui;
   const current = localizeTruthDareCard(cardsById.get(queue[index]), lang);
-  const activeCategory = TRUTH_DARE_CATEGORIES.find(c => c.id === current?.category);
+  const activeCategory = activeCatalog.categories.find(c => c.id === current?.category);
   const translatedCategory = activeCategory ? localizedCategory(activeCategory, lang) : null;
-  const available = TRUTH_DARE_CARDS.filter(c => draftCategories.includes(c.category)).length;
+  const available = liveCatalog.cards.filter(c => draftCategories.includes(c.category)).length;
   const remainingTypes = new Set(queue.slice(index).map(id => cardsById.get(id)?.type));
-  const all = draftCategories.length === TRUTH_DARE_CATEGORIES.length;
+  const all = selectableIds.every(id=>draftCategories.includes(id));
   const changed = draftCategories.length !== categories.length || draftCategories.some(id => !categories.includes(id));
   const completed = index >= queue.length;
 
@@ -54,7 +75,7 @@ export function useTruthOrDareGame({ lang }) {
     };
   }, [confirmOpen]);
 
-  const chooseType = type => setSession(current => chooseTruthDare(current, type));
+  const chooseType = type => setSession(current => chooseTruthDare(current, type, cardsById));
   const advance = skip => setSession(current => advanceTruthDare(current, skip));
   const toggleCategory = id => setDraftCategories(current =>
     current.includes(id) ? (current.length === 1 ? current : current.filter(c => c !== id)) : [...current, id]
@@ -83,5 +104,5 @@ export function useTruthOrDareGame({ lang }) {
     setSession(freshSession(categories));
     setDraftCategories([...categories]);
   };
-  return { session, setSession, categories, queue, index, chosen, skipped, draftCategories, setDraftCategories, settingsOpen, setSettingsOpen, confirmOpen, setConfirmOpen, confirmationRef, storageOk, cardsById, i18n, current, activeCategory, translatedCategory, available, remainingTypes, all, changed, completed, chooseType, advance, toggleCategory, closeSettings, toggleSettings, applyCategories, confirmCategories, reset };
+  return { catalogCategories, selectableIds, session, setSession, categories, queue, index, chosen, skipped, draftCategories, setDraftCategories, settingsOpen, setSettingsOpen, confirmOpen, setConfirmOpen, confirmationRef, storageOk, cardsById, i18n, current, activeCategory, translatedCategory, available, remainingTypes, all, changed, completed, chooseType, advance, toggleCategory, closeSettings, toggleSettings, applyCategories, confirmCategories, reset };
 }

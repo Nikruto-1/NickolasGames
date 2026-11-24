@@ -4,8 +4,8 @@ import "./TruthOrDareGame.css";
 import { localizedCategory } from "./i18n.js";
 
 import { useTruthOrDareGame } from "./useTruthOrDareGame.js";
-export function TruthOrDareGame({ games, t, lang, onGame }) {
-  const { categories, queue, index, chosen, skipped, draftCategories, setDraftCategories, settingsOpen, confirmOpen, setConfirmOpen, confirmationRef, storageOk, i18n, current, translatedCategory, available, remainingTypes, all, completed, chooseType, advance, toggleCategory, closeSettings, toggleSettings, applyCategories, confirmCategories, reset } = useTruthOrDareGame({lang});
+export function TruthOrDareGame({ games, t, lang, onGame, library }) {
+  const { catalogCategories, selectableIds, categories, queue, index, chosen, skipped, draftCategories, setDraftCategories, settingsOpen, confirmOpen, setConfirmOpen, confirmationRef, storageOk, i18n, current, translatedCategory, available, remainingTypes, all, completed, chooseType, advance, toggleCategory, closeSettings, toggleSettings, applyCategories, confirmCategories, reset } = useTruthOrDareGame({lang,library});
   return (
     <section className="s pv td-root" id="preview" aria-label={games.truth.n}>
       <div className="wrap">
@@ -22,15 +22,15 @@ export function TruthOrDareGame({ games, t, lang, onGame }) {
           {["whoami", "crocodile", "alias", "truth"].map((key) => <button type="button" key={key} className="chip" aria-pressed={key === "truth"} onClick={() => onGame(key)}>{games[key].n}</button>)}
         </div>
         <div id="td-settings" className={"td-settings" + (settingsOpen ? " is-open" : "")}>
-          <div className="td-section-head"><h3>{i18n.chooseCats}</h3><span>{draftCategories.length} / 8 {i18n.active}</span></div>
-          <button type="button" className="td-all" aria-pressed={all} onClick={() => setDraftCategories([...ALL_TRUTH_DARE_CATEGORIES])}>{i18n.all} <span aria-hidden="true">{all ? "✓" : "+"}</span></button>
+          <div className="td-section-head"><h3>{i18n.chooseCats}</h3><span>{draftCategories.filter(id=>selectableIds.includes(id)).length} / {selectableIds.length} {i18n.active}</span></div>
+          <button type="button" className="td-all" aria-pressed={all} onClick={() => setDraftCategories([...selectableIds])}>{i18n.all} <span aria-hidden="true">{all ? "✓" : "+"}</span></button>
           <div className="td-categories">
-            {TRUTH_DARE_CATEGORIES.map((original, i) => { const category = localizedCategory(original,lang); return <button type="button" key={category.id}
-              className="td-category" aria-pressed={draftCategories.includes(category.id)}
+            {catalogCategories.map((original, i) => { const category = localizedCategory(original,lang); return <button type="button" key={category.id}
+              className="td-category" disabled={!selectableIds.includes(category.id)} aria-pressed={draftCategories.includes(category.id)}
               onClick={() => toggleCategory(category.id)}>
               <span className="td-category-index">{String(i + 1).padStart(2, "0")}</span>
               <strong>{category.name}</strong><small>{category.description}</small>
-              <span className="td-category-count">100 {i18n.cards}</span><span className="td-check" aria-hidden="true">{draftCategories.includes(category.id) ? "✓" : "+"}</span>
+              <span className="td-category-count">{category.count} {i18n.cards}</span><span className="td-check" aria-hidden="true">{draftCategories.includes(category.id) ? "✓" : "+"}</span>
             </button>; })}
           </div>
           <p className="td-safe">{i18n.safe}</p>
