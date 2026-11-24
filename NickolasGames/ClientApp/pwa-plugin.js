@@ -25,6 +25,7 @@ export function offlinePlugin() {
         'icons/holmes-apple-touch.png',
         'manifest.webmanifest'
       ])];
+      const offlineFiles=[...new Set([...files,...Object.keys(bundle).filter(name=>name.startsWith('assets/'))])];
       const version=createHash('sha256')
         .update(readFileSync(new URL('./index.html',import.meta.url)))
         .update(Object.values(bundle).map(file=>file.code || file.source || '').join(''))
@@ -33,6 +34,7 @@ export function offlinePlugin() {
 const CACHE='nickolasgames-${version}';
 const BUILD_ID=${JSON.stringify(buildId)};
 const CORE_URLS=${JSON.stringify(files)}.map(path=>new URL(path,self.registration.scope).href);
+const OFFLINE_URLS=${JSON.stringify(offlineFiles)}.map(path=>new URL(path,self.registration.scope).href);
 const isAsset=url=>url.pathname.startsWith(new URL('assets/',self.registration.scope).pathname)
   && /\\.(?:js|css|png|jpe?g|webp|svg|woff2?|mp3|ogg)$/i.test(url.pathname);
 self.addEventListener('install',event=>{
@@ -53,6 +55,20 @@ self.addEventListener('activate',event=>{
 });
 self.addEventListener('message',event=>{
   if(event.data?.type==='GET_VERSION')event.source?.postMessage({type:'APP_VERSION',version:BUILD_ID});
+  if(!['OFFLINE_STATUS','OFFLINE_DOWNLOAD'].includes(event.data?.type)||!event.ports?.[0])return;
+  const port=event.ports[0];
+  event.waitUntil((async()=>{
+    try{
+      const cache=await caches.open(CACHE);
+      const missing=[];
+      for(const url of OFFLINE_URLS)if(!await cache.match(url))missing.push(url);
+      if(event.data.type==='OFFLINE_DOWNLOAD'&&missing.length){
+        // Small batches bound memory usage; retry only missing files.
+        for(let i=0;i<missing.length;i+=8)await cache.addAll(missing.slice(i,i+8).map(url=>new Request(url,{cache:'reload'})));
+      }
+      port.postMessage({ready:event.data.type==='OFFLINE_DOWNLOAD'||missing.length===0,total:OFFLINE_URLS.length});
+    }catch{port.postMessage({ready:false,error:true});}
+  })());
 });
 self.addEventListener('fetch',event=>{
   const request=event.request,url=new URL(request.url);

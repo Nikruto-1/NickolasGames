@@ -90,3 +90,16 @@ test('fresh offline install includes the shared runtime; older cached game chunk
   listeners.fetch({request:new Request(url),respondWith:p=>work=p});assert.equal((await work).body,body);
  }
 });
+
+test('explicit offline download caches every emitted asset and reports readiness',async()=>{
+ const sw=await readFile(new URL('../../wwwroot/sw.js',import.meta.url),'utf8');
+ const scope='https://example.test/',listeners={},saved=new Set();
+ const cache={match:async url=>saved.has(typeof url==='string'?url:url.url)?{ok:true}:undefined,addAll:async reqs=>{for(const req of reqs)saved.add(req.url);}};
+ vm.runInNewContext(sw,{URL,Request,caches:{open:async()=>cache},self:{registration:{scope},location:{origin:'https://example.test'},addEventListener:(k,fn)=>listeners[k]=fn}});
+ async function message(type){let work,result;listeners.message({data:{type},ports:[{postMessage:value=>result=value}],waitUntil:p=>work=p});await work;return result;}
+ assert.equal((await message('OFFLINE_STATUS')).ready,false);
+ const downloaded=await message('OFFLINE_DOWNLOAD');assert.equal(downloaded.ready,true);assert.equal(downloaded.total,saved.size);
+ assert.ok([...saved].some(url=>/CheckersGame-.*\.js$/.test(url)));
+ assert.ok([...saved].some(url=>/TruthOrDareGame-.*\.js$/.test(url)));
+ assert.equal((await message('OFFLINE_STATUS')).ready,true);
+});
