@@ -94,7 +94,7 @@ test('fresh offline install includes the shared runtime; older cached game chunk
 test('explicit offline download caches every emitted asset and reports readiness',async()=>{
  const sw=await readFile(new URL('../../wwwroot/sw.js',import.meta.url),'utf8');
  const scope='https://example.test/',listeners={},saved=new Set();
- const cache={match:async url=>saved.has(typeof url==='string'?url:url.url)?{ok:true}:undefined,addAll:async reqs=>{for(const req of reqs)saved.add(req.url);}};
+ const cache={match:async url=>saved.has(typeof url==='string'?url:url.url)?{ok:true}:undefined,addAll:async reqs=>{for(const req of reqs){await readFile(new URL('../../wwwroot/'+req.url.slice(scope.length),import.meta.url));saved.add(req.url);}}};
  vm.runInNewContext(sw,{URL,Request,caches:{open:async()=>cache},self:{registration:{scope},location:{origin:'https://example.test'},addEventListener:(k,fn)=>listeners[k]=fn}});
  async function message(type){let work,result;listeners.message({data:{type},ports:[{postMessage:value=>result=value}],waitUntil:p=>work=p});await work;return result;}
  assert.equal((await message('OFFLINE_STATUS')).ready,false);

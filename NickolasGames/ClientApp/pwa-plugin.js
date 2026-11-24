@@ -23,13 +23,15 @@ export function offlinePlugin() {
         'icons/holmes-192.png',
         'icons/holmes-512.png',
         'icons/holmes-apple-touch.png',
-        'manifest.webmanifest'
+        'manifest.webmanifest',
+        'offline-assets.json'
       ])];
       const offlineFiles=[...new Set([...files,...Object.keys(bundle).filter(name=>name.startsWith('assets/'))])];
       const version=createHash('sha256')
         .update(readFileSync(new URL('./index.html',import.meta.url)))
         .update(Object.values(bundle).map(file=>file.code || file.source || '').join(''))
         .digest('hex').slice(0,16);
+      this.emitFile({type:'asset',fileName:'offline-assets.json',source:JSON.stringify({cache:'nickolasgames-'+version,buildId,files:offlineFiles})});
       this.emitFile({type:'asset',fileName:'sw.js',source:`
 const CACHE='nickolasgames-${version}';
 const BUILD_ID=${JSON.stringify(buildId)};

@@ -715,7 +715,13 @@ try {
         return button&&(!button.disabled||button.textContent==="Усі ресурси ігор збережено");
       },null,{timeout:30000});
       if(await button.isEnabled())await button.click();
-      await download.getByRole("button",{name:"Усі ресурси ігор збережено",exact:true}).waitFor({timeout:125000});
+      await page.waitForFunction(()=>{
+        const section=document.querySelector("#offline-download");
+        return section?.querySelector("button")?.textContent==="Усі ресурси ігор збережено"||section?.querySelector("[data-offline-error]");
+      },null,{timeout:90000});
+      const failure=await download.locator("[data-offline-error]").evaluateAll(nodes=>nodes.map(node=>({reason:node.dataset.offlineError,file:node.dataset.offlineFile})));
+      assert.deepEqual(failure,[],"Offline download failed: "+JSON.stringify(failure));
+      await download.getByRole("button",{name:"Усі ресурси ігор збережено",exact:true}).waitFor();
       await context.setOffline(true);
       for(const game of ["whoami","crocodile","alias","truth","checkers","spy"]){
         await page.goto(base+"/uk/?game="+game);
