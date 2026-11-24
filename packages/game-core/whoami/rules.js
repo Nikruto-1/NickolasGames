@@ -50,7 +50,7 @@ export function whoamiReducer(s,a) {
     case 'remove': return s.phase === 'setup' ? {...s,players:s.players.filter(p=>p.id!==a.id)} : s;
     case 'config': return s.phase === 'setup' ? {...s,...a.values} : s;
     case 'deal':
-      return s.phase === 'setup' && s.players.length && a.pool.length >= s.players.length ? {...s,phase:'game',pool:a.pool,left:s.duration,
+      return s.phase === 'setup' && s.players.length && a.pool.length >= s.players.length ? {...s,phase:'game',resultId:a.resultId,pool:a.pool,left:s.duration,
         players:s.players.map((p,i)=>({...p,word:a.pool[i],usedWords:[a.pool[i]],guessed:0,skipped:0,revision:p.revision+1,lastOutcome:null}))} : s;
     case 'answer': {
       const target=s.players.find(p=>p.id===a.id);

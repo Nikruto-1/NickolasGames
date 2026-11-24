@@ -131,7 +131,7 @@ export function aliasReducer(state, action) {
     }
     case 'start':
       if (state.phase !== 'setup' || !strings(action.deck) || aliasSetupErrors(state, uniqueWords(action.deck)).length) return state;
-      return { ...state, phase: 'dice', deck: uniqueWords(action.deck), contenders: state.teams.map(team => team.id) };
+      return { ...state, phase: 'dice', resultId:action.resultId, deck: uniqueWords(action.deck), contenders: state.teams.map(team => team.id) };
     case 'roll': {
       if (state.phase !== 'dice' || !Number.isFinite(action.now) || !Array.isArray(action.rolls) ||
         action.rolls.length !== state.contenders.length || !state.contenders.every(id => action.rolls.filter(roll => roll.id === id &&

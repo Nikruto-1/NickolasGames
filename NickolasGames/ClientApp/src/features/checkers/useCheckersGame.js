@@ -1,3 +1,4 @@
+import {saveResult,removeResult} from '../../utils/sharedResults.js';
 import { useEffect, useMemo, useRef, useState } from "react";
 import { playCheckersVictory } from "./victorySound.js";
 import { createCheckersMatch, normalizeCheckersSettings, selectFirstSide } from "./matchSettings.js";
@@ -60,6 +61,7 @@ export function useCheckersGame(t) {
     setGame(appendGameHistory(game,{...next,matchId:gameId,startingSide:game.startingSide || "white"},validateCheckersState));
     setSelected(next.forcedFrom);
     if(!checkersFinished(game) && checkersFinished(next)){
+      saveResult({id:gameId,game:'checkers',outcome:next.draw?'draw':'finished',rows:['white','black'].map(side=>({name:'@'+side,score:Number(next.winner===side),winner:next.winner===side}))});
       if(next.winner) {
         setStandings(prev=>recordCheckersWin(prev,gameId,next.winner));
         playCheckersVictory();
@@ -131,6 +133,7 @@ export function useCheckersGame(t) {
       againstBot ? entry=>entry.turn===humanSide && entry.forcedFrom===null : ()=>true,
       validateCheckersState);
     if(!previous) return;
+    if(checkersFinished(game)&&game.matchId&&!checkersFinished(previous))removeResult('checkers',game.matchId);
     if(game.winner && game.matchId && previous.winner!==game.winner)
       setStandings(current=>revertCheckersWin(current,game.matchId));
     setGame(previous);

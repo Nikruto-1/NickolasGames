@@ -1,3 +1,4 @@
+import {saveResult,resultId} from '../../utils/sharedResults.js';
 import { subscribeGameClock, remainingSeconds } from '../../utils/gameClock.js';
 import { useEffect, useRef, useState } from 'react';
 import { persistSpySession, restoreSpySession as restore } from './session.js';
@@ -55,6 +56,7 @@ export function useSpyGame({lang}) {
  useEffect(()=>{
  setStorageOk(persistSpySession({players,round,step,finished,duration,deadline,phase,votes,winner,scores:Object.fromEntries(players.map(p=>[p.id,scores[p.id]||0])),roundLimit,roundNumber,category,hint,roles,locationHistory,spyHistory,mode,timeUp,guessMethod,guessResult}));
  },[players,round,step,finished,duration,deadline,phase,votes,winner,scores,roundLimit,roundNumber,category,hint,roles,locationHistory,spyHistory,mode,timeUp,guessMethod,guessResult]);
+ useEffect(()=>{if(finished&&round?.resultId)saveResult({id:round.resultId,game:'spy',outcome:'finished',rows:players.map((p,i)=>({name:p.name,score:scores[p.id]||0,winner:winner?i===round.spy:i!==round.spy}))});},[finished,round,players,scores,winner]);
  const guard=useRef(false);
  const armedDeadline=useRef(null);
  const announcedDeadline=useRef(null);
@@ -101,7 +103,7 @@ export function useSpyGame({lang}) {
  const clean=name.trim();
  const duplicate=players.some(p=>p.name.toLocaleLowerCase()===clean.toLocaleLowerCase());
  function add(e){e.preventDefault();if(!clean||duplicate||players.length>=20)return;setPlayers(old=>old.length>=20||old.some(p=>p.name.toLocaleLowerCase()===clean.toLocaleLowerCase())?old:[...old,{id:crypto.randomUUID(),name:clean}]);setName('');}
- function start(skip=false){if(players.length<3||clean||guard.current||(round&&((!finished&&!(free&&skip===true))||(!free&&roundNumber>=roundLimit))))return;guard.current=true;setRoundNumber(n=>n+1);setTimeUp(false);setAudioReady(false);armedDeadline.current=null;announcedDeadline.current=null;const drawn=drawLocation(pool,locationHistory);setLocationHistory(drawn.history);const roleOrder=Array.from({length:19},(_,i)=>i);for(let i=roleOrder.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[roleOrder[i],roleOrder[j]]=[roleOrder[j],roleOrder[i]];}const drawnSpy=mode==='rotation'?drawRotatingSpy(players,spyHistory):null;const spy=drawnSpy?drawnSpy.spy:Math.floor(Math.random()*players.length);if(drawnSpy)setSpyHistory(drawnSpy.history);setRound({spy,location:9+drawn.index,guessOptions:guessOptions(drawn.index,pool),first:Math.floor(Math.random()*players.length),roles:players.map((_,i)=>i===spy?null:roleOrder[i-(i>spy?1:0)])});setStep(0);setShown(false);setFinished(false);setDeadline(null);setPhase('discussion');setVotes([]);setChoice('');setGuessResult(null);setWinner(null);}
+ function start(skip=false){if(players.length<3||clean||guard.current||(round&&((!finished&&!(free&&skip===true))||(!free&&roundNumber>=roundLimit))))return;guard.current=true;setRoundNumber(n=>n+1);setTimeUp(false);setAudioReady(false);armedDeadline.current=null;announcedDeadline.current=null;const drawn=drawLocation(pool,locationHistory);setLocationHistory(drawn.history);const roleOrder=Array.from({length:19},(_,i)=>i);for(let i=roleOrder.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[roleOrder[i],roleOrder[j]]=[roleOrder[j],roleOrder[i]];}const drawnSpy=mode==='rotation'?drawRotatingSpy(players,spyHistory):null;const spy=drawnSpy?drawnSpy.spy:Math.floor(Math.random()*players.length);if(drawnSpy)setSpyHistory(drawnSpy.history);setRound({resultId:resultId(),spy,location:9+drawn.index,guessOptions:guessOptions(drawn.index,pool),first:Math.floor(Math.random()*players.length),roles:players.map((_,i)=>i===spy?null:roleOrder[i-(i>spy?1:0)])});setStep(0);setShown(false);setFinished(false);setDeadline(null);setPhase('discussion');setVotes([]);setChoice('');setGuessResult(null);setWinner(null);}
  const stage=!round?0:step<players.length?1:finished?4:phase==='discussion'?2:3;
  const remaining=remainingSeconds(deadline,clock);
  function advanceCard(){

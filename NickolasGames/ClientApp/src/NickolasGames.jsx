@@ -1,3 +1,4 @@
+import { ResultsHistory } from './components/ResultsHistory.jsx';
 import { CustomLibrary } from './components/CustomLibrary.jsx';
 import { readLibrary,saveLibrary,gamesWithLibrary } from './utils/customLibrary.js';
 import './styles/custom-library.css';
@@ -64,6 +65,7 @@ export default function NickolasGames() {
         <Hero t={t} onStart={requestStart} />
         <GamesGrid games={t.games} t={t} onPlay={choose} />
         <CustomLibrary key={lang} items={library} onSave={updateLibrary} lang={lang} t={t} />
+        <ResultsHistory key={lang} lang={lang} t={t}/>
         <HowItWorks t={t} />
         <FinalCta t={t} onStart={requestStart} />
       </> : <GameScreen game={screenGame} games={t.games} lang={lang}
