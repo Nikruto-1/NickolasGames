@@ -69,3 +69,16 @@ test("corrupt saves are rejected",()=>{
  assert.equal(validateCheckersState({...s,board:s.board.map((p,i)=>i===0?{side:"white",king:false}:p)}),false);
  assert.equal(validateCheckersState({...s,turn:"purple"}),false);
 });
+
+test("invalid capture chains and repeated moves are rejected",()=>{
+ const s=initialCheckers();
+ assert.equal(validateCheckersState({...s,captured:[17]}),false);
+ assert.equal(validateCheckersState({...s,board:s.board.map((p,i)=>i===24?false:p)}),false);
+ assert.equal(validateCheckersState({...s,board:s.board.map((p,i)=>i===24?{side:"white",king:false}:p)}),false);
+ assert.equal(validateCheckersState({...s,forcedFrom:40,captured:[17]}),false);
+ const next=applyCheckersMove(s,40,33);
+ assert.equal(applyCheckersMove(next,40,33),next);
+ const chain=applyCheckersMove(put(put(put(empty(),42,"white"),33,"black"),17,"black"),42,24);
+ assert.equal(validateCheckersState(chain),true);
+ assert.equal(validateCheckersState({...chain,captured:[42]}),false);
+});
