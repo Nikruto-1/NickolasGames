@@ -18,7 +18,9 @@ export const WHOAMI_ES = {
       "Futbolista",
       "Bailarín",
       "Bibliotecario",
-      "Pintor"
+      "Pintor",
+      "Jardinero",
+      "Fotógrafo"
     ],
     "medium": [
       "Director de cine",
@@ -39,7 +41,11 @@ export const WHOAMI_ES = {
       "Director de orquesta",
       "Socorrista de playa",
       "Guía turístico",
-      "Entrenador deportivo"
+      "Entrenador deportivo",
+      "Diseñador de muebles",
+      "Locutor de radio",
+      "Instructor de natación",
+      "Adiestrador de perros"
     ],
     "hard": [
       "Campeón de ajedrez",
@@ -59,7 +65,11 @@ export const WHOAMI_ES = {
       "Deshollinador",
       "Operador de grúa",
       "Técnico de sonido",
-      "Topógrafo"
+      "Topógrafo",
+      "Paleontólogo",
+      "Sumiller",
+      "Hidrólogo",
+      "Fabricante de instrumentos"
     ]
   },
   "Personajes": {
