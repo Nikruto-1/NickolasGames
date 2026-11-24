@@ -10,6 +10,9 @@
     "./whoami": "./whoami/rules.js",
     "./truth-or-dare": "./truth-or-dare/session.js",
     "./cards": "./truth-or-dare/cards.uk.js",
-    "./checkers": "./checkers/rules.js"
+    "./checkers": "./checkers/rules.js",
+    "./spy": "./spy/rules.js",
+    "./spy/locations": "./spy/locations.js",
+    "./shared/content-history": "./shared/contentHistory.js"
   }
 }
