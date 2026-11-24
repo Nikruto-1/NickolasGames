@@ -6,7 +6,7 @@ import { chooseCheckersBotMove, BOT_LEVELS } from "../../../packages/game-core/c
 const empty = (turn="black") => ({ board:Array(64).fill(null),turn,forcedFrom:null,captured:[],winner:null,moveNumber:1 });
 const place = (state,index,side,king=false) => { state.board[index]={side,king};return state; };
 
-test("both difficulty levels select legal opening moves", () => {
+test("all difficulty levels select legal opening moves", () => {
   const opening=initialCheckers();
   for(const level of BOT_LEVELS){
     const move=chooseCheckersBotMove(opening,level,()=>0.53);
@@ -38,4 +38,21 @@ test("bot stops when game is over or no legal moves remain", () => {
   const state=initialCheckers();
   assert.equal(chooseCheckersBotMove({...state,winner:"white"},"medium"),null);
   assert.equal(chooseCheckersBotMove(empty("black"),"easy"),null);
+});
+
+test("hard bot respects forced captures, terminal states and input immutability",()=>{
+ const state=place(place(place(place(empty(),21,"black"),28,"white"),44,"white"),1,"black");
+ const snapshot=JSON.stringify(state);
+ const first=chooseCheckersBotMove(state,"hard",()=>0);
+ assert.ok(legalCheckersMoves(state).some(m=>m.from===first.from&&m.to===first.to));
+ const next=applyCheckersMove(state,first.from,first.to);
+ const second=chooseCheckersBotMove(next,"hard",()=>0);
+ assert.equal(second.from,next.forcedFrom);
+ assert.equal(JSON.stringify(state),snapshot);
+ assert.equal(chooseCheckersBotMove({...state,draw:true},"hard"),null);
+});
+test("hard bot chooses an immediate winning capture",()=>{
+ const state=place(place(empty(),19,"black"),28,"white");
+ const move=chooseCheckersBotMove(state,"hard",()=>0);
+ assert.equal(applyCheckersMove(state,move.from,move.to).winner,"black");
 });

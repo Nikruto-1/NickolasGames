@@ -20,7 +20,7 @@ export function useCheckersGame(t) {
   });
   const [modeSettings,setModeSettings] = useVersionedState({
     game:"checkers-mode",lang:"shared",
-    restore:value=>value && ["friend","bot"].includes(value.mode) && ["easy","medium"].includes(value.level) ? normalizeCheckersSettings(value) : null,
+    restore:value=>value && ["friend","bot"].includes(value.mode) && ["easy","medium","hard"].includes(value.level) ? normalizeCheckersSettings(value) : null,
     initialize:()=>normalizeCheckersSettings(null)
   });
   const againstBot=modeSettings.mode==="bot";

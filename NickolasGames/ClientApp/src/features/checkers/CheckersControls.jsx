@@ -30,6 +30,7 @@ export function CheckersControls({t,game,modeSettings,againstBot,drawing,drawRes
                 <select value={modeSettings.level} disabled={drawing} onChange={event=>setModeSettings(current=>({...current,level:event.target.value}))}>
                   <option value="easy">{t.easy}</option>
                   <option value="medium">{t.medium}</option>
+                  <option value="hard">{t.hard}</option>
                 </select>
               </label>}
             </div>
