@@ -1,4 +1,6 @@
+/** @param {unknown} value @returns {string} */
 export const contentKey=value=>String(value).normalize('NFC').trim().toLowerCase().replace(/[’ʼ]/g,"'");
+/** @param {string[]} values @param {string[]} history @param {number} [minimum] @param {()=>number} [random] @returns {{values:string[],history:string[]}} */
 export function freshContent(values,history,minimum=1,random=Math.random){
  const unique=[...new Map(values.map(v=>[contentKey(v),v])).values()];
  const used=new Set(history);let fresh=unique.filter(v=>!used.has(contentKey(v)));
@@ -7,6 +9,7 @@ export function freshContent(values,history,minimum=1,random=Math.random){
    const recent=history.filter(v=>available.has(v)).at(-1);
    const nextHistory=history.filter(v=>!available.has(v));
    const remainder=unique.filter(v=>used.has(contentKey(v)));
+   /** @param {string[]} items */
    const shuffle=items=>{for(let i=items.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[items[i],items[j]]=[items[j],items[i]];}return items;};
    shuffle(fresh);shuffle(remainder);
    if(!fresh.length&&remainder.length>1&&contentKey(remainder[0])===recent){[remainder[0],remainder[1]]=[remainder[1],remainder[0]];}

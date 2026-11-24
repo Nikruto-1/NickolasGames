@@ -15,6 +15,9 @@
     "types": []
   },
   "include": [
-    "src/utils/gameClock.js"
+    "src/utils/gameClock.js",
+    "src/utils/timerMath.js",
+    "../../packages/game-core/shared/contentHistory.js",
+    "../../packages/game-core/spy/rules.js"
   ]
 }
