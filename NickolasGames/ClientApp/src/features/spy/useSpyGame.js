@@ -1,6 +1,6 @@
 import { subscribeGameClock, remainingSeconds } from '../../utils/gameClock.js';
 import { useEffect, useRef, useState } from 'react';
-import { SPY_STORAGE_KEY as storageKey, restoreSpySession as restore } from './session.js';
+import { persistSpySession, restoreSpySession as restore } from './session.js';
 import { spyWinsVote, spyScores } from './rules.js';
 import { locationsFor, SPY_LOCATIONS, locationPool, drawLocation, guessOptions, matchesLocationGuess } from './locations.js';
 import { createHolmesTimerSound, HOLMES_TIME_UP } from '../../utils/holmesTimerSound.js';
@@ -52,7 +52,7 @@ export function useSpyGame({lang}) {
  const [winner,setWinner]=useState(saved.winner??null);
  const [scores,setScores]=useState(saved.scores??{});
  useEffect(()=>{
- try{localStorage.setItem(storageKey,JSON.stringify({players,round,step,finished,duration,deadline,phase,votes,winner,scores,roundLimit,roundNumber,category,hint,roles,locationHistory,mode,timeUp,guessMethod,guessResult}));setStorageOk(true);}catch{setStorageOk(false);}
+ setStorageOk(persistSpySession({players,round,step,finished,duration,deadline,phase,votes,winner,scores,roundLimit,roundNumber,category,hint,roles,locationHistory,mode,timeUp,guessMethod,guessResult}));
  },[players,round,step,finished,duration,deadline,phase,votes,winner,scores,roundLimit,roundNumber,category,hint,roles,locationHistory,mode,timeUp,guessMethod,guessResult]);
  const guard=useRef(false);
  const armedDeadline=useRef(null);
