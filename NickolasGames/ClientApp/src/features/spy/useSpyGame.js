@@ -52,7 +52,7 @@ export function useSpyGame({lang}) {
  const [winner,setWinner]=useState(saved.winner??null);
  const [scores,setScores]=useState(saved.scores??{});
  useEffect(()=>{
- setStorageOk(persistSpySession({players,round,step,finished,duration,deadline,phase,votes,winner,scores,roundLimit,roundNumber,category,hint,roles,locationHistory,mode,timeUp,guessMethod,guessResult}));
+ setStorageOk(persistSpySession({players,round,step,finished,duration,deadline,phase,votes,winner,scores:Object.fromEntries(players.map(p=>[p.id,scores[p.id]||0])),roundLimit,roundNumber,category,hint,roles,locationHistory,mode,timeUp,guessMethod,guessResult}));
  },[players,round,step,finished,duration,deadline,phase,votes,winner,scores,roundLimit,roundNumber,category,hint,roles,locationHistory,mode,timeUp,guessMethod,guessResult]);
  const guard=useRef(false);
  const armedDeadline=useRef(null);
