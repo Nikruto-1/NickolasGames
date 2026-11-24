@@ -1,4 +1,4 @@
-import { rememberContent, nextContent } from '../../utils/contentHistory.js';
+import { rememberContent, nextContent, readHistory, contentKey } from '../../utils/contentHistory.js';
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { ALIAS_COPY } from './translations.js';
 import { ALIAS_WORDS } from './words.js';
@@ -13,10 +13,22 @@ export function useAliasGame({ games, t, lang, startRequest = 0 }) {
   const copy = ALIAS_COPY[lang] || ALIAS_COPY.en;
   const key = `nickolasgames-alias-teams-v1-${lang}`;
   const categories = useMemo(() => aliasCategories(games.alias.c, games.crocodile.c, ALIAS_WORDS[lang] || ALIAS_WORDS.en), [games, lang]);
+  const refreshDeck = value => {
+    const restored=restoreAliasState(value);
+    if(!restored)return null;
+    const next=refreshAliasDeck(restored,categories);
+    if(['setup','finished','exhausted'].includes(next.phase))return next;
+    const prefixLength=next.index+Number(['acting','last'].includes(next.phase));
+    const used=new Set(readHistory('alias',lang));
+    const prefix=next.deck.slice(0,prefixLength);
+    const tail=next.deck.slice(prefixLength).filter(word=>!used.has(contentKey(word)));
+    const deck=[...prefix,...tail];
+    return {...next,deck,phase:next.index>=deck.length?'exhausted':next.phase};
+  };
   const [state, dispatch, storageOk] = useVersionedReducer({
     game: "alias", lang, reducer: aliasReducer,
-    validate: value => validAliasState(value) ? refreshAliasDeck(restoreAliasState(value), categories) : null,
-    initialize: () => refreshAliasDeck(restoreAliasState(readValue(key)) || newAliasState(copy.teams), categories)
+    validate: value => validAliasState(value) ? refreshDeck(value) : null,
+    initialize: () => refreshDeck(readValue(key)) || newAliasState(copy.teams)
   });
   useEffect(()=>{if(state.phase!=='setup')rememberContent('alias',lang,state.deck.slice(0,state.index+Number(['acting','last'].includes(state.phase))));},[state.deck,state.index,state.phase,lang]);
   const categorySelection = aliasCategorySelection(state);
