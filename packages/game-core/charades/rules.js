@@ -78,9 +78,10 @@ export function validCharadesState(s) {
     (s.players.length ? !s.players.some(p => p.id === s.activeId) : s.activeId !== '')) return false;
   if (s.phase !== 'setup' && (s.players.length < 2 || !deckReady(s.deck))) return false;
   if (!validDraw(s)) return false;
-  if (['acting', 'confirming'].includes(s.phase) && (!s.selected || (s.timed !== false && !Number.isFinite(s.deadline)))) return false;
+  if (['handoff', 'choosing', 'acting', 'confirming'].includes(s.phase) && !hasCharadesCard(s)) return false;
+  if (['acting', 'confirming'].includes(s.phase) && (!s.selected || (s.timed !== false && (!Number.isFinite(s.deadline) || s.deadline <= 0)))) return false;
   if (s.timed === false && s.deadline !== null) return false;
-  if (s.phase === 'confirming' && !Number.isFinite(s.answeredAt)) return false;
+  if (s.phase === 'confirming' && (!Number.isFinite(s.answeredAt) || s.answeredAt < 0 || (s.timed !== false && s.answeredAt < s.deadline - CHARADES_DURATION))) return false;
   if (s.phase === 'finished' && (!s.winners.length || !s.winners.every(id => s.players.find(p => p.id === id).points >= s.targetScore))) return false;
   if (s.lastResult !== null && (!s.lastResult || typeof s.lastResult.presenter !== 'string' || typeof s.lastResult.guesser !== 'string' ||
     ![0, 1, 2, 3, 4, 5].includes(s.lastResult.presenterPoints) || ![1, 2, 3].includes(s.lastResult.guesserPoints) || (s.lastResult.bonus !== undefined && ![0, 1, 2].includes(s.lastResult.bonus)))) return false;
@@ -158,10 +159,10 @@ export function charadesReducer(state, action) {
     case 'reveal':
       return state.phase === 'handoff' && hasCharadesCard(state) ? { ...state, phase: 'choosing' } : state;
     case 'select':
-      return state.phase === 'choosing' && hasCharadesCard(state) && DIFFICULTIES.includes(action.level) && Number.isFinite(action.now)
+      return state.phase === 'choosing' && hasCharadesCard(state) && DIFFICULTIES.includes(action.level) && Number.isFinite(action.now) && action.now >= 0
         ? { ...state, phase: 'acting', selected: action.level, deadline: state.timed === false ? null : action.now + CHARADES_DURATION, answeredAt: null, lastResult: null } : state;
     case 'guess':
-      return state.phase === 'acting' && Number.isFinite(action.now)
+      return state.phase === 'acting' && Number.isFinite(action.now) && action.now >= 0 && (state.timed === false || action.now >= state.deadline - CHARADES_DURATION)
         ? { ...state, phase: 'confirming', answeredAt: action.now } : state;
     case 'cancelGuess':
       return state.phase === 'confirming' ? { ...state, phase: 'acting', answeredAt: null } : state;

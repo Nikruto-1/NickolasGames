@@ -136,3 +136,15 @@ test('awarding the final card preserves scores and ends the deck', () => {
   assert.equal(s.players.reduce((total, player) => total + player.points, 0), 48);
   assert(validCharadesState(s));
 });
+test('corrupted active card and impossible timestamps cannot restore or award points',()=>{
+ const s=acting('easy');
+ assert.equal(validCharadesState({...s,cardIndex:999}),false);
+ assert.equal(validCharadesState({...s,deadline:-1}),false);
+ assert.equal(reduce(s,{type:'guess',now:999}),s);
+ assert.equal(reduce(s,{type:'guess',now:Infinity}),s);
+ const confirmed=reduce(s,{type:'guess',now:2000});
+ assert.equal(validCharadesState({...confirmed,answeredAt:999}),false);
+ assert.equal(validCharadesState(JSON.parse(JSON.stringify(confirmed))),true);
+ const result=reduce(confirmed,{type:'award',id:'b'});
+ assert.equal(reduce(result,{type:'award',id:'b'}),result);
+});
