@@ -96,11 +96,11 @@ export const GAME_SEARCH_COPY={
       "Wählt Wahrheit oder Pflicht und entdeckt Fragen und lustige Aufgaben für Freunde und Familien. Spielt kostenlos auf einem Gerät."
     ],
     "checkers": [
-      "Katzen-Dame online — zu zweit oder gegen den PC",
+      "Katzen-Dame online — zu zweit oder gegen PC",
       "Spielt Dame zu zweit am selben Bildschirm oder gegen den Computer. Wählt die Schwierigkeit und bewegt weiße und schwarze Katzenfiguren."
     ],
     "spy": [
-      "Spion online — kostenloses Gesellschaftsspiel",
+      "Spion online — gratis Gesellschaftsspiel",
       "Stellt Fragen zum geheimen Ort und findet den versteckten Spion unter euren Freunden. Für 3–20 Personen auf einem gemeinsamen Gerät."
     ]
   },
