@@ -1,3 +1,4 @@
+import { subscribeGameClock } from '../../utils/gameClock.js';
 import { rememberContent, nextContent } from '../../utils/contentHistory.js';
 import { validateWhoamiStart } from "../../utils/startValidation";
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
@@ -50,11 +51,8 @@ export function useWhoAmIGame({ games, t, lang, startRequest = 0 }) {
  useEffect(()=>{
    if(!running||state.phase!=='game'||!state.timerEnabled||state.left<=0)return;
    const startedAt=Date.now();let accounted=0;
-   const tick=()=>{const elapsed=elapsedWholeSeconds(startedAt,Date.now());const due=elapsed-accounted;if(due>0){accounted=elapsed;dispatch({type:'tick',seconds:due});}};
-   const timer=setInterval(tick,250);
-   const onVisibility=()=>{if(document.hidden)tick();};
-   document.addEventListener('visibilitychange',onVisibility);
-   return()=>{clearInterval(timer);document.removeEventListener('visibilitychange',onVisibility);};
+   const tick=now=>{const elapsed=elapsedWholeSeconds(startedAt,now);const due=elapsed-accounted;if(due>0){accounted=elapsed;dispatch({type:'tick',seconds:due});}};
+   return subscribeGameClock(tick,{immediate:false,hiddenOnly:true});
  },[running,state.phase,state.timerEnabled]);
  useEffect(()=>{if(running&&(state.phase!=='game'||!state.timerEnabled||state.left<=0))setRunning(false);},[running,state.phase,state.timerEnabled,state.left]);
  useEffect(()=>{

@@ -1,3 +1,4 @@
+import { subscribeGameClock, remainingSeconds } from '../../utils/gameClock.js';
 import { rememberContent, nextContent, readHistory, contentKey } from '../../utils/contentHistory.js';
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { ALIAS_COPY } from './translations.js';
@@ -58,7 +59,7 @@ export function useAliasGame({ games, t, lang, startRequest = 0 }) {
   const team = state.teams[state.activeIndex];
   const actor = aliasActor(state);
   const word = aliasWord(state);
-  const remaining = state.deadline === null ? 60 : Math.max(0, Math.ceil((state.deadline - clock) / 1000));
+  const remaining = remainingSeconds(state.deadline,clock,60);
   const expired = state.phase === 'acting' && remaining === 0;
   const last = state.phase === 'last' || expired;
   const playing = state.phase === 'acting' || state.phase === 'last';
@@ -82,14 +83,10 @@ export function useAliasGame({ games, t, lang, startRequest = 0 }) {
   }, [state.answers]);
   useEffect(() => {
     if (!['acting', 'rolling'].includes(state.phase)) return;
-    const tick = () => {
-      const now = Date.now(); setClock(now);
+    return subscribeGameClock(now => {
+      setClock(now);
       dispatch({ type: state.phase === 'rolling' ? 'rolled' : 'expire', now });
-    };
-    tick();
-    const timer = setInterval(tick, 100);
-    document.addEventListener('visibilitychange', tick);
-    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', tick); };
+    },{interval:100});
   }, [state.phase, state.deadline, state.rollUntil]);
   useEffect(() => {
     if (state.phase === 'last' && armed.current !== null) {
