@@ -20,7 +20,11 @@ export const CROCODILE_SV = {
       "Höna",
       "Anka",
       "Fisk",
-      "Fjäril"
+      "Fjäril",
+      "Kalkon",
+      "Hamster",
+      "Åsna",
+      "Gås"
     ],
     "medium": [
       "Bläckfisk",
@@ -42,7 +46,11 @@ export const CROCODILE_SV = {
       "Hackspett",
       "Noshörning",
       "Valross",
-      "Bäver"
+      "Bäver",
+      "Hyena",
+      "Sengångare",
+      "Tukan",
+      "Sjölejon"
     ],
     "hard": [
       "Kapibara",
@@ -63,7 +71,11 @@ export const CROCODILE_SV = {
       "Surikat",
       "Tvättbjörn",
       "Fjärilslarv",
-      "Tioarmad bläckfisk"
+      "Tioarmad bläckfisk",
+      "Myrkott",
+      "Axolotl",
+      "Narval",
+      "Hammarhaj"
     ]
   },
   "Jobb": {

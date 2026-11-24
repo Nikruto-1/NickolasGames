@@ -20,7 +20,11 @@ export const CROCODILE_ES = {
       "Gallina",
       "Pato",
       "Pez",
-      "Mariposa"
+      "Mariposa",
+      "Pavo",
+      "Hámster",
+      "Burro",
+      "Ganso"
     ],
     "medium": [
       "Pulpo",
@@ -42,7 +46,11 @@ export const CROCODILE_ES = {
       "Pájaro carpintero",
       "Rinoceronte",
       "Morsa",
-      "Castor"
+      "Castor",
+      "Hiena",
+      "Perezoso",
+      "Tucán",
+      "León marino"
     ],
     "hard": [
       "Capibara",
@@ -63,7 +71,11 @@ export const CROCODILE_ES = {
       "Suricata",
       "Mapache",
       "Oruga",
-      "Calamar"
+      "Calamar",
+      "Pangolín",
+      "Ajolote",
+      "Narval",
+      "Tiburón martillo"
     ]
   },
   "Profesiones": {

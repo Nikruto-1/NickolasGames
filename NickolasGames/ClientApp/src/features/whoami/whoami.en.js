@@ -18,7 +18,9 @@ export const WHOAMI_EN = {
       "Football player",
       "Dancer",
       "Librarian",
-      "Painter"
+      "Painter",
+      "Gardener",
+      "Photographer"
     ],
     "medium": [
       "Movie director",
@@ -39,7 +41,11 @@ export const WHOAMI_EN = {
       "Orchestra conductor",
       "Beach lifeguard",
       "Tour guide",
-      "Sports coach"
+      "Sports coach",
+      "Furniture designer",
+      "Radio host",
+      "Swimming instructor",
+      "Dog trainer"
     ],
     "hard": [
       "Chess champion",
@@ -59,7 +65,11 @@ export const WHOAMI_EN = {
       "Chimney sweep",
       "Crane operator",
       "Sound engineer",
-      "Land surveyor"
+      "Land surveyor",
+      "Paleontologist",
+      "Sommelier",
+      "Hydrologist",
+      "Instrument maker"
     ]
   },
   "Characters": {

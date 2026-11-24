@@ -18,7 +18,9 @@ export const WHOAMI_SV = {
       "Fotbollsspelare",
       "Dansare",
       "Bibliotekarie",
-      "Konstnär"
+      "Konstnär",
+      "Trädgårdsmästare",
+      "Fotograf"
     ],
     "medium": [
       "Filmregissör",
@@ -39,7 +41,11 @@ export const WHOAMI_SV = {
       "Dirigent",
       "Strandlivräddare",
       "Turistguide",
-      "Idrottstränare"
+      "Idrottstränare",
+      "Möbeldesigner",
+      "Radioprogramledare",
+      "Simlärare",
+      "Hundtränare"
     ],
     "hard": [
       "Schackmästare",
@@ -59,7 +65,11 @@ export const WHOAMI_SV = {
       "Sotare",
       "Kranförare",
       "Ljudtekniker",
-      "Lantmätare"
+      "Lantmätare",
+      "Paleontolog",
+      "Sommelier",
+      "Hydrolog",
+      "Instrumentmakare"
     ]
   },
   "Karaktärer": {
