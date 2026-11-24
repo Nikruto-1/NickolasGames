@@ -8,7 +8,7 @@ import { useWhoAmIGame } from "./useWhoAmIGame.js";
 import { GameRules } from "../../components/GameRules.jsx";
 export function WhoAmIGame({games,t,lang,onGame,startRequest=0}) {
 
- const { copy, rules, pc, key, state, dispatch, name, setName, warning, setWarning, startAttempt, setStartAttempt, activeId, setActiveId, held, setHeld, manual, setManual, running, setRunning, storageOk, sound, previousLeft, dialog, active, pool, add, startErrors, deal, close, restart, answer, keyTrap, closeButton } = useWhoAmIGame({ games, t, lang, startRequest });
+ const { copy, rules, pc, key, state, dispatch, name, setName, warning, setWarning, startAttempt, setActiveId, held, setHeld, manual, setManual, running, setRunning, storageOk, sound, dialog, active, pool, add, startErrors, deal, close, restart, answer, keyTrap, closeButton } = useWhoAmIGame({ games, t, lang, startRequest });
  return <section className="s pv whoami-game" id="preview">
    <div className="wrap" inert={active?true:undefined}>
      <div className="whoami-heading"><div><h2>{copy.title}</h2><p className={state.phase==='setup'?'whoami-description':undefined}>{state.phase==='setup'?rules.description:state.phase==='summary'?copy.summary:copy.savedGame}</p></div>
