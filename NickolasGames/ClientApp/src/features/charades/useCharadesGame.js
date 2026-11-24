@@ -1,3 +1,4 @@
+import { subscribeGameClock, remainingSeconds } from '../../utils/gameClock.js';
 import { rememberContent, nextContent } from '../../utils/contentHistory.js';
 import { validateCharadesStart } from "../../utils/startValidation";
 import { createHolmesTimerSound, HOLMES_TIME_UP } from '../../utils/holmesTimerSound.js';
@@ -67,7 +68,7 @@ export function useCharadesGame({ games, t, lang, startRequest = 0 }) {
   const card = currentCharadesCard(state);
   const exhausted = !setup && state.phase !== 'finished' && (state.phase === 'exhausted' || !hasCharadesCard(state));
   const readingTime = state.phase === 'confirming' ? state.answeredAt : clock;
-  const remaining = state.deadline === null ? 60 : Math.max(0, Math.ceil((state.deadline - readingTime) / 1000));
+  const remaining = remainingSeconds(state.deadline,readingTime,60);
   const award = charadesPoints(state, readingTime);
   const roundPending = !guesserMode && !setup && !exhausted && state.phase !== 'finished' && state.players.some(player => player.points >= state.targetScore);
   const expired = state.deadline !== null && readingTime >= state.deadline;
@@ -78,20 +79,12 @@ export function useCharadesGame({ games, t, lang, startRequest = 0 }) {
   }, [state.phase]);
   useEffect(() => {
     if (state.phase !== 'acting' || !state.timed) return;
-    const refresh = () => setClock(Date.now());
-    refresh();
-    const timer = setInterval(refresh, 250);
-    document.addEventListener('visibilitychange', refresh);
-    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', refresh); };
+    return subscribeGameClock(setClock);
   }, [state.phase, state.deadline, state.timed]);
   useEffect(() => { setTargetDraft(String(state.targetScore)); setWarning(''); }, [state.targetScore, setup]);
   useEffect(() => {
     if (state.phase !== 'rolling') return;
-    const tick = () => { const now = Date.now(); setClock(now); dispatch({ type: 'rolled', now }); };
-    tick();
-    const timer = setInterval(tick, 90);
-    document.addEventListener('visibilitychange', tick);
-    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', tick); };
+    return subscribeGameClock(now=>{setClock(now);dispatch({type:'rolled',now});},{interval:90});
   }, [state.phase, state.draw?.until]);
 
   const startErrors=setup&&startAttempt?validateCharadesStart({state,targetDraft,pendingName:name}):[];
