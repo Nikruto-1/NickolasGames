@@ -11,6 +11,7 @@ import { PrivacyPanel } from "./components/PrivacyPanel.jsx";
 
 
 
+import {PlayerGuide} from "./components/PlayerGuide.jsx";
 import { Hero, GamesGrid, HowItWorks, FinalCta } from "./components/HomeSections.jsx";
 import { SiteNavigation } from "./components/SiteNavigation.jsx";
 
@@ -70,6 +71,7 @@ export default function NickolasGames() {
         <ResultsHistory key={lang} lang={lang} t={t}/>
         <OfflineDownload lang={lang}/>
         <HowItWorks t={t} />
+        <PlayerGuide lang={lang}/>
         <FinalCta t={t} onStart={requestStart} />
       </> : <GameScreen game={screenGame} games={t.games} lang={lang}
         onBack={() => navigate(null)} onChoose={choose}>
