@@ -80,7 +80,7 @@ export default function NickolasGames() {
           : screenGame === "spy"
             ? <SpyGame key={`${lang}-spy`} lang={lang} />
           : screenGame === "truth"
-            ? <TruthOrDareGame key={`${lang}-truth`} games={libraryGames} t={t} lang={lang} onGame={choose} />
+            ? <TruthOrDareGame library={library} key={`${lang}-truth`} games={libraryGames} t={t} lang={lang} onGame={choose} />
           : null}
         </Suspense>
       </GameScreen>}
