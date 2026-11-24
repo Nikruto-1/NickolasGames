@@ -50,9 +50,12 @@ export function useCheckersGame(t) {
   const targets=moves.filter(m=>m.from===active).map(m=>m.to);
   const mustCapture=moves.some(m=>m.capture!==null);
   const count=side=>game.board.filter(p=>p?.side===side).length;
+  const moveGuard=useRef(null);
   const finishMove=(from,to)=>{
+    if(moveGuard.current===game)return;
     const next=applyCheckersMove(game,from,to);
     if(next===game)return;
+    moveGuard.current=game;
     const gameId=game.matchId || roundId();
     setGame(appendGameHistory(game,{...next,matchId:gameId,startingSide:game.startingSide || "white"},validateCheckersState));
     setSelected(next.forcedFrom);

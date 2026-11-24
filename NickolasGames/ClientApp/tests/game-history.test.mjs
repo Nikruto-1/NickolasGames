@@ -54,3 +54,11 @@ test("timeline history remains bounded without nested copies",()=>{
   const rewind=rewindGameHistory(state,()=>true,valid);
   assert.equal(rewind.history.length,MAX_GAME_HISTORY-1);
 });
+
+test("restore discards snapshots from other matches and future turns",()=>{
+ const s=initialize();
+ const restored=restoreGameTimeline({...s,history:[{...initialCheckers(),matchId:"other"},{...initialCheckers(),matchId:s.matchId,moveNumber:9},{...initialCheckers(),matchId:s.matchId}]},valid);
+ assert.equal(restored.history.length,1);
+ assert.equal(restored.history[0].matchId,s.matchId);
+ assert.equal(restored.history[0].moveNumber,1);
+});
