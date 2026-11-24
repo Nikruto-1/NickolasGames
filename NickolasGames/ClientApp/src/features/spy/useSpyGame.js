@@ -1,7 +1,7 @@
 import { subscribeGameClock, remainingSeconds } from '../../utils/gameClock.js';
 import { useEffect, useRef, useState } from 'react';
 import { persistSpySession, restoreSpySession as restore } from './session.js';
-import { spyWinsVote, spyScores } from './rules.js';
+import { spyWinsVote, spyScores, drawRotatingSpy } from './rules.js';
 import { locationsFor, SPY_LOCATIONS, locationPool, drawLocation, guessOptions, matchesLocationGuess } from './locations.js';
 import { createHolmesTimerSound, HOLMES_TIME_UP } from '../../utils/holmesTimerSound.js';
 
@@ -21,8 +21,9 @@ export function useSpyGame({lang}) {
  const manual=manualCopy[lang]||manualCopy.en;
  const [guessMethod,setGuessMethod]=useState(['typed','choices'].includes(saved.guessMethod)?saved.guessMethod:'manual');
  const [guessResult,setGuessResult]=useState(typeof saved.guessResult==='boolean'?saved.guessResult:null);
- const [mode,setMode]=useState(saved.mode==='free'?'free':'classic');
+ const [mode,setMode]=useState(['free','rotation'].includes(saved.mode)?saved.mode:'classic');
  const free=mode==='free';
+ const [spyHistory,setSpyHistory]=useState(saved.spyHistory??[]);
  const [timeUp,setTimeUp]=useState(saved.timeUp===true);
  const [round,setRound]=useState(()=>{
    if(!saved.round)return null;
@@ -52,8 +53,8 @@ export function useSpyGame({lang}) {
  const [winner,setWinner]=useState(saved.winner??null);
  const [scores,setScores]=useState(saved.scores??{});
  useEffect(()=>{
- setStorageOk(persistSpySession({players,round,step,finished,duration,deadline,phase,votes,winner,scores:Object.fromEntries(players.map(p=>[p.id,scores[p.id]||0])),roundLimit,roundNumber,category,hint,roles,locationHistory,mode,timeUp,guessMethod,guessResult}));
- },[players,round,step,finished,duration,deadline,phase,votes,winner,scores,roundLimit,roundNumber,category,hint,roles,locationHistory,mode,timeUp,guessMethod,guessResult]);
+ setStorageOk(persistSpySession({players,round,step,finished,duration,deadline,phase,votes,winner,scores:Object.fromEntries(players.map(p=>[p.id,scores[p.id]||0])),roundLimit,roundNumber,category,hint,roles,locationHistory,spyHistory,mode,timeUp,guessMethod,guessResult}));
+ },[players,round,step,finished,duration,deadline,phase,votes,winner,scores,roundLimit,roundNumber,category,hint,roles,locationHistory,spyHistory,mode,timeUp,guessMethod,guessResult]);
  const guard=useRef(false);
  const armedDeadline=useRef(null);
  const announcedDeadline=useRef(null);
@@ -100,13 +101,13 @@ export function useSpyGame({lang}) {
  const clean=name.trim();
  const duplicate=players.some(p=>p.name.toLocaleLowerCase()===clean.toLocaleLowerCase());
  function add(e){e.preventDefault();if(!clean||duplicate||players.length>=20)return;setPlayers(old=>old.length>=20||old.some(p=>p.name.toLocaleLowerCase()===clean.toLocaleLowerCase())?old:[...old,{id:crypto.randomUUID(),name:clean}]);setName('');}
- function start(skip=false){if(players.length<3||clean||guard.current||(round&&((!finished&&!(free&&skip===true))||(!free&&roundNumber>=roundLimit))))return;guard.current=true;setRoundNumber(n=>n+1);setTimeUp(false);setAudioReady(false);armedDeadline.current=null;announcedDeadline.current=null;const drawn=drawLocation(pool,locationHistory);setLocationHistory(drawn.history);const roleOrder=Array.from({length:19},(_,i)=>i);for(let i=roleOrder.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[roleOrder[i],roleOrder[j]]=[roleOrder[j],roleOrder[i]];}const spy=Math.floor(Math.random()*players.length);setRound({spy,location:9+drawn.index,guessOptions:guessOptions(drawn.index,pool),first:Math.floor(Math.random()*players.length),roles:players.map((_,i)=>i===spy?null:roleOrder[i-(i>spy?1:0)])});setStep(0);setShown(false);setFinished(false);setDeadline(null);setPhase('discussion');setVotes([]);setChoice('');setGuessResult(null);setWinner(null);}
+ function start(skip=false){if(players.length<3||clean||guard.current||(round&&((!finished&&!(free&&skip===true))||(!free&&roundNumber>=roundLimit))))return;guard.current=true;setRoundNumber(n=>n+1);setTimeUp(false);setAudioReady(false);armedDeadline.current=null;announcedDeadline.current=null;const drawn=drawLocation(pool,locationHistory);setLocationHistory(drawn.history);const roleOrder=Array.from({length:19},(_,i)=>i);for(let i=roleOrder.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[roleOrder[i],roleOrder[j]]=[roleOrder[j],roleOrder[i]];}const drawnSpy=mode==='rotation'?drawRotatingSpy(players,spyHistory):null;const spy=drawnSpy?drawnSpy.spy:Math.floor(Math.random()*players.length);if(drawnSpy)setSpyHistory(drawnSpy.history);setRound({spy,location:9+drawn.index,guessOptions:guessOptions(drawn.index,pool),first:Math.floor(Math.random()*players.length),roles:players.map((_,i)=>i===spy?null:roleOrder[i-(i>spy?1:0)])});setStep(0);setShown(false);setFinished(false);setDeadline(null);setPhase('discussion');setVotes([]);setChoice('');setGuessResult(null);setWinner(null);}
  const stage=!round?0:step<players.length?1:finished?4:phase==='discussion'?2:3;
  const remaining=remainingSeconds(deadline,clock);
  function advanceCard(){
  if(guard.current||!shown||step>=players.length)return;guard.current=true;setShown(false);setStep(i=>i+1);
  if(step===players.length-1&&duration){sound.current.unlock(lang);const now=Date.now();setClock(now);armedDeadline.current=now+duration*60000;setAudioReady(true);setDeadline(armedDeadline.current);}
  }
- function reset(){if(!finished&&!window.confirm(d[15]))return;setRound(null);setStep(0);setShown(false);setFinished(false);setDeadline(null);setVotes([]);setChoice('');setScores({});setRoundNumber(0);setTimeUp(false);setGuessResult(null);setWinner(null);setPhase('discussion');}
+ function reset(){if(!finished&&!window.confirm(d[15]))return;setRound(null);setStep(0);setShown(false);setFinished(false);setDeadline(null);setVotes([]);setChoice('');setScores({});setSpyHistory([]);setRoundNumber(0);setTimeUp(false);setGuessResult(null);setWinner(null);setPhase('discussion');}
  return {w,d,q,m,g,manual,o,x,storageOk,locations,players,setPlayers,name,setName,guessMethod,setGuessMethod,guessResult,mode,setMode,free,timeUp,round,step,shown,setShown,finished,duration,setDuration,roundLimit,setRoundLimit,roundNumber,category,setCategory,hint,setHint,roles,setRoles,deadline,setDeadline,phase,setPhase,votes,choice,setChoice,winner,setWinner,scores,guard,audioReady,setAudioReady,sound,armedDeadline,setFinished,clean,duplicate,stage,remaining,add,start,advanceCard,reset,vote,submitGuess,confirmManual};
 }
