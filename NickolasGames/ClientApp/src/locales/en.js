@@ -8,7 +8,7 @@ export const UI_COPY = {
   "explore": "Explore games",
   "flight": "Step into the game world.",
   "gamesTitle": "Pick your game.",
-  "gamesText": "Five ways to get a room talking, laughing and moving.",
+  "gamesText": "Six ways to get a room talking, laughing and moving.",
   "play": "Play",
   "previewTitle": "Try it right here.",
   "previewText": "Reveal a card, act it out, then draw the next one.",
@@ -46,7 +46,7 @@ export const UI_COPY = {
   "steps": [
     [
       "Choose a game",
-      "Pick one of five games, or let the system choose for you."
+      "Pick one of six games, or let the system choose for you."
     ],
     [
       "Set players and time",

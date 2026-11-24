@@ -8,7 +8,7 @@ export const UI_COPY = {
   "explore": "Utforska spel",
   "flight": "Kliv in i spelvärlden.",
   "gamesTitle": "Välj ditt spel.",
-  "gamesText": "Fem sätt att få rummet att prata, skratta och röra på sig.",
+  "gamesText": "Sex sätt att få rummet att prata, skratta och röra på sig.",
   "play": "Spela",
   "previewTitle": "Prova direkt här.",
   "previewText": "Vänd ett kort, spela ut det och dra sedan nästa.",
@@ -46,7 +46,7 @@ export const UI_COPY = {
   "steps": [
     [
       "Välj ett spel",
-      "Välj ett av fem spel eller låt systemet välja åt dig."
+      "Välj ett av sex spel eller låt systemet välja åt dig."
     ],
     [
       "Ställ in spelare och tid",

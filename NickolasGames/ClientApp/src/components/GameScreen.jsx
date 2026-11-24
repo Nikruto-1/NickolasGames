@@ -2,6 +2,7 @@ import { useEffect,useState } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
 import { gameAudioEnabled, setGameAudioEnabled } from '../utils/gameAudioPreference.js';
 import "./GameScreen.css";
+import {gameSearchCopy} from "../locales/gameSearchCopy.js";
 
 const COPY = {
   uk: { back: "До всіх ігор", label: "Обери гру", intro: "Грай у своєму темпі — налаштування й прогрес зберігаються на цьому пристрої." },
@@ -31,7 +32,7 @@ export function GameScreen({ game, games, lang, onBack, onChoose, children }) {
             <div>
               <p className="game-screen-kicker">NICKOLASGAMES</p>
               <h1>{games[game].n}</h1>
-              <p>{copy.intro}</p>
+              <p>{gameSearchCopy(lang,game)?.[1]||copy.intro}</p>
             </div>
           </div>
           <nav className="game-screen-nav" aria-label={copy.label}>

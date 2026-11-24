@@ -8,7 +8,7 @@ export const UI_COPY = {
   "explore": "Explorar juegos",
   "flight": "Entra en el mundo del juego.",
   "gamesTitle": "Elige tu juego.",
-  "gamesText": "Cinco formas de hacer que todos hablen, rían y se muevan.",
+  "gamesText": "Seis formas de hacer que todos hablen, rían y se muevan.",
   "play": "Jugar",
   "previewTitle": "Pruébalo aquí mismo.",
   "previewText": "Revela una tarjeta, actúala y luego toma la siguiente.",
@@ -46,7 +46,7 @@ export const UI_COPY = {
   "steps": [
     [
       "Elige un juego",
-      "Elige uno de los cinco juegos o deja que el sistema elija por ti."
+      "Elige uno de los seis juegos o deja que el sistema elija por ti."
     ],
     [
       "Configura jugadores y tiempo",
