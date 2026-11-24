@@ -35,3 +35,21 @@ test('partial truth dare deck restores without exposing or losing a chosen card'
  assert.deepEqual(restoreTruthDareSession(partial),partial);
  assert.equal(restoreTruthDareSession({...partial,queue:[partial.queue[0],partial.queue[0]]}),null);
 });
+
+test('legacy history normalizes case, whitespace, apostrophes and Unicode',()=>{
+ const db=storage();db.setItem('nickolasgames-content-history-v1-alias-uk',JSON.stringify(["  П’ЯТНИЦЯ ","пʼятниця","Cafe\u0301","",null,123]));
+ assert.deepEqual(readHistory('alias','uk',db),["п'ятниця","café"]);
+ assert.deepEqual(nextContent('alias','uk',["П'ятниця","Café","Субота"],1,db),["Субота"]);
+});
+test('single-card draws across repeated sessions exhaust every unique word before repeating',()=>{
+ const db=storage(),pool=['A','B','C','D','E',' a '];let previous;
+ for(let cycle=0;cycle<20;cycle++){
+  const seen=new Set();
+  for(let i=0;i<5;i++){
+   const word=nextContent('alias','en',pool,1,db)[0];const key=word.trim().toLowerCase();
+   assert.ok(!seen.has(key));if(i===0&&previous!==undefined)assert.notEqual(key,previous);
+   seen.add(key);rememberContent('alias','en',[word],db);previous=key;
+  }
+  assert.equal(seen.size,5);
+ }
+});
