@@ -662,6 +662,18 @@ try {
     }
     await page.close();
   }
+  // Player guides remain available after React replaces the static HTML.
+  {
+    const page=await browser.newPage({viewport:{width:390,height:844},serviceWorkers:"block"});
+    await page.goto(base+"/uk/");
+    await page.locator("main .player-guide h2").waitFor();
+    assert.equal(await page.locator(".player-guide h2").innerText(),"Ігри для друзів на одному пристрої");
+    await page.goto(base+"/uk/games/crocodile/");
+    await page.locator(".game-screen .player-guide").waitFor();
+    assert.equal(await page.locator(".player-guide h2").innerText(),"Як грати");
+    assert.ok((await page.locator(".player-guide").innerText()).includes("машина часу"));
+    checks+=3;await page.close();
+  }
   // Static SEO deep links, legacy query migration and language switching.
   {
     const page=await browser.newPage({viewport:{width:390,height:844},serviceWorkers:"block"});

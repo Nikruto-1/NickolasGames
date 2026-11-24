@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gameGuide } from '../src/locales/gameGuides.js';
 import { COPY } from '../src/locales/index.js';
 import { PRIVACY_COPY } from '../src/locales/privacy.js';
 import { LANGUAGE_PATHS, SITE_ORIGIN, getPageMetadata } from '../src/utils/siteMetadata.js';
@@ -30,10 +31,12 @@ for (const [lang,path] of Object.entries(LANGUAGE_PATHS)) {
    .replace(/<meta name="twitter:(title|description|card)"[^>]*>/g,(_,key)=>'<meta name="twitter:'+key+'" content="'+escape({title,description,card:'summary'}[key])+'" />')
    .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g,'');
   const listing=GAMES.map(key=>'<section><h2><a href="'+gamePath(lang,key)+'">'+escape(games[key].n)+'</a></h2><p>'+escape(games[key].d)+'</p></section>').join('');
+  const guide=gameGuide(lang,game);
+  const guideHtml='<section class="player-guide"><h2>'+escape(guide.heading)+'</h2><p>'+escape(guide.paragraphs[0])+'</p>'+(game?'<h3>'+escape(guide.examples)+'</h3>':'')+guide.paragraphs.slice(1).map(p=>'<p>'+escape(p)+'</p>').join('')+'</section>';
   const content=privacy
    ? '<p>'+escape(policy.intro)+'</p>'+policy.sections.map(([heading,text])=>'<section><h2>'+escape(heading)+'</h2><p>'+escape(text)+'</p></section>').join('')
-   : game?'<p>'+escape(description)+'</p><p>'+escape(games[game].p)+' · '+escape(games[game].t)+'</p>'+listing
-   : '<p>'+escape(COPY[lang].heroText)+'</p>'+listing;
+   : game?'<p>'+escape(description)+'</p><p>'+escape(games[game].p)+' · '+escape(games[game].t)+'</p>'+guideHtml+listing
+   : '<p>'+escape(COPY[lang].heroText)+'</p>'+guideHtml+listing;
   html=html.replace('<h1>NickolasGames</h1>','<h1>'+escape(privacy?policy.title:game?games[game].n:title.split(' | ')[0])+'</h1>');
   html=html.replace(/<div class="seo-content">[\s\S]*?<\/div>/,'<div class="seo-content">'+content+'<p><a href="'+path+'">NickolasGames</a> · <a href="'+path+'privacy/">'+escape(policy.title)+'</a></p></div>');
   const application={'@type':'WebApplication',name:game?games[game].n:'NickolasGames',url,applicationCategory:'GameApplication',operatingSystem:'Web browser',isAccessibleForFree:true,inLanguage:lang,description};

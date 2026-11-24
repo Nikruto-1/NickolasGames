@@ -14,7 +14,7 @@ test('all game pages have distinct localized titles, useful descriptions and soc
   for(const game of GAMES){
    const {title,description}=getPageMetadata(lang,COPY[lang].games,PRIVACY_COPY[lang].title,PRIVACY_COPY[lang].intro,game);
    assert.ok(title.length<=80,title);
-   assert.ok(description.length>=90&&description.length<=170,description);
+   assert.ok(description.length>=90&&description.length<=160,description);
    assert.ok(!titles.has(title),title);titles.add(title);
    assert.ok(!descriptions.has(description),description);descriptions.add(description);
    const html=await readFile(new URL('../../wwwroot'+gamePath(lang,game)+'index.html',import.meta.url),'utf8');
