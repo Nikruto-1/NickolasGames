@@ -160,6 +160,46 @@ try {
     assert.deepEqual(errors,[],`${width}px runtime errors`);
     await page.close();
   }
+  // Shared preferences must survive reload and leave an active Spy round unchanged.
+  {
+    const page=await browser.newPage({viewport:{width:375,height:812},serviceWorkers:"block",reducedMotion:"reduce"});
+    const errors=[];page.on("pageerror",e=>errors.push(e.message));
+    await page.goto(base+"/uk/?game=spy");
+    const root=page.locator(".spy-game");
+    await root.locator(".spy-setup").waitFor();
+    for(const name of ["Анна","Богдан","Віра"]){
+      await root.locator("#spy-name").fill(name);await root.locator("form button").click();
+    }
+    await root.getByRole("button",{name:"Без часу",exact:true}).click();
+    await root.locator(".spy-start").click();
+    await root.locator(".spy-secret.is-hidden").waitFor();
+    const state=()=>page.evaluate(()=>JSON.parse(localStorage.getItem("nickolasgames-session-spy-shared")).state);
+    await page.waitForFunction(()=>JSON.parse(localStorage.getItem("nickolasgames-session-spy-shared"))?.state.round);
+    const before=await state();
+    await page.locator(".theme-toggle").click();
+    await page.waitForFunction(()=>document.documentElement.dataset.theme==="dark");
+    await page.locator(".game-audio-toggle").click();
+    assert.equal(await page.locator(".game-audio-toggle").getAttribute("aria-pressed"),"false");
+    assert.deepEqual(await state(),before);
+    await page.reload();
+    await root.locator(".spy-secret.is-hidden").waitFor();
+    await page.waitForFunction(()=>document.documentElement.dataset.theme==="dark");
+    assert.equal(await page.locator(".game-audio-toggle").getAttribute("aria-pressed"),"false");
+    assert.deepEqual(await state(),before);
+    for(const game of ["whoami","crocodile","alias","truth","checkers","spy"]){
+      await page.goto(base+"/uk/?game="+game);
+      await page.locator(game==="checkers"?".ck-board":game==="spy"?".spy-secret":".game-screen section.pv").waitFor();
+      await page.waitForFunction(()=>document.documentElement.dataset.theme==="dark");
+      await check(page,"375px dark "+game);
+      assert.equal(await page.locator(".game-audio-toggle").getAttribute("aria-pressed"),"false");
+    }
+    await page.locator(".theme-toggle").click();
+    await page.waitForFunction(()=>document.documentElement.dataset.theme==="light");
+    await page.locator(".game-audio-toggle").click();
+    assert.equal(await page.locator(".game-audio-toggle").getAttribute("aria-pressed"),"true");
+    assert.deepEqual(await state(),before);
+    assert.deepEqual(errors,[]);checks+=8;await page.close();
+  }
   // Spy: private handoff, reload, voting, scores, next round and timer expiry.
   {
     const page=await browser.newPage({viewport:{width:375,height:812},serviceWorkers:"block"});

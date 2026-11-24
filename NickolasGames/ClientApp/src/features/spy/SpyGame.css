@@ -9,3 +9,6 @@
 .spy-mode-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.spy-mode-options button{display:grid;gap:6px;text-align:left;align-content:start}.spy-mode-options small{font-weight:400;font-size:12px;line-height:1.4}.spy-mode-options strong{font-size:15px}@media(max-width:420px){.spy-mode-options{grid-template-columns:1fr}}
 
 .spy-guess-form{display:grid;gap:14px;min-width:0}.spy-guess-input{width:100%;min-width:0;min-height:50px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:inherit;font:inherit;padding:12px;box-sizing:border-box}.spy-guess-feedback{font-weight:700}.spy-guess-form .spy-candidate{min-height:76px}.spy-guess-form input:focus-visible{outline:2px solid var(--spy-gold);outline-offset:2px}
+
+/* Keep the reveal/hand-off action within easy reach without covering the card. */
+@media(max-width:640px){.spy-stage[data-stage="1"]{gap:12px}.spy-stage[data-stage="1"]>.spy-wide{min-height:56px}.spy-stage[data-stage="1"] .spy-secret{min-height:clamp(210px,36svh,300px)}.spy-stage[data-stage="1"] .spy-symbol{font-size:clamp(42px,8vh,60px)}}

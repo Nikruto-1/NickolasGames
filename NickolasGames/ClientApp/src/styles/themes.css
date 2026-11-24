@@ -27,3 +27,14 @@
 :root[data-theme=dark] :is(.ck-help,.ck-player small,.ck-rule-box p,.ck-rank-name small,.ck-recent>p,.ck-opponent-label,.ck-bot-difficulty,.ck-rank-num,.ck-leaderboard-title h3,.ck-recent-num){color:var(--mut)}
 :root[data-theme=dark] :is(.ck-opponent-choices button.is-active,.ck-start-buttons button.is-active,.ck-new){background:var(--acc);color:#292724}
 :root[data-theme=dark] .ck-action:hover:not(:disabled){background:#514235;color:var(--fg)}
+
+/* Explicit foreground/background pairs for selected and feedback states. */
+:root[data-theme=dark] :is(.btn.pri,.chip[aria-pressed=true],.lang-btn[aria-pressed=true],.player-score-list .player-name.is-active,.assigned-word.visible){background:var(--acc);color:#292724;border-color:var(--acc)}
+:root[data-theme=dark] .btn.pri:hover{background:#f1ce96;color:#292724}
+:root[data-theme=dark] .spy-steps li.is-active span{color:#292724}
+:root[data-theme=dark] .td-kind{background:#514235;color:var(--fg)}
+:root[data-theme=dark] .td-switcher .chip[aria-pressed=true]{background:var(--acc);color:#292724}
+:root[data-theme=dark] .charades-overtime{background:#49352a;color:#ffcf91;border-color:#c28b56}
+:root[data-theme=dark] .game-screen-tab:hover:not(.is-active){background:#514235;color:var(--fg)}
+:root[data-theme=dark] .game-screen .game-back:focus-visible,:root[data-theme=dark] .game-screen .game-screen-tab:focus-visible{outline-color:var(--acc)}
+:root[data-theme=dark] .ck-rank-num.ck-gold,:root[data-theme=dark] .ck-eyebrow,:root[data-theme=dark] .ck-recent li span:last-child{color:var(--acc)}
