@@ -60,7 +60,7 @@ export default function NickolasGames() {
       {showIntro && <Suspense fallback={<div role="status" aria-live="polite">{LOADING_GAME[lang]||LOADING_GAME.en}</div>}><HolmesIntro lang={lang} onComplete={finishIntro}/></Suspense>}
       <div className={"app-shell" + (screenGame ? " is-playing" : "")} inert={showIntro ? true : undefined}>
       <SiteNavigation theme={theme} onTheme={()=>setTheme(v=>v==="dark"?"light":"dark")} lang={lang} setLang={setLang} label={t.language} onHome={() => navigate(null)} />
-      {screenGame !== "checkers" && <AppStatus lang={lang} />}
+      {screenGame !== "checkers" && <AppStatus lang={lang} showInstall={!screenGame} />}
       <main id="main">
       {screenGame === null ? <>
         <Hero t={t} onStart={requestStart} />
