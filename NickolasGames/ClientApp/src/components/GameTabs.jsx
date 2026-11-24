@@ -2,12 +2,12 @@ import './GameTabs.css';
 
 // Shared in-game navigation keeps the same games and accessibility behaviour
 // across party modes. Checkers has its own dedicated game-screen navigation.
-const PARTY_GAMES = ['whoami', 'crocodile', 'alias', 'truth'];
+const PARTY_GAMES = ['whoami', 'crocodile', 'alias', 'truth', 'spy'];
 
 export function GameTabs({ active, games, t, onChoose, showRandom = false }) {
   return (
     <div className="tabs game-tabs" role="group" aria-label={t.gameLabel}>
-      {PARTY_GAMES.map(game => (
+      {PARTY_GAMES.filter(game => games[game]).map(game => (
         <button type="button" key={game} className="chip"
           aria-pressed={game === active} onClick={() => onChoose(game)}>
           {games[game].n}
