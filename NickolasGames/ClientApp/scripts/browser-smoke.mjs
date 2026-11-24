@@ -662,6 +662,33 @@ try {
     }
     await page.close();
   }
+  // Local library and history: exercise real UI, persistence and deletion.
+  {
+    const page=await browser.newPage({viewport:{width:390,height:844},serviceWorkers:"block"});
+    const errors=[];page.on("pageerror",e=>errors.push(e.message));
+    await page.goto(base+"/uk/");
+    const library=page.locator("#custom-library");
+    await library.locator("summary").click();
+    await library.locator("form input").fill("Тестовий набір");
+    await library.locator("textarea").nth(0).fill("Тестова картка");
+    await library.locator("form button[type=submit], form button:not([type])").click();
+    await library.locator(".custom-library-list li").filter({hasText:"Тестовий набір"}).waitFor();
+    await page.goto(base+"/uk/?game=whoami");
+    await page.locator("#whoami-category").waitFor();
+    assert.ok(await page.locator("#whoami-category option").allTextContents().then(x=>x.includes("★ Тестовий набір")));
+    await page.evaluate(()=>localStorage.setItem("nickolasgames-results-v1",JSON.stringify([{id:"smoke",game:"checkers",at:Date.now(),outcome:"draw",rows:[{name:"@white",score:0},{name:"@black",score:0}]}])));
+    await page.goto(base+"/uk/");
+    const results=page.locator("#results-history");
+    await results.locator("summary").click();
+    await results.locator("select").selectOption("checkers");
+    assert.equal(await results.locator("li").count(),1);
+    await results.locator("li button").click();
+    assert.equal(await results.locator("li").count(),0);
+    await page.reload();
+    await results.locator("summary").click();
+    assert.equal(await results.locator("li").count(),0);
+    assert.deepEqual(errors,[]);checks+=5;await page.close();
+  }
   const zoom=await browser.newPage({viewport:{width:390,height:844},serviceWorkers:"block"});
   await zoom.goto(base+"/de/?game=truth",{waitUntil:"domcontentloaded"});
   await zoom.locator(".game-screen-nav").waitFor();
