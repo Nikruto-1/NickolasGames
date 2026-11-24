@@ -20,7 +20,11 @@ export const CROCODILE_EN = {
       "Hen",
       "Duck",
       "Fish",
-      "Butterfly"
+      "Butterfly",
+      "Turkey",
+      "Hamster",
+      "Donkey",
+      "Goose"
     ],
     "medium": [
       "Octopus",
@@ -42,7 +46,11 @@ export const CROCODILE_EN = {
       "Woodpecker",
       "Rhinoceros",
       "Walrus",
-      "Beaver"
+      "Beaver",
+      "Hyena",
+      "Sloth",
+      "Toucan",
+      "Sea lion"
     ],
     "hard": [
       "Capybara",
@@ -63,7 +71,11 @@ export const CROCODILE_EN = {
       "Meerkat",
       "Raccoon",
       "Caterpillar",
-      "Squid"
+      "Squid",
+      "Pangolin",
+      "Axolotl",
+      "Narwhal",
+      "Hammerhead shark"
     ]
   },
   "Jobs": {
