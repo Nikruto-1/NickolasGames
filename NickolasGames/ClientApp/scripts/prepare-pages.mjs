@@ -1,3 +1,4 @@
+import { finalizeOfflineBuild } from './finalize-offline.mjs';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { resolve, dirname } from 'node:path';
@@ -112,3 +113,6 @@ const notFound = `<!doctype html>
 writeFileSync(resolve(root,'404.html'), notFound);
 
 console.log('Prepared '+urls.length+' localized game/privacy pages, 404 page, CSP and sitemap.');
+
+// Use only final hashed filenames, after Vite and all localized pages are written.
+finalizeOfflineBuild(root);
