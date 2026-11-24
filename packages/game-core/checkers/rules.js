@@ -124,6 +124,9 @@ export function validateCheckersState(s) {
       new Set(s.captured).size!==s.captured.length) return false;
   if (s.board.some((piece,i)=>piece &&
       (!squareIsDark(i) || !SIDES.includes(piece.side) || typeof piece.king!=="boolean"))) return false;
-  if (s.forcedFrom !== null && (s.board[s.forcedFrom]?.side!==s.turn || !s.captured.length)) return false;
+  if (s.board.some(piece=>piece!==null && (typeof piece!=='object'||Array.isArray(piece)))) return false;
+  if (SIDES.some(side=>s.board.filter(piece=>piece?.side===side).length>12)) return false;
+  if (s.forcedFrom === null && s.captured.length) return false;
+  if (s.forcedFrom !== null && (checkersFinished(s)||s.board[s.forcedFrom]?.side!==s.turn || !s.captured.length || s.captured.some(i=>s.board[i]?.side!==enemy(s.turn)) || !captureSteps(s.board,s.forcedFrom,s.captured).length)) return false;
   return true;
 }
