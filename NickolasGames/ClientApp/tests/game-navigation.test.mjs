@@ -1,14 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { GAMES, gameFromSearch, pageForGame } from "../src/utils/gameNavigation.js";
+import { GAMES, gameFromSearch, pageForGame, gameFromLocation } from "../src/utils/gameNavigation.js";
 
 test("game URLs work in all five supported languages", () => {
   for (const lang of ["uk","en","sv","de","es"]) {
     for (const game of GAMES) {
       const url = pageForGame(lang, game);
       const path = lang === "en" ? "/" : `/${lang}/`;
-      assert.equal(url, path + "?game=" + game);
-      assert.equal(gameFromSearch(new URL(url, "https://example.test").search), game);
+      assert.equal(url, path + "games/" + game + "/");
+      assert.equal(gameFromLocation(new URL(url, "https://example.test").pathname), game);
+      assert.equal(gameFromSearch("?game="+game),game);
       assert.equal(pageForGame(lang, null, "?game=" + game), path);
     }
   }
@@ -22,7 +23,7 @@ test("unknown game values fall back to catalog, not a broken screen", () => {
 });
 
 test("navigation retains unrelated query parameters and removes only game", () => {
-  assert.equal(pageForGame("uk", "truth", "?utm_source=discord"), "/uk/?utm_source=discord&game=truth");
+  assert.equal(pageForGame("uk", "truth", "?utm_source=discord"), "/uk/games/truth/?utm_source=discord");
   assert.equal(pageForGame("sv", null, "?utm_source=discord&game=alias"), "/sv/?utm_source=discord");
 });
 

@@ -52,7 +52,8 @@ export default function NickolasGames() {
   const choose = (requested) => { setStartRequest(0); navigate(requested); };
   const requestStart = () => choose(game);
   useEffect(() => {
-    updateSiteMetadata(lang, t.games, (PRIVACY_COPY[lang] || PRIVACY_COPY.en).title);
+    const policy=PRIVACY_COPY[lang] || PRIVACY_COPY.en;
+    updateSiteMetadata(lang, t.games, policy.title, policy.intro, screenGame);
   }, [lang, screenGame, t.games]);
 
   return (
@@ -64,7 +65,7 @@ export default function NickolasGames() {
       <main id="main">
       {screenGame === null ? <>
         <Hero t={t} onStart={requestStart} />
-        <GamesGrid games={t.games} t={t} onPlay={choose} />
+        <GamesGrid games={t.games} t={t} lang={lang} onPlay={choose} />
         <CustomLibrary key={lang} items={library} onSave={updateLibrary} lang={lang} t={t} />
         <ResultsHistory key={lang} lang={lang} t={t}/>
         <OfflineDownload lang={lang}/>

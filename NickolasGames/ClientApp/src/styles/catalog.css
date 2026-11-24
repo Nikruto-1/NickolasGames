@@ -20,3 +20,5 @@ section.s{padding:96px 0}
 .gc .btn{align-self:flex-start}
 .reveal-games{opacity:0;transform:translateY(28px);transition:opacity .8s,transform .8s}
 .reveal-games.in{opacity:1;transform:none}
+
+.gc a.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;text-decoration:none;color:var(--fg)}

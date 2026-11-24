@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { initialLanguage, LANGUAGE_PATHS } from "../utils/siteMetadata.js";
-import { GAMES, gameFromSearch, pageForGame } from "../utils/gameNavigation.js";
+import { GAMES, gameFromLocation, pageForGame } from "../utils/gameNavigation.js";
 import { readValue, writeValue } from "../utils/progress.js";
 import { pathLanguage } from "./routeParsing.js";
 
 export function useGameRouting() {
   const [lang, setLang] = useState(initialLanguage);
-  const [screenGame, setScreenGame] = useState(() => gameFromSearch(location.search));
+  const [screenGame, setScreenGame] = useState(() => gameFromLocation(location.pathname, location.search));
   const [game, setGame] = useState(() => {
-    const routed = gameFromSearch(location.search);
+    const routed = gameFromLocation(location.pathname, location.search);
     const saved = readValue("nickolasgames-active-game");
     return routed || (GAMES.includes(saved) ? saved : "crocodile");
   });
@@ -19,7 +19,7 @@ export function useGameRouting() {
     try { localStorage.setItem("nickolasgames-lang", lang); } catch {}
     document.documentElement.lang = lang;
     const privacy = location.pathname.endsWith("/privacy/");
-    const nextPath = LANGUAGE_PATHS[lang] + (privacy ? "privacy/" : "");
+    const nextPath = privacy ? LANGUAGE_PATHS[lang] + "privacy/" + location.search : pageForGame(lang, gameFromLocation(location.pathname, location.search), location.search);
     if (!ready.current) {
       ready.current = true;
       // The bare root may redirect to a previously chosen language.
@@ -27,12 +27,12 @@ export function useGameRouting() {
       const fromPath = location.pathname === "/" ? null : pathLanguage(location.pathname);
       if (fromPath && fromPath !== lang) { setLang(fromPath); return; }
     }
-    if (location.pathname !== nextPath) history.replaceState(null, "", nextPath + location.search);
+    if (location.pathname + location.search !== nextPath) history.replaceState(null, "", nextPath);
   }, [lang]);
 
   useEffect(() => {
     const onHistory = () => {
-      const route = gameFromSearch(location.search);
+      const route = gameFromLocation(location.pathname, location.search);
       setScreenGame(route);
       if (route) setGame(route);
       const nextLang = pathLanguage(location.pathname);

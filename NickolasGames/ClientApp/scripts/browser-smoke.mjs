@@ -657,9 +657,30 @@ try {
       assert.ok(!new URL(page.url()).searchParams.has("game"),"Back button must return to catalog");
       await page.goBack();
       await page.locator(".game-screen-nav").waitFor();
-      assert.equal(new URL(page.url()).searchParams.get("game"),"truth","Browser Back restores game screen");
+      assert.ok(new URL(page.url()).pathname.endsWith("/games/truth/"),"Browser Back restores game screen");
       checks+=3;
     }
+    await page.close();
+  }
+  // Static SEO deep links, legacy query migration and language switching.
+  {
+    const page=await browser.newPage({viewport:{width:390,height:844},serviceWorkers:"block"});
+    await page.goto(base+"/uk/?game=spy&utm_source=test");
+    await page.locator('.game-screen[data-game="spy"]').waitFor();
+    assert.equal(new URL(page.url()).pathname,"/uk/games/spy/");
+    assert.equal(new URL(page.url()).searchParams.get("utm_source"),"test");
+    await page.locator(".lang-btn").filter({hasText:"DE"}).click();
+    await page.waitForURL("**/de/games/spy/?utm_source=test");
+    assert.equal(await page.locator('link[rel="canonical"]').getAttribute("href"),"https://games.nickolasspace.com/de/games/spy/");
+    await page.reload();
+    await page.locator('.game-screen[data-game="spy"]').waitFor();
+    await page.locator(".game-back").click();
+    await page.locator("#games").waitFor();
+    const link=page.locator('#games a[href="/de/games/alias/"]');
+    await link.click();
+    await page.locator('.game-screen[data-game="alias"]').waitFor();
+    assert.equal(new URL(page.url()).pathname,"/de/games/alias/");
+    checks+=5;
     await page.close();
   }
   // Local library and history: exercise real UI, persistence and deletion.
@@ -724,7 +745,7 @@ try {
       await download.getByRole("button",{name:"Усі ресурси ігор збережено",exact:true}).waitFor();
       await context.setOffline(true);
       for(const game of ["whoami","crocodile","alias","truth","checkers","spy"]){
-        await page.goto(base+"/uk/?game="+game);
+        await page.goto(base+"/uk/games/"+game+"/");
         await page.locator(game==="checkers"?".ck-board":game==="spy"?".spy-setup":".game-screen-nav").waitFor({timeout:15000});
         await check(page,"390px offline "+game);
       }
