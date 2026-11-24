@@ -1,3 +1,4 @@
+import { rememberContent, nextContent } from '../../utils/contentHistory.js';
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { ALIAS_COPY } from './translations.js';
 import { ALIAS_WORDS } from './words.js';
@@ -17,6 +18,7 @@ export function useAliasGame({ games, t, lang, startRequest = 0 }) {
     validate: value => validAliasState(value) ? refreshAliasDeck(restoreAliasState(value), categories) : null,
     initialize: () => refreshAliasDeck(restoreAliasState(readValue(key)) || newAliasState(copy.teams), categories)
   });
+  useEffect(()=>{if(state.phase!=='setup')rememberContent('alias',lang,state.deck.slice(0,state.index+Number(['acting','last'].includes(state.phase))));},[state.deck,state.index,state.phase,lang]);
   const categorySelection = aliasCategorySelection(state);
   const pool = useMemo(() => aliasPool(categories, categorySelection, state.difficulty, state.format), [categories, categorySelection, state.difficulty, state.format]);
   const availableCategories = useMemo(() => Object.keys(categories), [categories]);
@@ -101,7 +103,7 @@ export function useAliasGame({ games, t, lang, startRequest = 0 }) {
     setAttempt(value => value + 1);
     if (errors.length) return;
     settings({ target: Number(target), teams: state.teams.map(item => ({ ...item, name: item.name.trim() })) });
-    dispatch({ type: 'start', deck: shuffleAlias(pool) });
+    dispatch({ type: 'start', deck: nextContent('alias',lang,pool) });
   };
   const roll = () => dispatch({ type: 'roll', now: Date.now(), rolls: state.contenders.map(id => ({ id, values: [1 + Math.floor(Math.random() * 6), 1 + Math.floor(Math.random() * 6)] })) });
   const begin = () => {
