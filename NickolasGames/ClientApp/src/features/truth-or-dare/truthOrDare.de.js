@@ -32,6 +32,10 @@ export default {
     "detective": [
       "Spaß-Detektive",
       "Verdächtige Hinweise und kreative Ausreden"
+    ],
+    "family": [
+      "Familienabenteuer",
+      "Freundliche Fragen und kreative Aufgaben"
     ]
   },
   "twists": {
@@ -55,7 +59,7 @@ export default {
     "title1": "Wahrheit",
     "title2": "oder",
     "title3": "Pflicht",
-    "subtitle": "Wählen, antworten, loslegen. 800 Karten für einen lustigen Abend.",
+    "subtitle": "Wählen, antworten, loslegen. 900 Karten für einen lustigen Abend.",
     "settings": "Kategorien & Regeln",
     "close": "Einstellungen schließen",
     "chooseCats": "Kategorien wählen",
@@ -249,6 +253,26 @@ export default {
     "detective-dare-7": "Lies ein Verhörprotokoll eines Kühlschranks nach Mitternacht vor.",
     "detective-dare-8": "Erfinde die Schlagzeile einer Enthüllungsstory über eure Gruppe.",
     "detective-dare-9": "Beschreibe einen erfundenen Gauner nur durch Gewohnheiten, Gang und Sprüche, nicht durch Aussehen.",
-    "detective-dare-10": "Überzeuge alle, dass ein normaler Stift der wichtigste Beweis einer Verschwörung ist."
+    "detective-dare-10": "Überzeuge alle, dass ein normaler Stift der wichtigste Beweis einer Verschwörung ist.",
+    "family-truth-1": "Welches Fantasietier hättest du gern als Haustier?",
+    "family-truth-2": "Welcher Duft erinnert dich an einen schönen Tag?",
+    "family-truth-3": "Welches Gericht würdest du nach dir benennen?",
+    "family-truth-4": "Welche neue Tradition würdest du der Gruppe vorschlagen?",
+    "family-truth-5": "Welche Fähigkeit würdest du gern an einem Tag meistern?",
+    "family-truth-6": "Wenn deine Stimmung eine Farbe wäre, welche wäre es?",
+    "family-truth-7": "Welchen Gegenstand würdest du auf einen erfundenen Planeten mitnehmen?",
+    "family-truth-8": "Welches Geräusch bringt dich immer zum Lachen?",
+    "family-truth-9": "Welchen Titel würdest du dem heutigen Tag geben?",
+    "family-truth-10": "Welche kleine Geste kann jemandem den Tag verschönern?",
+    "family-dare-1": "Spiele eine Roboterkatze, die tanzen lernt.",
+    "family-dare-2": "Erfinde Werbung für einen unsichtbaren Regenschirm.",
+    "family-dare-3": "Zeige deine Lieblingsjahreszeit mit drei Gesten.",
+    "family-dare-4": "Erfinde einen Namen und ein Motto für ein Katzenteam.",
+    "family-dare-5": "Erzähle ein Märchen in drei Sätzen über eine verlorene Socke.",
+    "family-dare-6": "Mache die Geräusche einer erfundenen Weltraumküche.",
+    "family-dare-7": "Präsentiere einen gewöhnlichen Löffel als Museumsstück.",
+    "family-dare-8": "Zeichne ein Tier in die Luft, das die anderen erraten sollen.",
+    "family-dare-9": "Erfinde einen freundlichen Gruß für einen Außerirdischen.",
+    "family-dare-10": "Gib einen Wetterbericht für ein Süßigkeitenland."
   }
 };

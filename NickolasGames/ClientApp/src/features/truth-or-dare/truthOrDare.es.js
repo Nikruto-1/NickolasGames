@@ -32,6 +32,10 @@ export default {
     "detective": [
       "Detectives de bromas",
       "Pistas sospechosas y excusas graciosas"
+    ],
+    "family": [
+      "Aventuras en familia",
+      "Preguntas amables y retos creativos"
     ]
   },
   "twists": {
@@ -55,7 +59,7 @@ export default {
     "title1": "Verdad",
     "title2": "o",
     "title3": "reto",
-    "subtitle": "Elige, responde y actúa. 800 cartas para una noche divertida.",
+    "subtitle": "Elige, responde y actúa. 900 cartas para una noche divertida.",
     "settings": "Categorías y reglas",
     "close": "Cerrar ajustes",
     "chooseCats": "Elige categorías",
@@ -249,6 +253,26 @@ export default {
     "detective-dare-7": "Lee el informe de un interrogatorio a una nevera después de medianoche.",
     "detective-dare-8": "Inventa el titular de una investigación sensacionalista sobre vuestro grupo.",
     "detective-dare-9": "Describe a un delincuente imaginario por sus costumbres, forma de andar y frases, sin hablar de su aspecto.",
-    "detective-dare-10": "Convence al grupo de que un bolígrafo normal es la prueba principal de una conspiración."
+    "detective-dare-10": "Convence al grupo de que un bolígrafo normal es la prueba principal de una conspiración.",
+    "family-truth-1": "¿Qué animal imaginario te gustaría tener como mascota?",
+    "family-truth-2": "¿Qué olor te recuerda un día bonito?",
+    "family-truth-3": "¿A qué plato le pondrías tu nombre?",
+    "family-truth-4": "¿Qué nueva tradición propondrías al grupo?",
+    "family-truth-5": "¿Qué habilidad te gustaría dominar en un día?",
+    "family-truth-6": "Si tu estado de ánimo fuera un color, ¿cuál sería?",
+    "family-truth-7": "¿Qué objeto llevarías a un planeta imaginario?",
+    "family-truth-8": "¿Qué sonido siempre te hace reír?",
+    "family-truth-9": "¿Qué título le pondrías al día de hoy?",
+    "family-truth-10": "¿Qué pequeño gesto puede alegrarle el día a alguien?",
+    "family-dare-1": "Imita a un gato robot que aprende a bailar.",
+    "family-dare-2": "Inventa un anuncio de un paraguas invisible.",
+    "family-dare-3": "Representa tu estación favorita con tres gestos.",
+    "family-dare-4": "Inventa un nombre y un lema para un equipo de gatos.",
+    "family-dare-5": "Cuenta un cuento de tres frases sobre un calcetín perdido.",
+    "family-dare-6": "Imita los sonidos de una cocina espacial imaginaria.",
+    "family-dare-7": "Presenta una cuchara corriente como pieza de museo.",
+    "family-dare-8": "Dibuja un animal en el aire para que los demás lo adivinen.",
+    "family-dare-9": "Inventa un saludo amistoso para un extraterrestre.",
+    "family-dare-10": "Da un pronóstico del tiempo para un país de dulces."
   }
 };

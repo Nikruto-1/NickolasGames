@@ -32,6 +32,10 @@ export default {
     "detective": [
       "Skämtdetektiven",
       "Misstänkta ledtrådar och roliga förklaringar"
+    ],
+    "family": [
+      "Familjeäventyr",
+      "Vänliga frågor och kreativa utmaningar"
     ]
   },
   "twists": {
@@ -55,7 +59,7 @@ export default {
     "title1": "Sanning",
     "title2": "eller",
     "title3": "konsekvens",
-    "subtitle": "Välj, svara och utför. 800 kort för en rolig kväll med vänner.",
+    "subtitle": "Välj, svara och utför. 900 kort för en rolig kväll med vänner.",
     "settings": "Kategorier och regler",
     "close": "Stäng inställningar",
     "chooseCats": "Välj kategorier",
@@ -249,6 +253,26 @@ export default {
     "detective-dare-7": "Läs upp ett förhörsprotokoll från ett kylskåp efter midnatt.",
     "detective-dare-8": "Hitta på en sensationell granskande rubrik om ert kompisgäng.",
     "detective-dare-9": "Beskriv en påhittad skurk med vanor, gångstil och favoritfraser, men inte utseendet.",
-    "detective-dare-10": "Övertyga alla om att en vanlig penna är det viktigaste beviset för en konspiration."
+    "detective-dare-10": "Övertyga alla om att en vanlig penna är det viktigaste beviset för en konspiration.",
+    "family-truth-1": "Vilket fantasidjur skulle du vilja ha som husdjur?",
+    "family-truth-2": "Vilken doft påminner dig om en fin dag?",
+    "family-truth-3": "Vilken maträtt skulle du döpa efter dig själv?",
+    "family-truth-4": "Vilken ny tradition skulle du föreslå för gruppen?",
+    "family-truth-5": "Vilken färdighet skulle du vilja lära dig på en dag?",
+    "family-truth-6": "Om ditt humör var en färg, vilken skulle det vara?",
+    "family-truth-7": "Vilket föremål skulle du ta med till en fantasiplanet?",
+    "family-truth-8": "Vilket ljud får dig alltid att skratta?",
+    "family-truth-9": "Vilken titel skulle du ge den här dagen?",
+    "family-truth-10": "Vilken liten gest kan göra någons dag bättre?",
+    "family-dare-1": "Spela en robotkatt som lär sig dansa.",
+    "family-dare-2": "Hitta på reklam för ett osynligt paraply.",
+    "family-dare-3": "Visa din favoritårstid med tre gester.",
+    "family-dare-4": "Hitta på ett namn och ett motto för ett kattlag.",
+    "family-dare-5": "Berätta en saga på tre meningar om en borttappad strumpa.",
+    "family-dare-6": "Gör ljuden från ett påhittat rymdkök.",
+    "family-dare-7": "Presentera en vanlig sked som ett museiföremål.",
+    "family-dare-8": "Rita ett djur i luften som de andra får gissa.",
+    "family-dare-9": "Hitta på en vänlig hälsning till en utomjording.",
+    "family-dare-10": "Ge en väderprognos för ett godisland."
   }
 };

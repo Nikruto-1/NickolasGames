@@ -5,6 +5,7 @@ import es from "./truthOrDare.es.js";
 
 const uk = {
   labels: {
+    family: ["Сімейні пригоди","Добрі питання та творчі завдання"],
     friends: ["Друзі під прицілом", "Доброзичливі підколи й питання про компанію"],
     choices: ["Вибір без переможців", "Дилеми, в яких доведеться викручуватися"],
     confessions: ["Зізнання з родзинкою", "Курйозні звички, фейли й маленькі секрети"],
@@ -16,7 +17,7 @@ const uk = {
   },
   ui: {
     eyebrow:"ГРА ДЛЯ КОМПАНІЇ",title1:"Правда",title2:"або",title3:"дія",
-    subtitle:"Обирай, відповідай, виконуй. 800 карток для веселого вечора з друзями.",
+    subtitle:"Обирай, відповідай, виконуй. 900 карток для веселого вечора з друзями.",
     settings:"Категорії та правила",close:"Закрити налаштування",chooseCats:"Обери категорії",
     active:"активні",all:"Обрати всі категорії",cards:"карток",
     safe:"Грайте у своєму темпі. Будь-яке запитання чи завдання можна пропустити.",
@@ -39,7 +40,7 @@ export const localizedCategory = (category, lang) => {
   return { ...category, name: translation?.[0] || category.name, description: translation?.[1] || category.description };
 };
 
-// Existing 800 queue IDs are immutable and stored in saved sessions.
+// Existing queue IDs are immutable and stored in saved sessions.
 // Translation keys point to the canonical base card, not to array positions.
 export const baseTruthDareCardId = (cardId) => typeof cardId === "string"
   ? cardId.replace(/-[1-5]$/, "")
