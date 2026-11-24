@@ -86,3 +86,14 @@ test('typed guesses tolerate casing, whitespace and punctuation but reject wrong
  assert.equal(matchesLocationGuess('',0,lang),false);
  }
 });
+
+test('legacy sessions default to verbal guessing and retain explicit alternatives',()=>{
+ assert.equal(validateSpySession(snapshot).guessMethod,'manual');
+ for(const guessMethod of ['choices','typed','manual'])assert.equal(validateSpySession({...snapshot,guessMethod}).guessMethod,guessMethod);
+});
+test('restore invalid category safely and clear deadline outside timed discussion',()=>{
+ assert.equal(validateSpySession({...snapshot,category:99}).category,0);
+ assert.equal(validateSpySession({...snapshot,category:2}).category,0);
+ assert.equal(validateSpySession({...snapshot,phase:'guess'}).deadline,null);
+ assert.equal(validateSpySession({...snapshot,duration:0}).deadline,null);
+});
