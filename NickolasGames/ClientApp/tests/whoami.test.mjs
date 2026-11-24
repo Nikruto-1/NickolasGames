@@ -91,3 +91,17 @@ for (const [language, oldName, newName] of [
   assert.equal(restoreWhoamiCategory({ ...legacy, category: newName }, categories).category, newName);
  });
 }
+
+test('timer charges elapsed seconds after delayed callbacks, never below zero',()=>{
+ let s={...game(),timerEnabled:true,duration:90,left:90};
+ s=reduce(s,{type:'tick',seconds:5});
+ assert.equal(s.left,85);
+ const unchanged=s;
+ assert.equal(reduce(s,{type:'tick',seconds:0}),unchanged);
+ assert.equal(reduce(s,{type:'tick',seconds:-2}),unchanged);
+ assert.equal(reduce(s,{type:'tick',seconds:1.5}),unchanged);
+ s=reduce(s,{type:'tick',seconds:180});
+ assert.equal(s.left,0);
+ assert.equal(reduce(s,{type:'tick',seconds:10}),s);
+ assert.equal(validWhoami(s),true);
+});

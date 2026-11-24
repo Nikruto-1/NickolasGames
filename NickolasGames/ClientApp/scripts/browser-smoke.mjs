@@ -294,6 +294,33 @@ try {
       assert.deepEqual(errors,[]);checks+=8;await page.close();
     }
   }
+  // Who Am I: enable the optional timer and verify the active phone layout.
+  {
+    const page=await browser.newPage({viewport:{width:320,height:700},serviceWorkers:"block"});
+    await page.goto(base+"/uk/?game=whoami",{waitUntil:"domcontentloaded"});
+    await page.locator("#whoami-name").fill("Timer player");
+    await page.locator(".player-add button").first().click();
+    await page.locator(".whoami-advanced").first().locator("summary").click();
+    await page.locator(".whoami-advanced .only-custom").last().locator("input").check();
+    await page.locator(".whoami-start .btn.pri").click();
+    await page.locator(".whoami-timer").waitFor();
+    await check(page,"320px whoami active timer");
+    assert.equal(await page.locator(".whoami-time-readout").innerText(),"1:00");
+    const controls=await page.locator(".whoami-timer-actions .btn").evaluateAll(buttons=>
+      buttons.map(button=>({height:button.getBoundingClientRect().height,width:button.getBoundingClientRect().width})));
+    assert.equal(controls.length,2);
+    assert(controls.every(button=>button.height>=44 && button.width>0),"Timer controls must be touch-friendly");
+    await page.locator(".whoami-timer-actions .btn").first().click();
+    await page.waitForFunction(()=>{
+      const time=document.querySelector(".whoami-time-readout")?.textContent;
+      return Boolean(time && time!=="1:00");
+    },null,{timeout:4000});
+    await page.locator(".whoami-timer-actions .btn").first().click();
+    await page.locator(".whoami-timer-actions .btn").last().click();
+    assert.equal(await page.locator(".whoami-time-readout").innerText(),"1:00","Reset restores the full duration");
+    checks+=4;
+    await page.close();
+  }
   // Complete real winning move: result dialog, ranking, undo, replay and safe restart.
   {
     const page=await browser.newPage({viewport:{width:1024,height:850},serviceWorkers:"block"});
