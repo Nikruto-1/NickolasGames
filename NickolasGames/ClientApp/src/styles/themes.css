@@ -38,3 +38,8 @@
 :root[data-theme=dark] .game-screen-tab:hover:not(.is-active){background:#514235;color:var(--fg)}
 :root[data-theme=dark] .game-screen .game-back:focus-visible,:root[data-theme=dark] .game-screen .game-screen-tab:focus-visible{outline-color:var(--acc)}
 :root[data-theme=dark] .ck-rank-num.ck-gold,:root[data-theme=dark] .ck-eyebrow,:root[data-theme=dark] .ck-recent li span:last-child{color:var(--acc)}
+
+/* The WebP wordmark has baked-in dark lettering. Keep its original colors on a
+   light brand surface in dark mode, without filtering Holmes or changing layout. */
+:root[data-theme=dark] .site-logo{background:#eee4d1;border-radius:10px}
+:root[data-theme=dark] .site-logo:focus-visible{outline-color:var(--acc)}
