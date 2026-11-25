@@ -838,6 +838,42 @@ try {
     assert.equal(await results.locator("li").count(),0);
     assert.deepEqual(errors,[]);checks+=5;await page.close();
   }
+  // Static production must not send player data or contact a backend/third party.
+  {
+    const context=await browser.newContext({serviceWorkers:"block"});
+    const unexpected=[];
+    const sentinel="NG_PRIVATE_SMOKE_7b43d";
+    try {
+      await context.route("**/*",async route=>{
+        const request=route.request(),url=new URL(request.url());
+        if(url.origin!==base || !["GET","HEAD"].includes(request.method()) ||
+           /^\/(api|hubs)(\/|$)/.test(url.pathname) ||
+           request.url().includes(sentinel) || (request.postData()||"").includes(sentinel)){
+          unexpected.push({method:request.method(),origin:url.origin,path:url.pathname});
+          await route.abort();
+        }else await route.continue();
+      });
+      const page=await context.newPage();
+      page.on("websocket",socket=>unexpected.push({websocket:new URL(socket.url()).origin}));
+      await page.goto(base+"/uk/");
+      const library=page.locator("#custom-library");
+      await library.locator("summary").click();
+      await library.locator("form input").fill(sentinel);
+      await library.locator("textarea").nth(0).fill(sentinel);
+      await library.locator("form button[type=submit], form button:not([type])").click();
+      await library.locator(".custom-library-list li").filter({hasText:sentinel}).waitFor();
+      for(const game of ["whoami","crocodile","alias","truth","checkers","spy"]){
+        await page.goto(base+"/uk/games/"+game+"/");
+        await page.locator(game==="checkers"?".ck-board":game==="spy"?".spy-setup":".game-faq").waitFor();
+      }
+      await page.goto(base+"/uk/privacy/");
+      await page.locator(".privacy-dialog[open]").waitFor();
+      await page.locator("#privacy-data-tab").click();
+      assert.ok((await page.locator(".privacy-records").innerText()).includes(sentinel));
+      assert.deepEqual(unexpected,[],"Unexpected network activity: "+JSON.stringify(unexpected));
+      checks++;
+    } finally {await context.close();}
+  }
   // Real service worker: download once, then open each lazy game with networking disabled.
   {
     const context=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:"allow"});
