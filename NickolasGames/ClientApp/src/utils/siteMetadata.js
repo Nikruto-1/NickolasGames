@@ -26,9 +26,18 @@ export function getPageMetadata(lang,games,privacyTitle,privacyIntro,game=null,p
  alternates['x-default']=alternates.en;
  return {title,description,url,locale:c.locale,alternates};
 }
-export function updateSiteMetadata(lang,games,privacyTitle,privacyIntro,game){
- const privacy=location.pathname.endsWith('/privacy/');
+export function getStructuredData(lang,games,meta,game=null,privacy=false){
+ const {title,description,url}=meta;
+ const selected=GAMES.includes(game)?game:null;
+ const application={'@type':'WebApplication',name:selected?games[selected].n:'NickolasGames',url,applicationCategory:'GameApplication',operatingSystem:'Web browser',isAccessibleForFree:true,inLanguage:lang,description};
+ return privacy?{'@context':'https://schema.org','@type':'WebPage',name:title,url,description,inLanguage:lang}:selected?{'@context':'https://schema.org',...application}:{'@context':'https://schema.org','@graph':[application,{'@type':'ItemList',itemListElement:GAMES.map((key,index)=>({'@type':'ListItem',position:index+1,url:SITE_ORIGIN+contentPath(lang,key),name:games[key].n}))}]};
+}
+export function updateSiteMetadata(lang,games,privacyTitle,privacyIntro,game,privacy=location.pathname.endsWith('/privacy/')){
  const meta=getPageMetadata(lang,games,privacyTitle,privacyIntro,game,privacy);
+ const structured=getStructuredData(lang,games,meta,game,privacy);
+ let script=document.querySelector('script[data-site-schema]');
+ if(!script){script=document.createElement('script');script.type='application/ld+json';script.dataset.siteSchema='';document.head.appendChild(script);}
+ script.textContent=JSON.stringify(structured).replace(/</g,'\\u003c');
  document.title=meta.title;
  document.documentElement.lang=lang;
  for(const selector of ['meta[name="description"]','meta[property="og:description"]','meta[name="twitter:description"]'])document.querySelector(selector)?.setAttribute('content',meta.description);

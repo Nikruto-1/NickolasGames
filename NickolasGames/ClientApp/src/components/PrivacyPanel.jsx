@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Download, Trash2, X, ShieldCheck } from 'lucide-react';
 import { PRIVACY_COPY } from '../locales/privacy.js';
+import {contentPath} from '../utils/siteRoutes.js';
 import { inspectGameData, clearGameData } from '../utils/privacy.js';
 
-export function PrivacyPanel({ lang }) {
+export function PrivacyPanel({ lang, privacy, onOpen, onClose }) {
   const copy = PRIVACY_COPY[lang] || PRIVACY_COPY.en;
   const dialog = useRef(null);
   const trigger = useRef(null);
@@ -15,16 +16,10 @@ export function PrivacyPanel({ lang }) {
   };
   const open = () => { refresh(); if (!dialog.current.open) dialog.current.showModal(); };
   useEffect(() => {
-    if (location.pathname.endsWith('/privacy/')) open();
-  }, []);
-  const close = () => {
-    dialog.current.close();
-    if (location.pathname.endsWith('/privacy/')) {
-      history.replaceState(null, '', lang === 'en' ? '/' : '/' + lang + '/');
-      dispatchEvent(new PopStateEvent('popstate'));
-    }
-    trigger.current?.focus();
-  };
+    if(privacy)open();
+    else if(dialog.current.open){dialog.current.close();trigger.current?.focus();}
+  }, [privacy]);
+  const close = () => { onClose(); };
   const download = () => {
     const url = URL.createObjectURL(new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' }));
     const link = document.createElement('a');
@@ -32,7 +27,7 @@ export function PrivacyPanel({ lang }) {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
   return <>
-    <button className="footer-command" ref={trigger} onClick={open}><ShieldCheck size={18} aria-hidden="true" />{copy.title}</button>
+    <a className="footer-command" href={contentPath(lang,null,true)} ref={trigger} onClick={event=>{if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;event.preventDefault();onOpen();}}><ShieldCheck size={18} aria-hidden="true" />{copy.title}</a>
     <dialog ref={dialog} className="privacy-dialog" aria-labelledby="privacy-title" onCancel={event => { event.preventDefault(); close(); }}>
       <header className="privacy-header"><h2 id="privacy-title">{copy.title}</h2><button className="icon-button" title={copy.close} aria-label={copy.close} onClick={close}><X size={20} /></button></header>
       <div className="privacy-tabs" role="tablist" aria-label={copy.title} onKeyDown={event => {

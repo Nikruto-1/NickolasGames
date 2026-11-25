@@ -2,6 +2,7 @@ import { useEffect,useState } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
 import { gameAudioEnabled, setGameAudioEnabled } from '../utils/gameAudioPreference.js';
 import "./GameScreen.css";
+import {GAMES,gamePath} from '../utils/siteRoutes.js';
 import {GameFaq} from './GameFaq.jsx';
 import {PlayerGuide} from "./PlayerGuide.jsx";
 import {gameSearchCopy} from "../locales/gameSearchCopy.js";
@@ -15,7 +16,10 @@ const COPY = {
 };
 
 const AUDIO_COPY={uk:['Звуки гри','Увімкнено','Вимкнено'],en:['Game sounds','On','Off'],sv:['Spelljud','På','Av'],de:['Spielklänge','An','Aus'],es:['Sonidos del juego','Activados','Desactivados']};
-const GAME_KEYS = ["whoami", "crocodile", "alias", "truth", "checkers", "spy"];
+function follow(event,action){
+ if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
+ event.preventDefault();action();
+}
 
 export function GameScreen({ game, games, lang, onBack, onChoose, children }) {
   const copy = COPY[lang] || COPY.en;
@@ -26,9 +30,9 @@ export function GameScreen({ game, games, lang, onBack, onChoose, children }) {
     <div className="game-screen" data-game={game}>
       <header className="game-screen-header">
         <div className="wrap">
-          <button type="button" className="game-back" onClick={onBack}>
+          <a href={gamePath(lang,null)} className="game-back" onClick={event=>follow(event,onBack)}>
             <span aria-hidden="true">←</span> {copy.back}
-          </button>
+          </a>
           <button type="button" className="game-audio-toggle" aria-pressed={audio} aria-label={labels[0]} onClick={()=>{const next=!audio;if(setGameAudioEnabled(next))setAudio(next);}}>{audio?<Volume2 size={19} aria-hidden="true"/>:<VolumeX size={19} aria-hidden="true"/>}<span>{labels[1+Number(!audio)]}</span></button>
           <div className="game-screen-heading">
             <div>
@@ -38,10 +42,10 @@ export function GameScreen({ game, games, lang, onBack, onChoose, children }) {
             </div>
           </div>
           <nav className="game-screen-nav" aria-label={copy.label}>
-            {GAME_KEYS.map(key => (
-              <button key={key} type="button" aria-current={key === game ? "page" : undefined}
+            {GAMES.map(key => (
+              <a key={key} href={gamePath(lang,key)} aria-current={key === game ? "page" : undefined}
                 className={"game-screen-tab" + (key === game ? " is-active" : "")}
-                onClick={() => onChoose(key)}>{games[key].n}</button>
+                onClick={event=>follow(event,()=>onChoose(key))}>{games[key].n}</a>
             ))}
           </nav>
         </div>

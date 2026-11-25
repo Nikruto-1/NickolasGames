@@ -88,3 +88,7 @@
  .game-screen .spy-stage,.game-screen .alias-round-summary,.game-screen .charades-guesser,.game-screen .winner-banner{animation:game-stage-enter .18s ease-out}
  @keyframes game-stage-enter{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 }
+
+.game-back,.game-screen-tab{color:var(--fg);text-decoration:none}
+.game-screen-tab.is-active{color:#fff}
+:root[data-theme=dark] .game-screen-tab.is-active{color:#292724}
