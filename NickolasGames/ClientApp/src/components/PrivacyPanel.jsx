@@ -38,16 +38,16 @@ export function PrivacyPanel({ lang, privacy, onOpen, onClose }) {
         setTab(next);
         requestAnimationFrame(() => document.getElementById('privacy-' + next + '-tab')?.focus());
       }}>
-        <button id="privacy-policy-tab" role="tab" aria-controls="privacy-policy" aria-selected={tab === 'policy'} onClick={() => setTab('policy')}>{copy.title}</button>
-        <button id="privacy-data-tab" role="tab" aria-controls="privacy-data" aria-selected={tab === 'data'} onClick={() => { refresh(); setTab('data'); }}>{copy.data}</button>
+        <button id="privacy-policy-tab" role="tab" aria-controls="privacy-policy" aria-selected={tab === 'policy'} tabIndex={tab === 'policy' ? 0 : -1} onClick={() => setTab('policy')}>{copy.title}</button>
+        <button id="privacy-data-tab" role="tab" aria-controls="privacy-data" aria-selected={tab === 'data'} tabIndex={tab === 'data' ? 0 : -1} onClick={() => { refresh(); setTab('data'); }}>{copy.data}</button>
       </div>
-      <div id="privacy-policy" role="tabpanel" aria-labelledby="privacy-policy-tab" hidden={tab !== 'policy'}>
+      <div id="privacy-policy" role="tabpanel" tabIndex={0} aria-labelledby="privacy-policy-tab" hidden={tab !== 'policy'}>
         <p>{copy.intro}</p>
         {copy.sections.map(([title, text]) => <section key={title}><h3>{title}</h3><p>{text}</p></section>)}
         <a href="mailto:kkosmacevskij@gmail.com">kkosmacevskij@gmail.com</a>
         <p className="policy-sources"><a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener noreferrer">GitHub Privacy Statement</a> · <a href="https://commission.europa.eu/law/law-topic/data-protection/information-individuals_en" target="_blank" rel="noopener noreferrer">EU data protection rights</a></p>
       </div>
-      <div id="privacy-data" role="tabpanel" aria-labelledby="privacy-data-tab" hidden={tab !== 'data'}>
+      <div id="privacy-data" role="tabpanel" tabIndex={0} aria-labelledby="privacy-data-tab" hidden={tab !== 'data'}>
         <p>{copy.note}</p>
         {failed ? <p role="status">{copy.failed}</p> : Object.keys(records).length ? <pre className="privacy-records">{JSON.stringify(records, null, 2)}</pre> : <p>{copy.empty}</p>}
         <div className="privacy-actions">
