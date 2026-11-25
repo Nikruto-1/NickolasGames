@@ -9,7 +9,7 @@ on:
       - 'NickolasGames/ClientApp/media-plugin.js'
       - 'NickolasGames/ClientApp/scripts/optimize-media.py'
   push:
-    branches: ['feature/lighthouse-baseline','fix/game-loading-cls','fix/navigation-logo-budget']
+    branches: ['feature/lighthouse-baseline','fix/game-loading-cls','fix/navigation-logo-budget','fix/home-route-split']
   workflow_dispatch:
 permissions:
   contents: read
