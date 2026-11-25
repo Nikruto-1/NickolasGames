@@ -12,3 +12,12 @@ test('production hero is optimized when required; original remains a safe local 
  if(process.env.NICKOLAS_REQUIRE_MEDIA_OPTIMIZATION==='1')assert.ok(hero.endsWith('.webp'),'CI must use optimized WebP');
  if(hero.endsWith('.webp'))assert.ok(emitted.size<original.size,'Optimized image must be smaller');
 });
+
+test('navigation logo stays within its production media budget',async()=>{
+ const assets=new URL('../../wwwroot/assets/',import.meta.url);
+ const names=await readdir(assets);
+ const generated=names.find(name=>/^holmes-logo\.generated-[\w-]+\.webp$/.test(name));
+ const original=await stat(new URL('../src/assets/holmes-logo.webp',import.meta.url));
+ if(process.env.NICKOLAS_REQUIRE_MEDIA_OPTIMIZATION==='1')assert.ok(generated,'CI must emit optimized logo');
+ if(generated)assert.ok((await stat(new URL(generated,assets))).size<original.size,'Logo must be smaller');
+});
