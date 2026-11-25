@@ -200,30 +200,50 @@ try {
     assert.deepEqual(await state(),before);
     assert.deepEqual(errors,[]);checks+=8;await page.close();
   }
-  // Brand artwork must stay readable in dark mode, including a narrow installed-app viewport.
+  // The dark wordmark changes color without a background plate or changes to Holmes.
   {
     const page=await browser.newPage({viewport:{width:462,height:640},serviceWorkers:"block"});
     await page.goto(base+"/uk/");
     const logo=page.locator(".site-logo");
     await logo.waitFor();
-    const background=()=>logo.evaluate(node=>getComputedStyle(node).backgroundColor);
-    const dimensions=()=>logo.evaluate(node=>({width:node.offsetWidth,height:node.offsetHeight}));
-    const original=await dimensions();
-    assert.equal(await background(),"rgba(0, 0, 0, 0)");
+    const style=()=>logo.evaluate(node=>{
+      const image=node.querySelector("img"),mark=node.querySelector(".site-logo-wordmark");
+      const a=getComputedStyle(node),b=getComputedStyle(image),c=getComputedStyle(mark);
+      return {background:a.backgroundColor,width:node.offsetWidth,height:node.offsetHeight,
+        imageClip:b.clipPath,imageFilter:b.filter,markDisplay:c.display,markColor:c.backgroundColor,
+        markClip:c.clipPath,mask:c.maskImage};
+    });
+    const verifyDark=async()=>{
+      const dark=await style();
+      assert.equal(dark.background,"rgba(0, 0, 0, 0)");
+      assert.equal(dark.markDisplay,"block");
+      assert.equal(dark.markColor,"rgb(244, 233, 215)");
+      assert.equal(dark.imageFilter,"none");
+      assert.equal(dark.imageClip,"inset(0px 67.5% 0px 0px)");
+      assert.equal(dark.markClip,"inset(0px 0px 0px 32.5%)");
+      assert.ok(dark.mask.includes("holmes-logo"));
+      return dark;
+    };
+    const original=await style();
+    assert.equal(original.markDisplay,"none");
+    assert.equal(original.imageClip,"none");
     await page.locator(".theme-toggle").click();
     await page.waitForFunction(()=>document.documentElement.dataset.theme==="dark");
-    assert.equal(await background(),"rgb(238, 228, 209)");
-    assert.deepEqual(await dimensions(),original,"Theme switching must not resize the logo");
+    const dark=await verifyDark();
+    assert.equal(dark.width,original.width);assert.equal(dark.height,original.height);
     await page.reload();
     await page.waitForFunction(()=>document.documentElement.dataset.theme==="dark");
-    assert.equal(await background(),"rgb(238, 228, 209)");
+    await verifyDark();
     await page.goto(base+"/uk/games/spy/");
     await page.locator(".spy-setup").waitFor();
     await page.waitForFunction(()=>document.documentElement.dataset.theme==="dark");
-    assert.equal(await background(),"rgb(238, 228, 209)");
+    await verifyDark();
     await page.locator(".theme-toggle").click();
     await page.waitForFunction(()=>document.documentElement.dataset.theme==="light");
-    assert.equal(await background(),"rgba(0, 0, 0, 0)");
+    const light=await style();
+    assert.equal(light.markDisplay,"none");
+    assert.equal(light.imageClip,"none");
+    assert.equal(light.background,"rgba(0, 0, 0, 0)");
     checks+=6;
     await page.close();
   }

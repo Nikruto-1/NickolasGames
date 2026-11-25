@@ -39,7 +39,10 @@
 :root[data-theme=dark] .game-screen .game-back:focus-visible,:root[data-theme=dark] .game-screen .game-screen-tab:focus-visible{outline-color:var(--acc)}
 :root[data-theme=dark] .ck-rank-num.ck-gold,:root[data-theme=dark] .ck-eyebrow,:root[data-theme=dark] .ck-recent li span:last-child{color:var(--acc)}
 
-/* The WebP wordmark has baked-in dark lettering. Keep its original colors on a
-   light brand surface in dark mode, without filtering Holmes or changing layout. */
-:root[data-theme=dark] .site-logo{background:#eee4d1;border-radius:10px}
+/* Preserve Holmes' original artwork and recolor only the transparent wordmark.
+   The original artwork is split at the gap between the cat and lettering. */
+.site-logo{position:relative}
+.site-logo-wordmark{display:none;position:absolute;inset:0;pointer-events:none;mask-size:100% 100%;mask-repeat:no-repeat;mask-position:center;-webkit-mask-size:100% 100%;-webkit-mask-repeat:no-repeat;-webkit-mask-position:center;clip-path:inset(0 0 0 32.5%);background:var(--fg)}
+:root[data-theme=dark] .site-logo img{clip-path:inset(0 67.5% 0 0)}
+:root[data-theme=dark] .site-logo-wordmark{display:block}
 :root[data-theme=dark] .site-logo:focus-visible{outline-color:var(--acc)}
