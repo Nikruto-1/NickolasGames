@@ -8,6 +8,7 @@ on:
       - 'architecture/**'
       - 'fix/**'
       - 'feature/**'
+      - 'seo/**'
 
 permissions:
   contents: read
@@ -33,6 +34,10 @@ jobs:
       - name: Install pinned dependencies
         working-directory: NickolasGames/ClientApp
         run: npm ci
+      - name: Report npm security advisories
+        working-directory: NickolasGames/ClientApp
+        continue-on-error: true
+        run: npm audit --audit-level=high --json
       - name: Set up Python for media optimization
         uses: actions/setup-python@v5
         with:
