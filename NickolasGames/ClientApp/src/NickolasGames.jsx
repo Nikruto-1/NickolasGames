@@ -45,7 +45,7 @@ export default function NickolasGames() {
   const [showIntro, setShowIntro] = useState(false);
   const [startRequest,setStartRequest] = useState(0);
   const finishIntro = useCallback(() => setShowIntro(false), []);
-  const { screenGame, lang, setLang, game, navigate } = useGameRouting();
+  const { screenGame, lang, setLang, game, navigate, privacy, openPrivacy, closePrivacy } = useGameRouting();
   const t = COPY[lang] || COPY.en;
   const [library,setLibrary]=useState(readLibrary);
   const libraryGames=useMemo(()=>gamesWithLibrary(t.games,library,lang),[t.games,library,lang]);
@@ -54,8 +54,8 @@ export default function NickolasGames() {
   const requestStart = () => choose(game);
   useEffect(() => {
     const policy=PRIVACY_COPY[lang] || PRIVACY_COPY.en;
-    updateSiteMetadata(lang, t.games, policy.title, policy.intro, screenGame);
-  }, [lang, screenGame, t.games]);
+    updateSiteMetadata(lang, t.games, policy.title, policy.intro, screenGame,privacy);
+  }, [lang, screenGame, t.games,privacy]);
 
   return (
     <>
@@ -92,7 +92,7 @@ export default function NickolasGames() {
         </Suspense>
       </GameScreen>}
       </main>
-      <footer><span>{t.footer}</span><PrivacyPanel lang={lang} /><button className="btn sm" onClick={() => setShowIntro(true)}>{({uk:"Холмс · 2D-вступ",en:"Holmes · 2D intro",sv:"Holmes · 2D-intro",de:"Holmes · 2D-Intro",es:"Holmes · Intro 2D"})[lang]}</button></footer>
+      <footer><span>{t.footer}</span><PrivacyPanel lang={lang} privacy={privacy} onOpen={openPrivacy} onClose={closePrivacy} /><button className="btn sm" onClick={() => setShowIntro(true)}>{({uk:"Холмс · 2D-вступ",en:"Holmes · 2D intro",sv:"Holmes · 2D-intro",de:"Holmes · 2D-Intro",es:"Holmes · Intro 2D"})[lang]}</button></footer>
       </div>
     </>
   );

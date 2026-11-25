@@ -751,6 +751,32 @@ try {
     assert.equal(new URL(page.url()).pathname,'/uk/games/alias/');
     checks++;await page.close();
   }
+  // Navigation and structured data remain synchronized without reloads.
+  {
+    const page=await browser.newPage({viewport:{width:390,height:844},serviceWorkers:"block"});
+    const schema=()=>page.locator('script[data-site-schema]').evaluate(el=>JSON.parse(el.textContent));
+    const canonical=()=>page.locator('link[rel="canonical"]').getAttribute('href');
+    await page.goto(base+'/uk/games/spy/');
+    await page.locator('.game-screen-nav a[href="/uk/games/alias/"]').click();
+    await page.waitForURL('**/uk/games/alias/');
+    await page.waitForFunction(()=>JSON.parse(document.querySelector('script[data-site-schema]').textContent).url.endsWith('/uk/games/alias/'));
+    assert.equal((await schema()).url,await canonical());
+    await page.locator('.game-back').click();
+    await page.locator('#games').waitFor();
+    await page.waitForFunction(()=>JSON.parse(document.querySelector('script[data-site-schema]').textContent)['@graph']?.length===2);
+    await page.locator('a.footer-command[href="/uk/privacy/"]').click();
+    await page.locator('.privacy-dialog[open]').waitFor();
+    await page.waitForFunction(()=>JSON.parse(document.querySelector('script[data-site-schema]').textContent)['@type']==='WebPage');
+    assert.equal((await schema()).url,await canonical());
+    await page.locator('.privacy-dialog .icon-button').click();
+    await page.waitForURL('**/uk/');
+    await page.waitForFunction(()=>JSON.parse(document.querySelector('script[data-site-schema]').textContent)['@graph']?.length===2);
+    await page.goForward();
+    await page.locator('.privacy-dialog[open]').waitFor();
+    await page.goBack();
+    await page.locator('.privacy-dialog[open]').waitFor({state:'hidden'});
+    checks+=5;await page.close();
+  }
   // Static SEO deep links, legacy query migration and language switching.
   {
     const page=await browser.newPage({viewport:{width:390,height:844},serviceWorkers:"block"});

@@ -7,7 +7,7 @@ import { gameFaq } from '../src/locales/gameFaq.js';
 import { gameGuide } from '../src/locales/gameGuides.js';
 import { COPY } from '../src/locales/index.js';
 import { PRIVACY_COPY } from '../src/locales/privacy.js';
-import { LANGUAGE_PATHS, SITE_ORIGIN, getPageMetadata } from '../src/utils/siteMetadata.js';
+import { LANGUAGE_PATHS, SITE_ORIGIN, getPageMetadata, getStructuredData } from '../src/utils/siteMetadata.js';
 import { GAMES, contentPath, gamePath } from '../src/utils/siteRoutes.js';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../../wwwroot');
 const template = readFileSync(resolve(root, 'index.html'), 'utf8').replace(/\r\n?/g, '\n');
@@ -42,9 +42,8 @@ for (const [lang,path] of Object.entries(LANGUAGE_PATHS)) {
    : '<p>'+escape(COPY[lang].heroText)+'</p>'+guideHtml+listing;
   html=html.replace('<h1>NickolasGames</h1>','<h1>'+escape(privacy?policy.title:game?games[game].n:title.split(' | ')[0])+'</h1>');
   html=html.replace(/<div class="seo-content">[\s\S]*?<\/div>/,'<div class="seo-content">'+content+'<p><a href="'+path+'">NickolasGames</a> · <a href="'+path+'privacy/">'+escape(policy.title)+'</a></p></div>');
-  const application={'@type':'WebApplication',name:game?games[game].n:'NickolasGames',url,applicationCategory:'GameApplication',operatingSystem:'Web browser',isAccessibleForFree:true,inLanguage:lang,description};
-  const structured=privacy?{'@context':'https://schema.org','@type':'WebPage',name:title,url,description,inLanguage:lang}:game?{'@context':'https://schema.org',...application}:{'@context':'https://schema.org','@graph':[application,{'@type':'ItemList',itemListElement:GAMES.map((key,index)=>({'@type':'ListItem',position:index+1,url:SITE_ORIGIN+gamePath(lang,key),name:games[key].n}))}]};
-  html=html.replace('</head>',alternateLinks+'\n<meta property="og:image" content="'+image+'" />\n<meta property="og:image:alt" content="NickolasGames" />\n<meta name="twitter:image" content="'+image+'" />\n<meta name="twitter:image:alt" content="NickolasGames" />\n<script type="application/ld+json">'+json(structured)+'</script>\n</head>');
+  const structured=getStructuredData(lang,games,{url,title,description},game,privacy);
+  html=html.replace('</head>',alternateLinks+'\n<meta property="og:image" content="'+image+'" />\n<meta property="og:image:alt" content="NickolasGames" />\n<meta name="twitter:image" content="'+image+'" />\n<meta name="twitter:image:alt" content="NickolasGames" />\n<script type="application/ld+json" data-site-schema>'+json(structured)+'</script>\n</head>');
   const hashes = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)]
    .map(match=>"'sha256-"+createHash('sha256').update(match[1]).digest('base64')+"'");
   const csp = "default-src 'self'; script-src 'self' "+hashes.join(' ')+"; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; media-src 'self' blob:; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'";
