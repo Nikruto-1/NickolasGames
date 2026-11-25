@@ -3,8 +3,6 @@ import { Volume2, VolumeX } from 'lucide-react';
 import { gameAudioEnabled, setGameAudioEnabled } from '../utils/gameAudioPreference.js';
 import "./GameScreen.css";
 import {GAMES,gamePath} from '../utils/siteRoutes.js';
-import {GameFaq} from './GameFaq.jsx';
-import {PlayerGuide} from "./PlayerGuide.jsx";
 import {gameSearchCopy} from "../locales/gameSearchCopy.js";
 
 const COPY = {
@@ -51,8 +49,6 @@ export function GameScreen({ game, games, lang, onBack, onChoose, children }) {
         </div>
       </header>
       {children}
-      <PlayerGuide lang={lang} game={game}/>
-      <GameFaq lang={lang} game={game} games={games} onChoose={onChoose}/>
     </div>
   );
 }

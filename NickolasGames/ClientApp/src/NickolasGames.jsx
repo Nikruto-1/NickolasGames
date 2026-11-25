@@ -12,6 +12,7 @@ import { PrivacyPanel } from "./components/PrivacyPanel.jsx";
 
 
 import {PlayerGuide} from "./components/PlayerGuide.jsx";
+import {GameFaq} from "./components/GameFaq.jsx";
 import { Hero, GamesGrid, HowItWorks, FinalCta } from "./components/HomeSections.jsx";
 import { SiteNavigation } from "./components/SiteNavigation.jsx";
 
@@ -89,6 +90,8 @@ export default function NickolasGames() {
           : screenGame === "truth"
             ? <TruthOrDareGame library={library} key={`${lang}-truth`} games={libraryGames} t={t} lang={lang} onGame={choose} />
           : null}
+          <PlayerGuide lang={lang} game={screenGame}/>
+          <GameFaq lang={lang} game={screenGame} games={t.games} onChoose={choose}/>
         </Suspense>
       </GameScreen>}
       </main>
