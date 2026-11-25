@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -63,3 +63,9 @@ jobs:
       - name: Verify game UX at different screen widths
         working-directory: NickolasGames/ClientApp
         run: node scripts/browser-smoke.mjs
+
+      - name: Install WebKit for offline compatibility tests
+        run: node /tmp/nickolasgames-browser/node_modules/playwright-core/cli.js install --with-deps webkit
+      - name: Verify offline games in WebKit
+        working-directory: NickolasGames/ClientApp
+        run: node scripts/webkit-offline-smoke.mjs

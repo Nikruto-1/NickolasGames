@@ -7,9 +7,25 @@ export async function requestOffline(type,{
  let currentFile='offline-assets.json';
  try{
   const manifestUrl=new URL(currentFile,baseUrl);
-  const response=await fetcher(manifestUrl,{cache:'no-store'});
-  if(!response.ok)throw Error('HTTP '+response.status);
-  const manifest=await response.json();
+  let manifest;
+  try{
+   const response=await fetcher(manifestUrl,{cache:'no-store'});
+   if(!response.ok)throw Error('HTTP '+response.status);
+   manifest=await response.json();
+  }catch(error){
+   if(type!=='OFFLINE_STATUS'||!buildId||typeof storage.keys!=='function')throw error;
+   // Only trust the manifest belonging to the currently running build.
+   for(const name of (await storage.keys()).reverse()){
+    if(!/^nickolasgames-[a-f0-9]{16}$/.test(name))continue;
+    const cached=await (await storage.open(name)).match(manifestUrl.href);
+    if(!cached)continue;
+    try{
+     const candidate=await cached.json();
+     if(candidate.buildId===buildId&&candidate.cache===name){manifest=candidate;break;}
+    }catch{}
+   }
+   if(!manifest)throw error;
+  }
   if(!/^nickolasgames-[a-f0-9]{16}$/.test(manifest.cache)||!Array.isArray(manifest.files)||!manifest.files.length||
     !manifest.files.every(path=>typeof path==='string'&&/^(?:assets\/[^/]+|icons\/[^/]+|index\.html|manifest\.webmanifest|offline-assets\.json)$/.test(path)))throw Error('invalid-manifest');
   if(buildId&&manifest.buildId!==buildId)throw Error('version-changed');
