@@ -58,3 +58,16 @@ test('finalizer discards provisional chunk names and preserves final entry depen
   assert.ok(!(await readFile(join(root,'sw.js'),'utf8')).includes('stale'));
  }finally{await rm(root,{recursive:true,force:true});}
 });
+
+test('offline status uses only the cached manifest for the running build',async()=>{
+ const baseUrl='https://example.test/', current='nickolasgames-0123456789abcdef', old='nickolasgames-1111111111111111';
+ const manifestUrl=baseUrl+'offline-assets.json';
+ const saved=new Map([[manifestUrl,{json:async()=>({cache:current,buildId:'current',files:['offline-assets.json','assets/game.js']})}],[baseUrl+'assets/game.js',{}]]);
+ const older=new Map([[manifestUrl,{json:async()=>({cache:old,buildId:'old',files:['offline-assets.json']})}]]);
+ const options={baseUrl,buildId:'current',fetcher:async()=>{throw Error('offline');},storage:{keys:async()=>[current,old],open:async name=>({match:async url=>(name===current?saved:older).get(url)})}};
+ assert.equal((await requestOffline('OFFLINE_STATUS',options)).ready,true);
+ saved.delete(baseUrl+'assets/game.js');
+ assert.equal((await requestOffline('OFFLINE_STATUS',options)).ready,false);
+ assert.equal((await requestOffline('OFFLINE_STATUS',{...options,buildId:'unknown'})).ready,false);
+ assert.equal((await requestOffline('OFFLINE_DOWNLOAD',options)).ready,false);
+});
