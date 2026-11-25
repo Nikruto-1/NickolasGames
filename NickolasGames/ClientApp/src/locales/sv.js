@@ -37,7 +37,6 @@ export const UI_COPY = {
   "guessed": "Gissade",
   "skipped": "Hoppade över",
   "howTitle": "Så fungerar det",
-  "testimonialsTitle": "Spelas runt om i världen.",
   "played": "Spelade",
   "finalTitle": "Redo att spela?",
   "finalText": "Välj ett spel, samla dina människor och börja på några sekunder.",
@@ -161,33 +160,7 @@ export const UI_COPY = {
       "t": "När som helst",
       "c": null
     }
-  },
-  "testimonials": [
-    [
-      "Sofia",
-      "Sverige",
-      "Vi använde Vem är jag? på en teamkväll. Det var enkelt, snabbt och riktigt kul.",
-      "Vem är jag?"
-    ],
-    [
-      "Dmytro",
-      "Ukraina",
-      "Krokodil fungerade perfekt från en telefon på en hemmafest.",
-      "Krokodil"
-    ],
-    [
-      "Lena",
-      "Tyskland",
-      "Alias blev vår snabba isbrytare före möten.",
-      "Alias"
-    ],
-    [
-      "Marta",
-      "Polen",
-      "Sanning eller konsekvens kändes rent och modernt, inte pinsamt.",
-      "Sanning eller konsekvens"
-    ]
-  ]
+  }
 };
 
 export const PLAYER_COPY = {

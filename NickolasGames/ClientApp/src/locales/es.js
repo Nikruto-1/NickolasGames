@@ -37,7 +37,6 @@ export const UI_COPY = {
   "guessed": "Adivinadas",
   "skipped": "Saltadas",
   "howTitle": "Cómo funciona",
-  "testimonialsTitle": "Jugado en todo el mundo.",
   "played": "Jugó",
   "finalTitle": "¿Listo para jugar?",
   "finalText": "Elige un juego, reúne a tu gente y empieza en segundos.",
@@ -161,33 +160,7 @@ export const UI_COPY = {
       "t": "Cualquiera",
       "c": null
     }
-  },
-  "testimonials": [
-    [
-      "Sofia",
-      "Suecia",
-      "Usamos ¿Quién soy? durante una noche de equipo. Fue simple, rápido y muy divertido.",
-      "¿Quién soy?"
-    ],
-    [
-      "Dmytro",
-      "Ucrania",
-      "Cocodrilo funcionó perfecto desde un solo teléfono en una fiesta en casa.",
-      "Cocodrilo"
-    ],
-    [
-      "Lena",
-      "Alemania",
-      "Alias se convirtió en nuestro rompehielos rápido antes de reuniones.",
-      "Alias"
-    ],
-    [
-      "Marta",
-      "Polonia",
-      "Verdad o reto se sintió moderno y nada incómodo.",
-      "Verdad o reto"
-    ]
-  ]
+  }
 };
 
 export const PLAYER_COPY = {

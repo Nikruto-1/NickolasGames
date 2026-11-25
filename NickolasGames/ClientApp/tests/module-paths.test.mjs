@@ -37,3 +37,14 @@ test('all local module imports resolve to existing files after refactors', async
   }
   assert.deepEqual(missing, [], 'Dangling relative imports found');
 });
+
+// Retired review UI and placeholder copy must have no dangling consumers.
+test('removed testimonial module and copy have no remaining source references', async () => {
+  const list = (await Promise.all(['src','scripts'].map(dir => files(resolve(root, dir))))).flat();
+  const references = [];
+  for (const file of list) {
+    const code = await readFile(file, 'utf8');
+    if (/\b(?:Testimonials|testimonialsTitle|testimonials)\b/.test(code)) references.push(file.slice(root.length));
+  }
+  assert.deepEqual(references, []);
+});
