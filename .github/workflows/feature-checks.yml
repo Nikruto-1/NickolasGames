@@ -36,7 +36,6 @@ jobs:
         run: npm ci
       - name: Report npm security advisories
         working-directory: NickolasGames/ClientApp
-        continue-on-error: true
         run: npm audit --audit-level=high --json
       - name: Set up Python for media optimization
         uses: actions/setup-python@v5
