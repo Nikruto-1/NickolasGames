@@ -1,6 +1,3 @@
-import {OfflineDownload} from './components/OfflineDownload.jsx';
-import { ResultsHistory } from './components/ResultsHistory.jsx';
-import { CustomLibrary } from './components/CustomLibrary.jsx';
 import { readLibrary,saveLibrary,gamesWithLibrary } from './utils/customLibrary.js';
 import './styles/custom-library.css';
 import { readTheme, saveTheme } from './utils/themePreference.js';
@@ -13,7 +10,6 @@ import { PrivacyPanel } from "./components/PrivacyPanel.jsx";
 
 import {PlayerGuide} from "./components/PlayerGuide.jsx";
 import {GameFaq} from "./components/GameFaq.jsx";
-import { Hero, GamesGrid, HowItWorks, FinalCta } from "./components/HomeSections.jsx";
 import { SiteNavigation } from "./components/SiteNavigation.jsx";
 
 import { AppStatus } from "./components/AppStatus";
@@ -24,6 +20,8 @@ import { GameScreen } from "./components/GameScreen.jsx";
 import { COPY } from "./locales";
 import "./nickolasgames.css";
 import "./product.css";
+
+const HomeScreen=lazy(()=>import("./components/HomeScreen.jsx"));
 
 const SpyGame=lazy(()=>import("./features/spy/SpyGame.jsx").then(m=>({default:m.SpyGame})));
 const AliasGame=lazy(()=>import("./features/alias/AliasGame.jsx").then(m=>({default:m.AliasGame})));
@@ -66,14 +64,9 @@ export default function NickolasGames() {
       {screenGame !== "checkers" && <AppStatus lang={lang} showInstall={!screenGame} />}
       <main id="main">
       {screenGame === null ? <>
-        <Hero t={t} onStart={requestStart} />
-        <GamesGrid games={t.games} t={t} lang={lang} onPlay={choose} />
-        <CustomLibrary key={lang} items={library} onSave={updateLibrary} lang={lang} t={t} />
-        <ResultsHistory key={lang} lang={lang} t={t}/>
-        <OfflineDownload lang={lang}/>
-        <HowItWorks t={t} />
-        <PlayerGuide lang={lang}/>
-        <FinalCta t={t} onStart={requestStart} />
+        <Suspense fallback={<div role="status" className="game-loading" aria-live="polite" aria-busy="true">{LOADING_GAME[lang]||LOADING_GAME.en}</div>}>
+          <HomeScreen t={t} lang={lang} library={library} updateLibrary={updateLibrary} choose={choose} requestStart={requestStart}/>
+        </Suspense>
       </> : <GameScreen game={screenGame} games={t.games} lang={lang}
         onBack={() => navigate(null)} onChoose={choose}>
         <Suspense fallback={<div role="status" className="game-loading" aria-live="polite" aria-busy="true">{LOADING_GAME[lang]||LOADING_GAME.en}</div>}>
