@@ -21,3 +21,11 @@ test('remaining time respects deadline, rounding and untimed fallback',()=>{
  assert.equal(remainingSeconds(61000,62000),0);
  assert.equal(remainingSeconds(null,1000,60),60);
 });
+
+test('queued ticks after disposal cannot update a former game session',()=>{
+ let callback,listener,cleared=0,removed=0;
+ const values=[];
+ const stop=subscribeGameClock(n=>values.push(n),{now:()=>1000,scheduler:{setInterval(fn){callback=fn;return 7;},clearInterval(){cleared++;}},visibility:{hidden:false,addEventListener(_,fn){listener=fn;},removeEventListener(){removed++;}}});
+ stop();callback();listener();stop();
+ assert.deepEqual(values,[1000]);assert.equal(cleared,1);assert.equal(removed,1);
+});
