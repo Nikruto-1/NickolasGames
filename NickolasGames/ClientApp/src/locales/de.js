@@ -37,7 +37,6 @@ export const UI_COPY = {
   "guessed": "Erraten",
   "skipped": "Übersprungen",
   "howTitle": "So funktioniert es",
-  "testimonialsTitle": "Weltweit gespielt.",
   "played": "Spielte",
   "finalTitle": "Bereit zu spielen?",
   "finalText": "Wähle ein Spiel, sammle deine Leute und starte in Sekunden.",
@@ -161,33 +160,7 @@ export const UI_COPY = {
       "t": "Jederzeit",
       "c": null
     }
-  },
-  "testimonials": [
-    [
-      "Sofia",
-      "Schweden",
-      "Wir haben Wer bin ich? bei einem Teamabend genutzt. Es war einfach, schnell und wirklich lustig.",
-      "Wer bin ich?"
-    ],
-    [
-      "Dmytro",
-      "Ukraine",
-      "Krokodil funktionierte perfekt von einem Handy auf einer Hausparty.",
-      "Krokodil"
-    ],
-    [
-      "Lena",
-      "Deutschland",
-      "Alias wurde unser schneller Eisbrecher vor Meetings.",
-      "Alias"
-    ],
-    [
-      "Marta",
-      "Polen",
-      "Wahrheit oder Pflicht wirkte modern und gar nicht unangenehm.",
-      "Wahrheit oder Pflicht"
-    ]
-  ]
+  }
 };
 
 export const PLAYER_COPY = {

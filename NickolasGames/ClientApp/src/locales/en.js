@@ -37,7 +37,6 @@ export const UI_COPY = {
   "guessed": "Guessed",
   "skipped": "Skipped",
   "howTitle": "How it works",
-  "testimonialsTitle": "Played around the world.",
   "played": "Played",
   "finalTitle": "Ready to play?",
   "finalText": "Pick a game, gather your people and start in seconds.",
@@ -161,33 +160,7 @@ export const UI_COPY = {
       "t": "Any",
       "c": null
     }
-  },
-  "testimonials": [
-    [
-      "Sofia",
-      "Sweden",
-      "We used Who Am I? during a team evening. It was simple, fast and genuinely fun.",
-      "Who Am I?"
-    ],
-    [
-      "Dmytro",
-      "Ukraine",
-      "Crocodile worked perfectly from one phone at a house party.",
-      "Crocodile"
-    ],
-    [
-      "Lena",
-      "Germany",
-      "Alias became our quick icebreaker before meetings.",
-      "Alias"
-    ],
-    [
-      "Marta",
-      "Poland",
-      "Truth or Dare felt clean and modern, not awkward.",
-      "Truth or Dare"
-    ]
-  ]
+  }
 };
 
 export const PLAYER_COPY = {

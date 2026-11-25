@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { gamePath } from "../utils/siteRoutes.js";
 import { HolmesFloor } from "./HolmesFloor";
-import { reducedMotion, scrollToSection } from "../utils/pageNavigation.js";
+import { scrollToSection } from "../utils/pageNavigation.js";
 
 export function Hero({ t, onStart }) {
   return (
@@ -54,23 +54,6 @@ export function HowItWorks({ t }) {
           {t.steps.map(([title, text]) => <div key={title}><h3>{title}</h3><p>{text}</p></div>)}
         </div>
       </div>
-    </section>
-  );
-}
-
-export function Testimonials({ t }) {
-  const items = reducedMotion ? t.testimonials : [...t.testimonials, ...t.testimonials];
-  return (
-    <section className="s" style={{ paddingTop: 20 }}>
-      <div className="wrap"><div className="head"><h2>{t.testimonialsTitle}</h2></div></div>
-      <div className="mq"><div className="mt">
-        {items.map(([name, country, quote, game], i) => (
-          <figure className="tc" style={{ margin: 0 }} key={`${name}-${i}`}>
-            <q>{quote}</q>
-            <div><b>{name}, {country}</b>{t.played} {game}</div>
-          </figure>
-        ))}
-      </div></div>
     </section>
   );
 }
