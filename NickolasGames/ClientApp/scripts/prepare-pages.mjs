@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gameFaq } from '../src/locales/gameFaq.js';
 import { gameGuide } from '../src/locales/gameGuides.js';
 import { COPY } from '../src/locales/index.js';
 import { PRIVACY_COPY } from '../src/locales/privacy.js';
@@ -33,9 +34,11 @@ for (const [lang,path] of Object.entries(LANGUAGE_PATHS)) {
   const listing=GAMES.map(key=>'<section><h2><a href="'+gamePath(lang,key)+'">'+escape(games[key].n)+'</a></h2><p>'+escape(games[key].d)+'</p></section>').join('');
   const guide=gameGuide(lang,game);
   const guideHtml='<section class="player-guide"><h2>'+escape(guide.heading)+'</h2><p>'+escape(guide.paragraphs[0])+'</p>'+(game?'<h3>'+escape(guide.examples)+'</h3>':'')+guide.paragraphs.slice(1).map(p=>'<p>'+escape(p)+'</p>').join('')+'</section>';
+  const faq=gameFaq(lang,game);
+  const faqHtml=game?'<section class="game-faq"><h2>'+escape(faq.heading)+'</h2>'+faq.items.map(([q,a])=>'<details><summary>'+escape(q)+'</summary><p>'+escape(a)+'</p></details>').join('')+'<nav class="related-games" aria-label="'+escape(faq.relatedHeading)+'"><h2>'+escape(faq.relatedHeading)+'</h2><ul>'+faq.related.map(({key,reason})=>'<li><a href="'+gamePath(lang,key)+'">'+escape(games[key].n)+'</a><p>'+escape(reason)+'</p></li>').join('')+'</ul></nav></section>':'';
   const content=privacy
    ? '<p>'+escape(policy.intro)+'</p>'+policy.sections.map(([heading,text])=>'<section><h2>'+escape(heading)+'</h2><p>'+escape(text)+'</p></section>').join('')
-   : game?'<p>'+escape(description)+'</p><p>'+escape(games[game].p)+' · '+escape(games[game].t)+'</p>'+guideHtml+listing
+   : game?'<p>'+escape(description)+'</p><p>'+escape(games[game].p)+' · '+escape(games[game].t)+'</p>'+guideHtml+faqHtml
    : '<p>'+escape(COPY[lang].heroText)+'</p>'+guideHtml+listing;
   html=html.replace('<h1>NickolasGames</h1>','<h1>'+escape(privacy?policy.title:game?games[game].n:title.split(' | ')[0])+'</h1>');
   html=html.replace(/<div class="seo-content">[\s\S]*?<\/div>/,'<div class="seo-content">'+content+'<p><a href="'+path+'">NickolasGames</a> · <a href="'+path+'privacy/">'+escape(policy.title)+'</a></p></div>');

@@ -721,6 +721,36 @@ try {
     assert.ok((await page.locator(".player-guide").innerText()).includes("машина часу"));
     checks+=3;await page.close();
   }
+  // FAQ content and related links survive React rendering in every locale.
+  {
+    const {gameFaq}=await import('../src/locales/gameFaq.js');
+    const {GAMES,gamePath}=await import('../src/utils/siteRoutes.js');
+    const page=await browser.newPage({viewport:{width:320,height:844},serviceWorkers:"block"});
+    for(const lang of ['en','uk','sv','de','es']){
+      for(const game of GAMES){
+        await page.goto(base+gamePath(lang,game));
+        const section=page.locator('.game-screen .game-faq');
+        await section.waitFor();
+        const faq=gameFaq(lang,game);
+        assert.equal(await section.locator('h2').first().innerText(),faq.heading);
+        assert.equal(await section.locator('.related-games').evaluate(el=>getComputedStyle(el).position),'static');
+        await page.locator('.theme-toggle').click();
+        await page.locator('.theme-toggle').click();
+        assert.deepEqual(await section.locator('summary').allTextContents(),faq.items.map(([q])=>q));
+        const first=section.locator('details').first();
+        await first.locator('summary').click();
+        assert.equal(await first.locator('p').innerText(),faq.items[0][1]);
+        assert.equal(await first.getAttribute('open'),'');
+        assert.deepEqual(await section.locator('.related-games a').evaluateAll(links=>links.map(a=>a.getAttribute('href'))),faq.related.map(({key})=>gamePath(lang,key)));
+        checks+=8;
+      }
+    }
+    await page.goto(base+'/uk/games/crocodile/');
+    await page.locator('.game-screen .related-games a[href="/uk/games/alias/"]').click();
+    await page.locator('.game-screen[data-game="alias"] .game-faq').waitFor();
+    assert.equal(new URL(page.url()).pathname,'/uk/games/alias/');
+    checks++;await page.close();
+  }
   // Static SEO deep links, legacy query migration and language switching.
   {
     const page=await browser.newPage({viewport:{width:390,height:844},serviceWorkers:"block"});
