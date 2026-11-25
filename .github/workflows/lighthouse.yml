@@ -5,8 +5,11 @@ on:
     paths:
       - '.github/workflows/lighthouse.yml'
       - 'NickolasGames/ClientApp/scripts/lighthouse-audit.mjs'
+      - 'NickolasGames/ClientApp/src/**'
+      - 'NickolasGames/ClientApp/media-plugin.js'
+      - 'NickolasGames/ClientApp/scripts/optimize-media.py'
   push:
-    branches: ['feature/lighthouse-baseline']
+    branches: ['feature/lighthouse-baseline','fix/game-loading-cls','fix/navigation-logo-budget']
   workflow_dispatch:
 permissions:
   contents: read
