@@ -200,6 +200,33 @@ try {
     assert.deepEqual(await state(),before);
     assert.deepEqual(errors,[]);checks+=8;await page.close();
   }
+  // Brand artwork must stay readable in dark mode, including a narrow installed-app viewport.
+  {
+    const page=await browser.newPage({viewport:{width:462,height:640},serviceWorkers:"block"});
+    await page.goto(base+"/uk/");
+    const logo=page.locator(".site-logo");
+    await logo.waitFor();
+    const background=()=>logo.evaluate(node=>getComputedStyle(node).backgroundColor);
+    const dimensions=()=>logo.evaluate(node=>({width:node.offsetWidth,height:node.offsetHeight}));
+    const original=await dimensions();
+    assert.equal(await background(),"rgba(0, 0, 0, 0)");
+    await page.locator(".theme-toggle").click();
+    await page.waitForFunction(()=>document.documentElement.dataset.theme==="dark");
+    assert.equal(await background(),"rgb(238, 228, 209)");
+    assert.deepEqual(await dimensions(),original,"Theme switching must not resize the logo");
+    await page.reload();
+    await page.waitForFunction(()=>document.documentElement.dataset.theme==="dark");
+    assert.equal(await background(),"rgb(238, 228, 209)");
+    await page.goto(base+"/uk/games/spy/");
+    await page.locator(".spy-setup").waitFor();
+    await page.waitForFunction(()=>document.documentElement.dataset.theme==="dark");
+    assert.equal(await background(),"rgb(238, 228, 209)");
+    await page.locator(".theme-toggle").click();
+    await page.waitForFunction(()=>document.documentElement.dataset.theme==="light");
+    assert.equal(await background(),"rgba(0, 0, 0, 0)");
+    checks+=6;
+    await page.close();
+  }
   // Spy: private handoff, reload, voting, scores, next round and timer expiry.
   {
     const page=await browser.newPage({viewport:{width:375,height:812},serviceWorkers:"block"});
