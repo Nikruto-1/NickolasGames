@@ -1,5 +1,6 @@
 // Build-level responsive smoke test. Run after 'npm run build' with Playwright installed.
 import assert from "node:assert/strict";
+import { LANGUAGE_PATHS } from "../src/utils/siteRoutes.js";
 import { createServer } from "node:http";
 import { readFile, stat } from "node:fs/promises";
 import { resolve, extname, sep } from "node:path";
@@ -926,7 +927,9 @@ try {
     for(const lang of ['uk','en','sv','de','es']){
       const page=await browser.newPage({viewport:{width:390,height:844},serviceWorkers:'block',reducedMotion:'reduce'});
       try{
-        await page.goto(base+'/'+lang+'/');
+        const response=await page.goto(base+LANGUAGE_PATHS[lang]);
+        assert.equal(response?.status(),200,`Review page ${lang} must exist`);
+        await page.waitForFunction(expected=>document.documentElement.lang===expected,lang);
         const section=page.locator('.player-reviews');
         await section.waitFor();
         assert.equal(await section.locator('.review-group:not(.review-clone) .review-card').count(),16);
@@ -940,7 +943,8 @@ try {
     }
     const page=await browser.newPage({viewport:{width:1280,height:850},serviceWorkers:'block',reducedMotion:'no-preference'});
     try{
-      await page.goto(base+'/en/');
+      const response=await page.goto(base+LANGUAGE_PATHS.en);
+      assert.equal(response?.status(),200,'English home must exist');
       const section=page.locator('.player-reviews');
       await section.waitFor();
       const track=section.locator('.review-track');
@@ -950,7 +954,8 @@ try {
       assert.equal(await section.locator('.review-viewport').evaluate(el=>getComputedStyle(el).overflowX),'auto');
       await section.locator('.review-toggle').click();
       assert.equal(await track.evaluate(el=>getComputedStyle(el).animationName),'review-slide');
-      await page.evaluate(()=>document.documentElement.dataset.theme='dark');
+      if(await page.evaluate(()=>document.documentElement.dataset.theme)!=='dark')await page.locator('.theme-toggle').click();
+      await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');
       assert.equal(await section.locator('.review-card').first().evaluate(el=>getComputedStyle(el).color),await page.evaluate(()=>{const probe=document.createElement('span');probe.style.color='var(--fg)';document.body.append(probe);const color=getComputedStyle(probe).color;probe.remove();return color;}));
       checks+=5;
     }finally{await page.close();}
