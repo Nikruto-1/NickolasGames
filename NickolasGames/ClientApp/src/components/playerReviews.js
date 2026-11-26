@@ -19,7 +19,7 @@ const rows = [
     "hennadii",
     "Геннадій",
     "Hennadii",
-    null,
+    "UA",
     "offline",
     "Працюю моряком, тому в морі не завжди є доступ до інтернету. Дуже зручно, що ми змогли пограти разом із колегами прямо на судні. Окремий плюс за англійську локалізацію, адже в екіпажі можуть бути люди з різних країн.",
     "I work as a seafarer, so internet access isn't always available at sea. It was really convenient to play together with my colleagues right on board. English language support is also a big plus, especially when the crew includes people from different countries.",
