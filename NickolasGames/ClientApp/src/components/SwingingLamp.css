@@ -15,3 +15,7 @@
 @keyframes holmes-lamp-arrive{from{transform:translateY(-105%)}to{transform:translateY(0)}}
 @keyframes holmes-lamp-pendulum{0%,100%{transform:rotate(6deg)}50%{transform:rotate(-6deg)}}
 @media(prefers-reduced-motion:reduce){.holmes-lamp-drop,:root[data-theme=dark] .holmes-lamp-drop,:root[data-theme=dark] .holmes-lamp-pivot{animation:none;transition:none}}
+
+/* Maintain subtitle contrast over the moving lamp without a visible panel. */
+:root[data-theme=dark] .hero.holmes-home .hero-copy>p{color:var(--fg);text-shadow:0 1px 2px #181411,0 0 4px #181411,0 0 9px #181411}
+:root[data-theme=dark] .hero.holmes-home .hero-copy>p::selection{background:#dfb578;color:#25221f;text-shadow:none}

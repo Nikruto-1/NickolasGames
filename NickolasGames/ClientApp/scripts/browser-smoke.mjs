@@ -941,7 +941,14 @@ try {
           const center=beam.left+beam.width/2;
           return shade.top<cat.top&&beam.top<cat.top&&beam.bottom>=cat.bottom-2&&shade.width>=bounds.width*.23&&shade.width<=bounds.width*.35&&beam.width>=bounds.width*1.9&&center-halfWidth<=bounds.left+2&&center+halfWidth>=bounds.right-2&&getComputedStyle(lamp).pointerEvents==='none'&&getComputedStyle(hero.querySelector('.hero-copy')).zIndex==='2';
         }),'Mobile pendant must be compact and its cone must span the full scene at cat height');
-        checks+=1;
+        assert.ok(await page.locator('.hero.holmes-home .hero-copy>p').evaluate(el=>{
+          const style=getComputedStyle(el);
+          const sample=document.createElement('span');sample.style.color='var(--fg)';document.body.append(sample);
+          const expected=getComputedStyle(sample).color;sample.remove();
+          const selected=getComputedStyle(el,'::selection');
+          return style.color===expected&&style.textShadow!=='none'&&selected.color==='rgb(37, 34, 31)'&&selected.backgroundColor==='rgb(223, 181, 120)';
+        }),'Hero subtitle must use readable foreground and text shadow over the lamp');
+        checks+=2;
         assert.equal(await section.locator('.review-group:not(.review-clone) .review-card').count(),17);
         assert.ok(await page.evaluate(()=>{const games=document.querySelector('#games');const reviews=document.querySelector('.player-reviews');const library=document.querySelector('#custom-library');return games?.nextElementSibling===reviews&&reviews?.nextElementSibling===library;}),'Reviews must immediately follow the games catalog and precede personal tools');
         assert.ok(await section.locator('.review-editorial').isVisible());
