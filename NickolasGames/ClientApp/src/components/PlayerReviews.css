@@ -21,3 +21,6 @@
  .review-track{animation:none}
  .review-clone,.review-toggle{display:none}
 }
+
+.review-summary{margin:0 auto 24px;color:var(--fg);line-height:1.6}
+.review-toggle{min-height:44px}
