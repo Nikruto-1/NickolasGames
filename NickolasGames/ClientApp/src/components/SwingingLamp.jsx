@@ -13,11 +13,15 @@ export default function SwingingLamp(){
     <svg className="holmes-lamp-light" viewBox="0 0 320 420" preserveAspectRatio="none" focusable="false">
      <defs>
       <linearGradient id={id+'-cone'} x1="0" y1="0" x2="0" y2="100%">
-       <stop offset="0%" stopColor="#ffd27a" stopOpacity=".55"/><stop offset="60%" stopColor="#ffd27a" stopOpacity=".18"/><stop offset="100%" stopColor="#ffd27a" stopOpacity="0"/>
+       <stop offset="0%" stopColor="#ffd27a" stopOpacity=".45"/><stop offset="45%" stopColor="#ffd27a" stopOpacity=".26"/><stop offset="82%" stopColor="#ffd27a" stopOpacity=".22"/><stop offset="100%" stopColor="#ffd27a" stopOpacity="0"/>
       </linearGradient>
+      <radialGradient id={id+'-pool'}>
+       <stop offset="0%" stopColor="#ffe2aa" stopOpacity=".22"/><stop offset="60%" stopColor="#ffd27a" stopOpacity=".12"/><stop offset="100%" stopColor="#ffd27a" stopOpacity="0"/>
+      </radialGradient>
       <filter id={id+'-blur'} x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="9"/></filter>
      </defs>
-     <polygon className="holmes-lamp-cone" points="116,0 204,0 320,420 0,420" fill={paint('cone')} filter={paint('blur')}/>
+     <polygon className="holmes-lamp-cone" points="140,0 180,0 320,420 0,420" fill={paint('cone')} filter={paint('blur')}/>
+     <ellipse className="holmes-lamp-pool" cx="160" cy="350" rx="112" ry="70" fill={paint('pool')}/>
     </svg>
     <span className="holmes-lamp-cord"/>
     <svg className="holmes-lamp-art" viewBox="0 0 150 145" focusable="false">
