@@ -31,6 +31,7 @@ export function CheckersControls({t,game,modeSettings,againstBot,drawing,drawRes
                   <option value="easy">{t.easy}</option>
                   <option value="medium">{t.medium}</option>
                   <option value="hard">{t.hard}</option>
+                  <option value="expert">{t.expert}</option>
                 </select>
               </label>}
             </div>

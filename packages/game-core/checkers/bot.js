@@ -2,7 +2,7 @@ import { legalCheckersMoves, applyCheckersMove } from "./rules.js";
 
 // Pure, reproducible checkers AI. The board engine remains the authority for legal moves.
 // This helper returns exactly one legal step; the UI calls it again for forced capture chains.
-export const BOT_LEVELS = Object.freeze(["easy", "medium", "hard"]);
+export const BOT_LEVELS = Object.freeze(["easy", "medium", "hard", "expert"]);
 
 function evaluate(state, side) {
   if (state.winner) return state.winner === side ? 100000 : -100000;
@@ -46,9 +46,10 @@ function scoreMove(state, move, side) {
 
 // Iterative deepening: keep the last fully searched result, never a partial ranking.
 // Depth counts completed turns, not individual jumps in a forced capture chain.
-function hardMove(state,moves,unit){
+export const BOT_SEARCH_LIMITS = Object.freeze({hard:Object.freeze({depth:2,nodes:1800}),expert:Object.freeze({depth:4,nodes:5000})});
+function hardMove(state,moves,unit,limits){
  const side=state.turn;
- const budget={remaining:1800};
+ const budget={remaining:limits.nodes};
  const exhausted=Symbol("search budget");
  const search=(position,depth,alpha,beta)=>{
   if(--budget.remaining<0)throw exhausted;
@@ -67,7 +68,7 @@ function hardMove(state,moves,unit){
   return best;
  };
  let ranked=moves.map(move=>({move,value:scoreMove(state,move,side)})).sort((a,b)=>b.value-a.value);
- for(let depth=1;depth<=4;depth++){
+ for(let depth=1;depth<=limits.depth;depth++){
   try{
    const nextRanking=ranked.map(({move})=>{
     const next=applyCheckersMove(state,move.from,move.to);
@@ -86,7 +87,7 @@ export function chooseCheckersBotMove(state, level = "easy", random = Math.rando
   const unit = Number(random());
   const index = Math.min(moves.length - 1, Math.max(0, Math.floor((Number.isFinite(unit) ? unit : 0) * moves.length)));
   if (moves.length === 1) return moves[0];
-  if (level === "hard") return hardMove(state,moves,unit);
+  if (level === "hard" || level === "expert") return hardMove(state,moves,unit,BOT_SEARCH_LIMITS[level]);
   if (level !== "medium") return moves[index];
 
   const ratings = moves.map(move => ({ move, value: scoreMove(state, move, state.turn) }));

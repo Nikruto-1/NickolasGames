@@ -56,3 +56,21 @@ test("hard bot chooses an immediate winning capture",()=>{
  const move=chooseCheckersBotMove(state,"hard",()=>0);
  assert.equal(applyCheckersMove(state,move.from,move.to).winner,"black");
 });
+
+import { BOT_SEARCH_LIMITS } from "../../../packages/game-core/checkers/bot.js";
+test("advanced levels have distinct bounded search depths and expert is legal",()=>{
+ assert.equal(BOT_SEARCH_LIMITS.hard.depth,2);
+ assert.equal(BOT_SEARCH_LIMITS.expert.depth,4);
+ assert.ok(BOT_SEARCH_LIMITS.expert.nodes>BOT_SEARCH_LIMITS.hard.nodes);
+ const state=place(place(place(place(empty(),21,"black"),28,"white"),44,"white"),1,"black");
+ const snapshot=JSON.stringify(state);
+ for(const level of ["hard","expert"]){
+  const move=chooseCheckersBotMove(state,level,()=>0);
+  assert.ok(legalCheckersMoves(state).some(m=>m.from===move.from&&m.to===move.to));
+  const next=applyCheckersMove(state,move.from,move.to);
+  const continuation=chooseCheckersBotMove(next,level,()=>0);
+  assert.equal(continuation.from,next.forcedFrom);
+  assert.equal(chooseCheckersBotMove({...state,draw:true},level,()=>0),null);
+ }
+ assert.equal(JSON.stringify(state),snapshot);
+});
