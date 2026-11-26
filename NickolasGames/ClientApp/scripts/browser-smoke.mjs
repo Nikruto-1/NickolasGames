@@ -933,6 +933,7 @@ try {
         const section=page.locator('.player-reviews');
         await section.waitFor();
         assert.equal(await section.locator('.review-group:not(.review-clone) .review-card').count(),17);
+        assert.ok(await page.evaluate(()=>{const games=document.querySelector('#games');const reviews=document.querySelector('.player-reviews');const library=document.querySelector('#custom-library');return games?.nextElementSibling===reviews&&reviews?.nextElementSibling===library;}),'Reviews must immediately follow the games catalog and precede personal tools');
         assert.ok(await section.locator('.review-editorial').isVisible());
         assert.ok((await section.locator('.review-group:not(.review-clone) .review-card').nth(1).innerText()).includes('🇺🇦'));
         assert.equal(await section.locator('.review-group:not(.review-clone) .review-text').count(),17);
@@ -940,7 +941,7 @@ try {
         assert.equal(await section.locator('.review-clone').isVisible(),false);
         assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+3));
         assert.equal(await section.locator('.review-track').evaluate(el=>getComputedStyle(el).animationName),'none');
-        checks+=8;
+        checks+=9;
       }finally{await page.close();}
     }
     const page=await browser.newPage({viewport:{width:1280,height:850},serviceWorkers:'block',reducedMotion:'no-preference'});
