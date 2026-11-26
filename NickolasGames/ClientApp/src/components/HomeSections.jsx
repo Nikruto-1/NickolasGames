@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { gamePath } from "../utils/siteRoutes.js";
 import { HolmesFloor } from "./HolmesFloor";
+import SwingingLamp from "./SwingingLamp.jsx";
 import { scrollToSection } from "../utils/pageNavigation.js";
 
 export function Hero({ t, onStart }) {
   return (
     <header className="hero holmes-home">
+      <SwingingLamp/>
       <div className="wrap">
         <div className="hero-copy"><h1>{t.heroTitle}</h1>
         <p>{t.heroText}</p>
