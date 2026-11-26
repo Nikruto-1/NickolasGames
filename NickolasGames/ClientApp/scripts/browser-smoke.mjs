@@ -932,6 +932,13 @@ try {
         await page.waitForFunction(expected=>document.documentElement.lang===expected,lang);
         const section=page.locator('.player-reviews');
         await section.waitFor();
+        if(await page.evaluate(()=>document.documentElement.dataset.theme)!=='dark')await page.locator('.theme-toggle').click();
+        await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark'&&getComputedStyle(document.querySelector('.holmes-lamp-drop')).visibility==='visible');
+        assert.ok(await page.evaluate(()=>{
+          const hero=document.querySelector('.hero.holmes-home'),lamp=hero.querySelector(':scope > .holmes-lamp'),shade=lamp.querySelector('.holmes-lamp-art').getBoundingClientRect(),beam=lamp.querySelector('.holmes-lamp-light').getBoundingClientRect(),cat=hero.querySelector('.holmes-resting').getBoundingClientRect(),bounds=hero.getBoundingClientRect();
+          return shade.top<cat.top&&beam.top<cat.top&&beam.bottom>=cat.bottom-2&&shade.width>=bounds.width*.35&&getComputedStyle(lamp).pointerEvents==='none'&&getComputedStyle(hero.querySelector('.hero-copy')).zIndex==='2';
+        }),'Mobile pendant must sit above Holmes, illuminate the entire cat and leave text interactive');
+        checks+=1;
         assert.equal(await section.locator('.review-group:not(.review-clone) .review-card').count(),17);
         assert.ok(await page.evaluate(()=>{const games=document.querySelector('#games');const reviews=document.querySelector('.player-reviews');const library=document.querySelector('#custom-library');return games?.nextElementSibling===reviews&&reviews?.nextElementSibling===library;}),'Reviews must immediately follow the games catalog and precede personal tools');
         assert.ok(await section.locator('.review-editorial').isVisible());

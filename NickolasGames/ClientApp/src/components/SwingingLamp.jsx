@@ -10,24 +10,27 @@ export default function SwingingLamp(){
   <div className="holmes-lamp-drop">
    <span className="holmes-lamp-mount"/>
    <div className="holmes-lamp-pivot">
-    <svg className="holmes-lamp-art" viewBox="0 0 320 460" preserveAspectRatio="xMidYMin meet" focusable="false">
+    <svg className="holmes-lamp-light" viewBox="0 0 320 420" preserveAspectRatio="none" focusable="false">
      <defs>
       <linearGradient id={id+'-cone'} x1="0" y1="0" x2="0" y2="100%">
-       <stop offset="0%" stopColor="#ffd27a" stopOpacity=".55"/><stop offset="55%" stopColor="#ffd27a" stopOpacity=".14"/><stop offset="100%" stopColor="#ffd27a" stopOpacity="0"/>
+       <stop offset="0%" stopColor="#ffd27a" stopOpacity=".55"/><stop offset="60%" stopColor="#ffd27a" stopOpacity=".18"/><stop offset="100%" stopColor="#ffd27a" stopOpacity="0"/>
       </linearGradient>
       <filter id={id+'-blur'} x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="9"/></filter>
+     </defs>
+     <polygon className="holmes-lamp-cone" points="116,0 204,0 320,420 0,420" fill={paint('cone')} filter={paint('blur')}/>
+    </svg>
+    <span className="holmes-lamp-cord"/>
+    <svg className="holmes-lamp-art" viewBox="0 0 150 145" focusable="false">
+     <defs>
       <linearGradient id={id+'-shade'}>
        <stop offset="0%" stopColor="#14151a"/><stop offset="22%" stopColor="#3b3f4b"/><stop offset="38%" stopColor="#6a6f7e"/><stop offset="55%" stopColor="#2b2e37"/><stop offset="100%" stopColor="#0f1015"/>
       </linearGradient>
-      <linearGradient id={id+'-cord'}><stop stopColor="#15161b"/><stop offset="50%" stopColor="#4a4e5a"/><stop offset="100%" stopColor="#15161b"/></linearGradient>
       <radialGradient id={id+'-inner'} cx="50%" cy="0%" r="90%"><stop stopColor="#fff6d6"/><stop offset="45%" stopColor="#ffd27a"/><stop offset="100%" stopColor="#c47a1a"/></radialGradient>
       <radialGradient id={id+'-bulb'} cx="50%" cy="45%" r="55%"><stop stopColor="#fff"/><stop offset="50%" stopColor="#fff0b8"/><stop offset="100%" stopColor="#ffd27a"/></radialGradient>
       <radialGradient id={id+'-halo'}><stop stopColor="#ffd27a" stopOpacity=".85"/><stop offset="100%" stopColor="#ffd27a" stopOpacity="0"/></radialGradient>
       <filter id={id+'-soft'}><feGaussianBlur stdDeviation="2.2"/></filter>
      </defs>
-     <polygon className="holmes-lamp-cone" points="115,155 205,155 320,460 0,460" fill={paint('cone')} filter={paint('blur')}/>
-     <rect x="158.5" y="0" width="3" height="55" rx="1.5" fill={paint('cord')}/>
-     <g transform="translate(85 51)">
+     <g>
       <rect x="66" y="0" width="18" height="14" rx="3" fill={paint('shade')}/>
       <rect x="62" y="12" width="26" height="6" rx="3" fill="#20222a"/>
       <path d="M 5 80 C 8 50, 30 16, 75 16 C 120 16, 142 50, 145 80 A 70 13 0 0 1 5 80 Z" fill={paint('shade')}/>

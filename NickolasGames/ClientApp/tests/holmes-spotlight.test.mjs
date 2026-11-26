@@ -3,8 +3,11 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const read=path=>readFileSync(new URL(path,import.meta.url),'utf8');
 test('Holmes pendant is decorative, uses the supplied SVG design and is dark-theme-only',()=>{
- const floor=read('../src/components/HolmesFloor.jsx'),lamp=read('../src/components/SwingingLamp.jsx'),css=read('../src/components/SwingingLamp.css');
- assert.match(floor,/<SwingingLamp\/>/);
+ const floor=read('../src/components/HolmesFloor.jsx'),hero=read('../src/components/HomeSections.jsx'),lamp=read('../src/components/SwingingLamp.jsx'),css=read('../src/components/SwingingLamp.css');
+ assert.match(hero,/<header className="hero holmes-home">\s*<SwingingLamp\/>/);
+ assert.doesNotMatch(floor,/<SwingingLamp/);
+ assert.match(css,/\.hero\.holmes-home \.hero-copy\{position:relative;z-index:2\}/);
+ assert.match(lamp,/className="holmes-lamp-light"[^>]*preserveAspectRatio="none"/);
  assert.doesNotMatch(floor,/holmes-spotlight/);
  assert.match(floor,/import holmesLying from "\.\.\/assets\/holmes-lying-hero\.png"/);
  assert.match(lamp,/className="holmes-lamp" aria-hidden="true"/);
