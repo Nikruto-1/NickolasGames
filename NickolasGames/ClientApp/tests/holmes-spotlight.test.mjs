@@ -16,5 +16,8 @@ test('Holmes pendant is decorative, uses the supplied SVG design and is dark-the
  assert.match(css,/\.holmes-lamp\{[^}]*pointer-events:none/);
  assert.match(css,/\.holmes-lamp-drop\{[^}]*visibility:hidden/);
  assert.match(css,/:root\[data-theme=dark\] \.holmes-lamp-drop\{[^}]*visibility:visible/);
+ assert.match(css,/--lamp-shade:clamp\(92px,30vw,132px\);--lamp-beam:200%/);
+ assert.match(lamp,/points="140,0 180,0 320,420 0,420"/);
+ assert.match(lamp,/className="holmes-lamp-pool"/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 });
