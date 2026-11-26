@@ -31,3 +31,7 @@ test("black can legally make the first move when selected",()=>{
 });
 
 test("hard bot difficulty survives settings normalization",()=>{assert.equal(normalizeCheckersSettings({mode:"bot",level:"hard"}).level,"hard");});
+
+test("expert bot difficulty survives settings normalization",()=>{
+ assert.equal(normalizeCheckersSettings({mode:"bot",level:"expert"}).level,"expert");
+});

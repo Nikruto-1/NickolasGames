@@ -1,9 +1,10 @@
+import { BOT_LEVELS } from "../../../../../packages/game-core/checkers/bot.js";
 import { initialCheckers,checkersPositionKey } from "./gameLogic.js";
 
 // Keeps saved pre-feature settings compatible; never resets the selected AI level.
 export const normalizeCheckersSettings = value => ({
   mode: value?.mode === "bot" ? "bot" : "friend",
-  level: ["easy","medium","hard"].includes(value?.level) ? value.level : "easy",
+  level: BOT_LEVELS.includes(value?.level) ? value.level : "easy",
   starter: ["white","black","random"].includes(value?.starter) ? value.starter : "white",
   humanSide: value?.humanSide === "black" ? "black" : "white"
 });

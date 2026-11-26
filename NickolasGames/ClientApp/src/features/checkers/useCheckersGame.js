@@ -2,7 +2,7 @@ import {saveResult,removeResult} from '../../utils/sharedResults.js';
 import { useEffect, useMemo, useRef, useState } from "react";
 import { playCheckersVictory } from "./victorySound.js";
 import { createCheckersMatch, normalizeCheckersSettings, selectFirstSide } from "./matchSettings.js";
-import { chooseCheckersBotMove } from "../../../../../packages/game-core/checkers/bot.js";
+import { chooseCheckersBotMove, BOT_LEVELS } from "../../../../../packages/game-core/checkers/bot.js";
 import { emptyCheckersStandings,validateCheckersStandings,recordCheckersWin,revertCheckersWin,rankedCheckersSides } from "./standings.js";
 import { useVersionedState } from "../../utils/gameSession.js";
 import { restoreGameTimeline,appendGameHistory,rewindGameHistory } from "../../utils/gameHistory.js";
@@ -21,7 +21,7 @@ export function useCheckersGame(t) {
   });
   const [modeSettings,setModeSettings] = useVersionedState({
     game:"checkers-mode",lang:"shared",
-    restore:value=>value && ["friend","bot"].includes(value.mode) && ["easy","medium","hard"].includes(value.level) ? normalizeCheckersSettings(value) : null,
+    restore:value=>value && ["friend","bot"].includes(value.mode) && BOT_LEVELS.includes(value.level) ? normalizeCheckersSettings(value) : null,
     initialize:()=>normalizeCheckersSettings(null)
   });
   const againstBot=modeSettings.mode==="bot";
