@@ -934,12 +934,13 @@ try {
         await section.waitFor();
         assert.equal(await section.locator('.review-group:not(.review-clone) .review-card').count(),17);
         assert.ok(await section.locator('.review-editorial').isVisible());
+        assert.ok((await section.locator('.review-group:not(.review-clone) .review-card').nth(1).innerText()).includes('🇺🇦'));
         assert.equal(await section.locator('.review-group:not(.review-clone) .review-text').count(),17);
         assert.ok((await section.locator('.review-group:not(.review-clone) .review-text').allTextContents()).every(s=>s.trim().length>35));
         assert.equal(await section.locator('.review-clone').isVisible(),false);
         assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+3));
         assert.equal(await section.locator('.review-track').evaluate(el=>getComputedStyle(el).animationName),'none');
-        checks+=7;
+        checks+=8;
       }finally{await page.close();}
     }
     const page=await browser.newPage({viewport:{width:1280,height:850},serviceWorkers:'block',reducedMotion:'no-preference'});
@@ -950,16 +951,53 @@ try {
       await section.waitFor();
       const track=section.locator('.review-track');
       assert.equal(await track.evaluate(el=>getComputedStyle(el).animationName),'review-slide');
-      await section.locator('.review-toggle').click();
-      assert.equal(await track.evaluate(el=>getComputedStyle(el).animationName),'none');
-      assert.equal(await section.locator('.review-viewport').evaluate(el=>getComputedStyle(el).overflowX),'auto');
-      await section.locator('.review-toggle').click();
-      assert.equal(await track.evaluate(el=>getComputedStyle(el).animationName),'review-slide');
+      const viewport=section.locator('.review-viewport');
+      await section.locator('.review-toggle').focus();
+      await page.keyboard.press('Space');
+      assert.equal(await track.evaluate(el=>getComputedStyle(el).animationPlayState),'paused');
+      await page.keyboard.press('Space');
+      assert.equal(await viewport.evaluate(el=>getComputedStyle(el).overflowX),'hidden');
+      await viewport.scrollIntoViewIfNeeded();
+      const bounds=await viewport.boundingBox();
+      await page.mouse.move(bounds.x+200,bounds.y+50);
+      await page.mouse.down();
+      await viewport.evaluate(el=>{if(!el.classList.contains('review-dragging'))throw Error('drag did not begin');});
+      const time=()=>track.evaluate(el=>el.getAnimations()[0].currentTime);
+      const before=await time();
+      await page.mouse.move(bounds.x+120,bounds.y+50,{steps:4});
+      const after=await time();
+      assert.ok(Math.abs(after-before)>100,'Drag must change animation position');
+      await page.mouse.up();
+      await page.mouse.move(1,1);
+      await page.waitForFunction(()=>getComputedStyle(document.querySelector('.review-track')).animationPlayState==='running');
       if(await page.evaluate(()=>document.documentElement.dataset.theme)!=='dark')await page.locator('.theme-toggle').click();
       await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');
       assert.equal(await section.locator('.review-card').first().evaluate(el=>getComputedStyle(el).color),await page.evaluate(()=>{const probe=document.createElement('span');probe.style.color='var(--fg)';document.body.append(probe);const color=getComputedStyle(probe).color;probe.remove();return color;}));
-      checks+=5;
+      checks+=6;
     }finally{await page.close();}
+    // Emulated touch: hold, swipe and release without a persistent manual state.
+    const touch=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,serviceWorkers:'block',reducedMotion:'no-preference'});
+    try{
+      const page=await touch.newPage();
+      await page.goto(base+LANGUAGE_PATHS.uk);
+      const viewport=page.locator('.review-viewport');
+      await viewport.waitFor();
+      await viewport.scrollIntoViewIfNeeded();
+      const bounds=await viewport.boundingBox();
+      const client=await touch.newCDPSession(page);
+      const x=Math.round(bounds.x+bounds.width*.65),y=Math.round(bounds.y+Math.min(50,bounds.height/2));
+      const send=(type,touchPoints)=>client.send('Input.dispatchTouchEvent',{type,touchPoints});
+      await send('touchStart',[{x,y}]);
+      await page.waitForFunction(()=>document.querySelector('.review-viewport').classList.contains('review-dragging')&&getComputedStyle(document.querySelector('.review-track')).animationPlayState==='paused');
+      const time=()=>page.locator('.review-track').evaluate(el=>el.getAnimations()[0].currentTime);
+      const before=await time();
+      await send('touchMove',[{x:x-85,y}]);
+      await page.waitForFunction(initial=>Math.abs(document.querySelector('.review-track').getAnimations()[0].currentTime-initial)>100,before);
+      await send('touchEnd',[]);
+      await page.waitForFunction(()=>!document.querySelector('.review-viewport').classList.contains('review-dragging')&&getComputedStyle(document.querySelector('.review-track')).animationPlayState==='running');
+      assert.equal(await viewport.evaluate(el=>getComputedStyle(el).overflowX),'hidden');
+      checks+=3;
+    }finally{await touch.close();}
   }
   const zoom=await browser.newPage({viewport:{width:390,height:844},serviceWorkers:"block"});
   await zoom.goto(base+"/de/?game=truth",{waitUntil:"domcontentloaded"});
