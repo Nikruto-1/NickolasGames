@@ -922,7 +922,7 @@ try {
       checks+=3;
     } finally {await context.close();}
   }
-  // Review roster: all five locales, mobile/desktop, motion and theme.
+  // Editorial player reviews: all five locales, mobile/desktop, motion and theme.
   {
     for(const lang of ['uk','en','sv','de','es']){
       const page=await browser.newPage({viewport:{width:390,height:844},serviceWorkers:'block',reducedMotion:'reduce'});
@@ -932,13 +932,14 @@ try {
         await page.waitForFunction(expected=>document.documentElement.lang===expected,lang);
         const section=page.locator('.player-reviews');
         await section.waitFor();
-        assert.equal(await section.locator('.review-group:not(.review-clone) .review-card').count(),16);
-        assert.ok(await section.locator('.review-summary').isVisible());
-        assert.equal(await section.locator('blockquote').count(),0,'Collective feedback is not a personal quotation');
+        assert.equal(await section.locator('.review-group:not(.review-clone) .review-card').count(),17);
+        assert.ok(await section.locator('.review-editorial').isVisible());
+        assert.equal(await section.locator('.review-group:not(.review-clone) .review-text').count(),17);
+        assert.ok((await section.locator('.review-group:not(.review-clone) .review-text').allTextContents()).every(s=>s.trim().length>35));
         assert.equal(await section.locator('.review-clone').isVisible(),false);
         assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+3));
         assert.equal(await section.locator('.review-track').evaluate(el=>getComputedStyle(el).animationName),'none');
-        checks+=6;
+        checks+=7;
       }finally{await page.close();}
     }
     const page=await browser.newPage({viewport:{width:1280,height:850},serviceWorkers:'block',reducedMotion:'no-preference'});
