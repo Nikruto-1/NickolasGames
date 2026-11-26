@@ -955,6 +955,16 @@ try {
         assert.ok((await section.locator('.review-group:not(.review-clone) .review-card').nth(1).innerText()).includes('🇺🇦'));
         assert.equal(await section.locator('.review-group:not(.review-clone) .review-text').count(),17);
         assert.ok((await section.locator('.review-group:not(.review-clone) .review-text').allTextContents()).every(s=>s.trim().length>35));
+        const spacing=await section.locator('.review-group:not(.review-clone) .review-card').evaluateAll(cards=>cards.map(card=>{
+          const text=card.querySelector('.review-text').getBoundingClientRect();
+          const author=card.querySelector('.review-author').getBoundingClientRect();
+          const label=card.querySelector('small').getBoundingClientRect();
+          const bounds=card.getBoundingClientRect();
+          return {gap:author.top-text.bottom,labelGap:label.top-author.bottom,height:bounds.height,bottom:bounds.bottom-label.bottom};
+        }));
+        assert.ok(spacing.every(s=>s.gap>=0&&s.gap<=16&&s.labelGap>=0&&s.labelGap<=12&&s.bottom<=24),'Review attribution must remain close to its text without empty space');
+        assert.ok(Math.max(...spacing.map(s=>s.height))-Math.min(...spacing.map(s=>s.height))>20,'Short reviews must not stretch to the longest card');
+        checks+=2;
         assert.equal(await section.locator('.review-clone').isVisible(),false);
         assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+3));
         assert.equal(await section.locator('.review-track').evaluate(el=>getComputedStyle(el).animationName),'none');
