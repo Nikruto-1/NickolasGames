@@ -1,11 +1,12 @@
 import holmesLying from "../assets/holmes-lying-hero.png";
 import "./HolmesFloor.css";
+import SwingingLamp from "./SwingingLamp.jsx";
 
 export function HolmesFloor({games}) {
  const symbols=["?","✦","A","♡"];
  return <div className="holmes-floor" aria-hidden="true">
   <div className="holmes-floor-ground"/>
-  <div className="holmes-spotlight" aria-hidden="true"><div className="holmes-spotlight-swing"><span className="holmes-spotlight-shade"/><span className="holmes-spotlight-beam"/></div></div>
+  <SwingingLamp/>
   <div className="holmes-floor-cards">
    {Object.entries(games).slice(0,4).map(([key,game],i)=><div className={`holmes-floor-card holmes-floor-card-${i}`} key={key}><span>{symbols[i]}</span><strong>{game.n}</strong><small>NickolasGames</small></div>)}
   </div>

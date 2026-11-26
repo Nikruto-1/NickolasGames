@@ -973,6 +973,14 @@ try {
       await page.waitForFunction(()=>getComputedStyle(document.querySelector('.review-track')).animationPlayState==='running');
       if(await page.evaluate(()=>document.documentElement.dataset.theme)!=='dark')await page.locator('.theme-toggle').click();
       await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');
+      const lamp=page.locator('.holmes-lamp-drop');
+      await page.waitForFunction(()=>getComputedStyle(document.querySelector('.holmes-lamp-drop')).visibility==='visible');
+      assert.equal(await page.locator('.holmes-lamp-pivot').evaluate(el=>getComputedStyle(el).animationName),'holmes-lamp-pendulum');
+      await page.locator('.theme-toggle').click();
+      await page.waitForFunction(()=>document.documentElement.dataset.theme!=='dark'&&getComputedStyle(document.querySelector('.holmes-lamp-drop')).visibility==='hidden');
+      await page.locator('.theme-toggle').click();
+      await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark'&&getComputedStyle(document.querySelector('.holmes-lamp-drop')).visibility==='visible');
+      checks+=3;
       assert.equal(await section.locator('.review-card').first().evaluate(el=>getComputedStyle(el).color),await page.evaluate(()=>{const probe=document.createElement('span');probe.style.color='var(--fg)';document.body.append(probe);const color=getComputedStyle(probe).color;probe.remove();return color;}));
       checks+=6;
     }finally{await page.close();}
